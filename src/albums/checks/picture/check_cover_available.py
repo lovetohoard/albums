@@ -7,8 +7,8 @@ from typing import Any, Dict, List, Mapping, Sequence, Tuple
 from rich.markup import escape
 
 from ...interactive.image_table import render_image_table
-from ...library.metadata import get_embedded_image_data
-from ...types import Album, CheckResult, Fixer, Picture, PictureType, ProblemCategory
+from ...tagger.types import PictureType
+from ...types import Album, CheckResult, Fixer, Picture, ProblemCategory
 from ..base_check import Check
 from ..helpers import FRONT_COVER_FILENAME
 
@@ -43,7 +43,7 @@ class CheckCoverAvailable(Check):
             if pictures_by_type:
                 pics = [k for k, _ in picture_sources.items()]
                 headers = [self._describe_album_art(pic, picture_sources) for pic in pics]
-                table = (headers, lambda: render_image_table(self.ctx, album, pics, picture_sources))
+                table = (headers, lambda: render_image_table(self.ctx, self.tagger.get(album.path), pics, picture_sources))
                 has_embedded = any(track.pictures for track in album.tracks)
                 option_automatic_index = 0 if len(headers) == 1 else None
                 message = f"album has pictures but none is COVER_FRONT picture{' (embedded)' if has_embedded else ''}"
@@ -87,9 +87,8 @@ class CheckCoverAvailable(Check):
             rename(path, self.ctx.config.library / album.path / new_filename)
         else:
             (filename, _, embed_ix) = sources[pic][0]
-            path = self.ctx.config.library / album.path / filename
-            images = get_embedded_image_data(path)
-            image_data = images[embed_ix]
+            with self.tagger.get(album.path).open(filename) as tags:
+                image_data = tags.get_image_data(pic.picture_type, embed_ix)
             suffix = mimetypes.guess_extension(pic.format)
             new_filename = f"{FRONT_COVER_FILENAME}{suffix}"
             self.ctx.console.print(f"Creating {len(image_data)} byte {pic.format} file {new_filename}")

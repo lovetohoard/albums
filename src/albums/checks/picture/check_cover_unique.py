@@ -6,7 +6,8 @@ from rich.markup import escape
 
 from ...database import operations
 from ...interactive.image_table import render_image_table
-from ...types import Album, CheckResult, Fixer, Picture, PictureType, ProblemCategory
+from ...tagger.types import PictureType
+from ...types import Album, CheckResult, Fixer, Picture, ProblemCategory
 from ..base_check import Check
 from ..helpers import delete_files_except
 
@@ -55,7 +56,7 @@ class CheckCoverUnique(Check):
             cover_embedded_desc = [self._describe_album_art(pic, picture_sources) for pic in cover_embedded]
             table = (
                 cover_image_filenames + cover_embedded_desc,
-                lambda: render_image_table(self.ctx, album, cover_image_files + cover_embedded, picture_sources),
+                lambda: render_image_table(self.ctx, self.tagger.get(album.path), cover_image_files + cover_embedded, picture_sources),
             )
             if cover_image_files and cover_source_filename is None:
                 # at this point every picture in cover_image_file should be associated with exactly one file
