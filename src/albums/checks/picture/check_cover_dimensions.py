@@ -9,8 +9,9 @@ from PIL import Image
 from ...database.operations import update_picture_files
 from ...interactive.image_table import render_image_table
 from ...library.folder import read_binary_file
-from ...tagger.types import PictureType
-from ...types import Album, CheckResult, Fixer, Picture, ProblemCategory
+from ...tagger.picture import IMAGE_MODE_BPP
+from ...tagger.types import Picture, PictureInfo, PictureType
+from ...types import Album, CheckResult, Fixer, PictureFile, ProblemCategory
 from ..base_check import Check
 
 logger = logging.getLogger(__name__)
@@ -43,57 +44,70 @@ class CheckCoverDimensions(Check):
 
     def check(self, album: Album) -> CheckResult | None:
         issues: set[str] = set()
-        embedded_covers: dict[Picture, str] = {}
+        embedded_covers: dict[Picture, tuple[int, str]] = {}
         for track in album.tracks:
-            covers = [pic for pic in track.pictures if pic.picture_type == PictureType.COVER_FRONT]
+            covers = [(embed_ix, pic) for embed_ix, pic in enumerate(track.pictures) if pic.type == PictureType.COVER_FRONT]
             if covers:
-                embedded_covers[covers[0]] = track.filename
-        cover_files = [(pic, filename) for filename, pic in album.picture_files.items() if pic.picture_type == PictureType.COVER_FRONT]
+                embedded_covers[covers[0][1]] = (covers[0][0], track.filename)
+        cover_files = [
+            (file, filename) for filename, file in album.picture_files.items() if PictureType.from_filename(filename) == PictureType.COVER_FRONT
+        ]
 
         if len(cover_files) > 1:
             return CheckResult(ProblemCategory.PICTURES, "there is more than one front cover image file (check cover-unique suggested)")
         file_cover = cover_files[0][0] if cover_files else None
         if len(embedded_covers) > 1:
             return CheckResult(ProblemCategory.PICTURES, "more than one unique embedded cover image file (check cover-unique suggested)")
-        embedded_cover = list(embedded_covers.items())[0][0] if embedded_covers else None
-        if file_cover and embedded_cover and not file_cover.cover_source and file_cover != embedded_cover:
+
+        if embedded_covers:
+            (embedded_cover, (embed_ix, _)) = list(embedded_covers.items())[0]
+        else:
+            embed_ix = 0
+            embedded_cover = None
+
+        if (
+            file_cover
+            and embedded_cover
+            and not file_cover.cover_source
+            and file_cover.picture.file_info.file_hash != embedded_cover.file_info.file_hash
+        ):
             return CheckResult(ProblemCategory.PICTURES, "cover image file not unique, not cover_source (check cover-unique suggested)")
 
         if file_cover:  # either cover_source or identical to embedded images
-            (cover, from_file) = cover_files[0]
+            (cover_file, from_file) = cover_files[0]
+            cover = cover_file.picture
             embedded = False
         elif embedded_cover:
-            (cover, from_file) = list(embedded_covers.items())[0]
+            (cover, (embed_ix, from_file)) = list(embedded_covers.items())[0]
             embedded = True
         else:
             return None  # no cover means cover-available is not configured to require one
 
-        if min(cover.height, cover.width) < self.min_pixels:
+        if min(cover.file_info.height, cover.file_info.width) < self.min_pixels:
             # we think we have selected the best cover image, no automated fix here
-            issues.add(f"COVER_FRONT image is too small ({cover.width}x{cover.height})")
-        if max(cover.height, cover.width) > self.max_pixels:
+            issues.add(f"COVER_FRONT image is too small ({cover.file_info.width}x{cover.file_info.height})")
+        if max(cover.file_info.height, cover.file_info.width) > self.max_pixels:
             # TODO: extract original to file, then resize/compress
-            issues.add(f"COVER_FRONT image is too large ({cover.width}x{cover.height})")
-        if not self._cover_square_enough(cover.width, cover.height):
-            message = f"COVER_FRONT is not square ({cover.width}x{cover.height})"
-            if not issues and self._can_squarify(cover.width, cover.height):  # squarify if image is not too small/large/unsquare
+            issues.add(f"COVER_FRONT image is too large ({cover.file_info.width}x{cover.file_info.height})")
+        if not self._cover_square_enough(cover.file_info.width, cover.file_info.height):
+            message = f"COVER_FRONT is not square ({cover.file_info.width}x{cover.file_info.height})"
+            if not issues and self._can_squarify(cover.file_info.width, cover.file_info.height):  # squarify if image is not too small/large/unsquare
                 options = [">> Make cover image square"]
                 option_automatic_index = 0
-                picture_source: Dict[Picture, List[Tuple[str, bool, int]]] = {cover: [(from_file, embedded, cover.embed_ix)]}
+                picture_source: Dict[Picture, List[Tuple[str, bool, int]]] = {cover: [(from_file, embedded, embed_ix)]}
                 source_file = from_file if not embedded else None
                 new_cover: list[Tuple[Picture, Image.Image, bytes]] = []
 
                 def get_new_cover():
                     if not new_cover:
-                        (filename, embedded, _) = picture_source[cover][0]
-                        (image, image_data) = self._squarify(cover, embedded, self.ctx.config.library / album.path, filename)
-                        new_cover.append(
-                            (Picture(cover.picture_type, "image/png", image.width, image.height, len(image_data), b""), image, image_data)
-                        )
+                        (filename, embedded, embed_ix) = picture_source[cover][0]
+                        (image, image_data) = self._squarify(cover, embedded, embed_ix, self.ctx.config.library / album.path, filename)
+                        pic_info = PictureInfo("image/png", image.width, image.height, IMAGE_MODE_BPP.get(image.mode, 0), len(image_data), b"")
+                        new_cover.append((Picture(pic_info, cover.type, "", ()), image, image_data))
                     return new_cover[0]
 
                 table = (
-                    [f"Front cover {from_file}{f'#{cover.embed_ix}' if embedded else ''}", "Preview"],
+                    [f"Front cover {from_file}{f'#{embed_ix}' if embedded else ''}", "Preview"],
                     lambda: self._render_table(album, cover, picture_source, get_new_cover),
                 )
                 return CheckResult(
@@ -134,7 +148,8 @@ class CheckCoverDimensions(Check):
             del picture_files[source_filename]
 
         # mark new/replaced image as cover_source (metadata will be picked up in rescan)
-        picture_files[new_path.name] = Picture(PictureType.COVER_FRONT, "image/png", 0, 0, 0, b"", "", None, 0, cover_source=True)
+        file_info = PictureInfo("image/png", 0, 0, 0, 0, b"")
+        picture_files[new_path.name] = PictureFile(Picture(file_info, PictureType.COVER_FRONT, "", ()), 0, cover_source=True)
         update_picture_files(self.ctx.db, album.album_id, picture_files)
 
         with open(new_path, "wb") as f:
@@ -161,10 +176,10 @@ class CheckCoverDimensions(Check):
     def _can_squarify(self, w: int, h: int):
         return not self._cover_square_enough(w, h) and self._aspect(w, h) >= self.fixable_squareness
 
-    def _squarify(self, pic: Picture, embedded: bool, path: Path, filename: str):
+    def _squarify(self, pic: Picture, embedded: bool, embed_ix: int, path: Path, filename: str):
         if embedded:
             with self.tagger.get(path).open(filename) as tags:
-                image_data = tags.get_image_data(pic.picture_type, pic.embed_ix)
+                image_data = tags.get_image_data(pic.type, embed_ix)
         else:
             image_data = read_binary_file(path / filename)
 

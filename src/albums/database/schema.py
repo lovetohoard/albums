@@ -77,6 +77,7 @@ CREATE TABLE track_picture (
     format TEXT NOT NULL,
     width INTEGER NOT NULL,
     height INTEGER NOT NULL,
+    -- v10 add column depth_bpp
     file_size INTEGER NOT NULL,
     file_hash BLOB NOT NULL,
     -- v4 add embed_ix
@@ -95,6 +96,7 @@ CREATE TABLE album_picture_file (
     format TEXT NOT NULL,
     width INTEGER NOT NULL,
     height INTEGER NOT NULL
+    -- v10 add column depth_bpp
     -- v6 add column cover_source
 );
 CREATE INDEX idx_album_picture_file_album_id ON album_picture_file(album_id);
@@ -112,6 +114,11 @@ CREATE TABLE setting (
     name TEXT PRIMARY KEY,
     value_json TEXT NOT NULL
 ) WITHOUT ROWID;
+""",
+    10: """
+ALTER TABLE album_picture_file ADD COLUMN depth_bpp INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE album_picture_file ADD COLUMN load_issue TEXT NULL;
+ALTER TABLE track_picture ADD COLUMN depth_bpp INTEGER NOT NULL DEFAULT 0;
 """,
 }
 

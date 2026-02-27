@@ -5,14 +5,20 @@ import shutil
 
 import pytest
 
-from albums.tagger.types import PictureType
-from albums.types import Album, Picture, Track
+from albums.tagger.types import Picture, PictureInfo, PictureType
+from albums.types import Album, PictureFile, Track
 
 from . import helpers
 from .fixtures.create_library import create_library, test_data_path
 
 albums = [
-    Album("foo" + os.sep, [Track("1.mp3", {"title": ["1"]})], [], [], {"folder.png": Picture(PictureType.COVER_FRONT, "ignored", 400, 400, 0, b"")}),
+    Album(
+        "foo" + os.sep,
+        [Track("1.mp3", {"title": ["1"]})],
+        [],
+        [],
+        {"folder.png": PictureFile(Picture(PictureInfo("ignored", 400, 400, 24, 0, b""), PictureType.COVER_FRONT, "", ()), 999, False)},
+    ),
     Album("bar" + os.sep, [Track("1.flac", {"title": ["1"]}), Track("2.flac", {"title": ["2"]})]),
 ]
 

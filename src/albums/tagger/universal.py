@@ -7,7 +7,7 @@ from mutagen._tags import PaddingInfo
 
 from .base_mutagen import AbstractMutagenTagger
 from .helpers import vorbis_comment_set_tag, vorbis_comment_tags
-from .types import AlbumPicture, BasicTag, MutagenFileType, PictureType
+from .types import BasicTag, MutagenFileType, Picture, PictureType
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +30,7 @@ class UniversalTagger(AbstractMutagenTagger):
             logger.warning(f"error setting {tag} in {self._file.filename}: {repr(ex)}")
 
     @override
-    def get_pictures(self) -> Generator[Tuple[AlbumPicture, bytes], None, None]:
+    def get_pictures(self) -> Generator[Tuple[Picture, bytes], None, None]:
         yield from ()
 
     @override

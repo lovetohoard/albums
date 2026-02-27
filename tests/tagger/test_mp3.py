@@ -4,8 +4,8 @@ import pytest
 import xxhash
 
 from albums.tagger.folder import AlbumTagger, BasicTag
-from albums.tagger.types import AlbumPicture, PictureInfo
-from albums.types import Album, Picture, PictureType, Track
+from albums.tagger.types import Picture, PictureInfo, PictureType
+from albums.types import Album, Track
 
 from ..fixtures.create_library import create_library, make_image_data
 
@@ -24,7 +24,10 @@ track = Track(
     0,
     0,
     None,
-    [Picture(PictureType.COVER_FRONT, "image/png", 400, 400, 0, b""), Picture(PictureType.COVER_BACK, "image/png", 400, 400, 0, b"")],
+    [
+        Picture(PictureInfo("image/png", 400, 400, 24, 1, b""), PictureType.COVER_FRONT, "", ()),
+        Picture(PictureInfo("image/png", 400, 400, 24, 1, b""), PictureType.COVER_BACK, "", ()),
+    ],
 )
 album = Album("baz" + os.sep, [track])
 
@@ -40,8 +43,8 @@ class TestMp3:
             scan = file.scan()
         assert len(scan.pictures) == 2
         assert any(pic.description.endswith(" ") for pic in scan.pictures)  # ID3 frame hash was made unique by modifying description
-        assert scan.pictures[0].picture_type == PictureType.COVER_FRONT or scan.pictures[1].picture_type == PictureType.COVER_FRONT
-        assert scan.pictures[0].picture_type == PictureType.COVER_BACK or scan.pictures[1].picture_type == PictureType.COVER_BACK
+        assert scan.pictures[0].type == PictureType.COVER_FRONT or scan.pictures[1].type == PictureType.COVER_FRONT
+        assert scan.pictures[0].type == PictureType.COVER_BACK or scan.pictures[1].type == PictureType.COVER_BACK
         assert (
             scan.pictures[0].file_info.width
             == scan.pictures[0].file_info.height
@@ -141,8 +144,8 @@ class TestMp3:
             scan = file.scan()
 
         assert len(scan.pictures) == 2
-        assert scan.pictures[0].picture_type == PictureType.COVER_FRONT
-        assert scan.pictures[1].picture_type == PictureType.COVER_BACK
+        assert scan.pictures[0].type == PictureType.COVER_FRONT
+        assert scan.pictures[1].type == PictureType.COVER_BACK
         assert (
             scan.pictures[0].file_info.width
             == scan.pictures[0].file_info.height
@@ -158,7 +161,7 @@ class TestMp3:
             scan = file.scan()
 
         assert len(scan.pictures) == 1
-        assert scan.pictures[0].picture_type == PictureType.COVER_BACK
+        assert scan.pictures[0].type == PictureType.COVER_BACK
         assert scan.pictures[0].file_info.width == scan.pictures[0].file_info.height == 400
         assert scan.pictures[0].file_info.mime_type == "image/png"
 
@@ -166,15 +169,13 @@ class TestMp3:
         with TestMp3.tagger.open(track.filename) as file:
             scan = file.scan()
         assert len(scan.pictures) == 2
-        assert scan.pictures[0].picture_type == PictureType.COVER_FRONT
+        assert scan.pictures[0].type == PictureType.COVER_FRONT
         front = scan.pictures[0]
-        assert scan.pictures[1].picture_type == PictureType.COVER_BACK
+        assert scan.pictures[1].type == PictureType.COVER_BACK
         back = scan.pictures[1]
 
         image_data = make_image_data(600, 600, "JPEG")
-        replacement = AlbumPicture(
-            PictureInfo("image/jpeg", 600, 600, 24, len(image_data), xxhash.xxh32_digest(image_data)), PictureType.FISH, "", ()
-        )
+        replacement = Picture(PictureInfo("image/jpeg", 600, 600, 24, len(image_data), xxhash.xxh32_digest(image_data)), PictureType.FISH, "", ())
 
         with TestMp3.tagger.open(track.filename) as file:
             file.remove_picture(front)

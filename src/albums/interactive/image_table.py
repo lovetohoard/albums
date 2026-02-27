@@ -13,7 +13,7 @@ from skimage.metrics import mean_squared_error  # pyright: ignore[reportUnknownV
 from ..app import Context
 from ..library.folder import read_binary_file
 from ..tagger.folder import AlbumTagger
-from ..types import Picture
+from ..tagger.types import Picture
 
 logger = logging.getLogger(__name__)
 
@@ -36,7 +36,7 @@ def render_image_table(
             (filename, embedded, embed_ix) = picture_sources[cover][0]
             if embedded:
                 with tags.open(filename) as f:
-                    image_data = f.get_image_data(cover_ref.picture_type, embed_ix)
+                    image_data = f.get_image_data(cover_ref.type, embed_ix)
             else:
                 image_data = read_binary_file(tags.path() / filename)
             image = Image.open(io.BytesIO(image_data))
@@ -49,7 +49,7 @@ def render_image_table(
             pix_image = image.resize((int(image.width * scale), int(h * scale)), resample=Image.Resampling.LANCZOS)
             pixels = Pixels.from_image(pix_image)
             pixelses.append(pixels)
-            caption = f"[{cover.width} x {cover.height}] {humanize.naturalsize(len(image_data), binary=True)}"
+            caption = f"[{cover.file_info.width} x {cover.file_info.height}] {humanize.naturalsize(len(image_data), binary=True)}"
             if len(pictures) > 1:
                 COMPARISON_BOX_SIZE = 75
                 image.thumbnail((COMPARISON_BOX_SIZE, COMPARISON_BOX_SIZE), Image.Resampling.LANCZOS)

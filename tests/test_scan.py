@@ -8,8 +8,8 @@ from mutagen.flac import FLAC
 from albums.app import SCANNER_VERSION, Context
 from albums.database import connection, selector
 from albums.library.scanner import scan
-from albums.tagger.types import PictureType
-from albums.types import Album, Path, Picture, Track
+from albums.tagger.types import PictureInfo, PictureType
+from albums.types import Album, Path, Picture, PictureFile, Track
 
 from .fixtures.create_library import create_album_in_library, create_library
 
@@ -32,7 +32,7 @@ class TestScanner:
             ],
             [],
             [],
-            {"cover.jpg": Picture(PictureType.COVER_FRONT, "ignored", 410, 410, 0, b"")},
+            {"cover.jpg": PictureFile(Picture(PictureInfo("image/png", 410, 410, 24, 0, b""), PictureType.COVER_FRONT, "", ()), 0, False)},
         ),
         Album("foo" + os.sep, [Track("1.mp3", {"title": ["1"]}), Track("2.mp3", {"title": ["2"]})]),
         Album("baz" + os.sep, [Track("1.wma", {"title": ["one"]}), Track("2.wma", {"title": ["two"]})]),
@@ -76,9 +76,9 @@ class TestScanner:
             assert len(result[0].picture_files) == 1
             cover_png = result[0].picture_files.get("cover.jpg")
             assert cover_png
-            assert cover_png.format == "image/jpeg"
+            assert cover_png.picture.file_info.mime_type == "image/jpeg"
             assert cover_png.modify_timestamp
-            assert cover_png.picture_type == PictureType.COVER_FRONT
+            assert cover_png.picture.type == PictureType.COVER_FRONT
 
     def test_scan_empty(self):
         with contextlib.closing(connection.open(connection.MEMORY)) as db:

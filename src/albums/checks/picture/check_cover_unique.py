@@ -6,8 +6,8 @@ from rich.markup import escape
 
 from ...database import operations
 from ...interactive.image_table import render_image_table
-from ...tagger.types import PictureType
-from ...types import Album, CheckResult, Fixer, Picture, ProblemCategory
+from ...tagger.types import Picture, PictureType
+from ...types import Album, CheckResult, Fixer, ProblemCategory
 from ..base_check import Check
 from ..helpers import delete_files_except
 
@@ -25,16 +25,16 @@ class CheckCoverUnique(Check):
     def check(self, album: Album) -> CheckResult | None:
         tracks_with_cover = 0
         album_art = [(track.filename, True, track.pictures) for track in album.tracks]
-        album_art.extend([(filename, False, [picture]) for filename, picture in album.picture_files.items()])
+        album_art.extend([(filename, False, [file.picture]) for filename, file in album.picture_files.items()])
 
         pictures_by_type: defaultdict[PictureType, set[Picture]] = defaultdict(set)
         picture_sources: defaultdict[Picture, list[tuple[str, bool, int]]] = defaultdict(list)
         for filename, embedded, pictures in album_art:
             file_cover: Picture | None = None
-            for picture in pictures:
-                picture_sources[picture].append((filename, embedded, picture.embed_ix))
-                pictures_by_type[picture.picture_type].add(picture)
-                if picture.picture_type == PictureType.COVER_FRONT:
+            for embed_ix, picture in enumerate(pictures):
+                picture_sources[picture].append((filename, embedded, embed_ix))
+                pictures_by_type[picture.type].add(picture)
+                if picture.type == PictureType.COVER_FRONT:
                     if file_cover is None:
                         file_cover = picture
             if embedded:
@@ -44,12 +44,11 @@ class CheckCoverUnique(Check):
         front_covers: set[Picture] = pictures_by_type.get(PictureType.COVER_FRONT, set())
         cover_image_files = list(
             pic
-            for pic in sorted(front_covers, key=lambda pic: pic.file_size, reverse=True)
+            for pic in sorted(front_covers, key=lambda pic: pic.file_info.file_size, reverse=True)
             if any(not embedded for (_, embedded, _ix) in picture_sources[pic])
         )
         cover_image_filenames = [[file for (file, embedded, _) in picture_sources[pic] if not embedded][0] for pic in cover_image_files]
-        cover_source_ix = next((ix for ix, pic in enumerate(cover_image_files) if pic.cover_source), None)
-        cover_source_filename = cover_image_filenames[cover_source_ix] if cover_source_ix is not None else None
+        cover_source_filename = next((filename for filename, file in album.picture_files.items() if file.cover_source), None)
 
         if len(front_covers) > 1:
             cover_embedded = list(pic for pic in front_covers if any(embedded for (_, embedded, _ix) in picture_sources[pic]))
@@ -106,7 +105,7 @@ class CheckCoverUnique(Check):
                 )
             # else
             if cover_source_filename is None or len(cover_image_files) > 1 or len(cover_embedded) > 1:
-                tracks_have_covers = all(any(pic for pic in track.pictures if pic.picture_type == PictureType.COVER_FRONT) for track in album.tracks)
+                tracks_have_covers = all(any(pic for pic in track.pictures if pic.type == PictureType.COVER_FRONT) for track in album.tracks)
                 if tracks_have_covers:
                     # Maybe the tracks have unique cover art on purpose?
                     return CheckResult(
@@ -125,13 +124,15 @@ class CheckCoverUnique(Check):
         sources = picture_sources[picture]
         (filename, embedded, embed_ix) = sources[0]
         first_source = f"{escape(filename)}{f'#{embed_ix}' if embedded else ''}"
-        details = f"{picture.format} {picture.picture_type.name}"
+        details = f"{picture.file_info.mime_type} {picture.type.name}"
         return f"{first_source}{f' (and {len(sources) - 1} more)' if len(sources) > 1 else ''} {details}"
 
     def _source_image_file_candidate(self, image_files: Collection[Picture], embedded_images: Collection[Picture]):
-        largest_image_file = max(image_files, key=lambda pic: pic.file_size) if image_files else None
-        largest_embedded_file = max(embedded_images, key=lambda pic: pic.file_size) if embedded_images else None
-        if largest_embedded_file is None or (largest_image_file and largest_image_file.file_size > largest_embedded_file.file_size):
+        largest_image_file = max(image_files, key=lambda pic: pic.file_info.file_size) if image_files else None
+        largest_embedded_file = max(embedded_images, key=lambda pic: pic.file_info.file_size) if embedded_images else None
+        if largest_embedded_file is None or (
+            largest_image_file and largest_image_file.file_info.file_size > largest_embedded_file.file_info.file_size
+        ):
             return largest_image_file
         return None
 

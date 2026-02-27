@@ -1,3 +1,4 @@
+import base64
 from dataclasses import dataclass
 from enum import IntEnum, StrEnum, auto
 from typing import Generator, List, Tuple
@@ -114,15 +115,24 @@ class PictureInfo:
     height: int
     depth_bpp: int
     file_size: int
-    hash: bytes  # xxhash.xxh32_digest(image_data)
+    file_hash: bytes  # xxhash.xxh32_digest(image_data)
+
+    def to_dict(self):
+        return self.__dict__ | {"file_hash": base64.b64encode(self.file_hash).decode()}
 
 
 @dataclass(frozen=True)
-class AlbumPicture:
+class Picture:
     file_info: PictureInfo
-    picture_type: PictureType
+    type: PictureType
     description: str
     load_issue: Tuple[Tuple[str, str | int], ...]
+
+    def to_dict(self):
+        result = self.__dict__ | {"file_info": self.file_info.to_dict()}
+        if not self.load_issue:
+            del result["load_issue"]
+        return result
 
 
 @dataclass(frozen=True)
@@ -140,16 +150,16 @@ class StreamInfo:
 @dataclass(frozen=True)
 class ScanResult:
     tags: Tuple[Tuple[BasicTag, Tuple[str, ...]], ...]
-    pictures: Tuple[AlbumPicture, ...]
+    pictures: Tuple[Picture, ...]
     stream: StreamInfo
 
 
 class TaggerFile:
     def scan(self) -> ScanResult: ...
     def get_image_data(self, picture_type: PictureType, embed_ix: int) -> bytes: ...
-    def get_pictures(self) -> Generator[Tuple[AlbumPicture, bytes], None, None]: ...
+    def get_pictures(self) -> Generator[Tuple[Picture, bytes], None, None]: ...
 
     def set_tag(self, tag: BasicTag, value: str | List[str] | None) -> None: ...
-    def add_picture(self, new_picture: AlbumPicture, image_data: bytes) -> None: ...
-    def remove_picture(self, remove_picture: AlbumPicture) -> None: ...
+    def add_picture(self, new_picture: Picture, image_data: bytes) -> None: ...
+    def remove_picture(self, remove_picture: Picture) -> None: ...
     def save(self) -> None: ...

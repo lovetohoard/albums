@@ -6,8 +6,8 @@ from rich_pixels import Pixels
 
 from albums.app import Context
 from albums.checks.picture.check_cover_unique import CheckCoverUnique
-from albums.tagger.types import PictureType, StreamInfo
-from albums.types import Album, Picture, Track
+from albums.tagger.types import Picture, PictureInfo, PictureType, StreamInfo
+from albums.types import Album, PictureFile, Track
 
 from ...fixtures.create_library import create_library
 
@@ -23,7 +23,10 @@ class TestCheckCoverUnique:
                     0,
                     0,
                     StreamInfo(1.5, 0, 0, "FLAC"),
-                    [Picture(PictureType.COVER_FRONT, "image/png", 400, 400, 0, b""), Picture(PictureType.COVER_BACK, "image/png", 400, 400, 0, b"")],
+                    [
+                        Picture(PictureInfo("image/png", 400, 400, 24, 1, b""), PictureType.COVER_FRONT, "", ()),
+                        Picture(PictureInfo("image/png", 400, 400, 24, 1, b""), PictureType.COVER_BACK, "", ()),
+                    ],
                 ),
                 Track(
                     "2.flac",
@@ -31,7 +34,10 @@ class TestCheckCoverUnique:
                     0,
                     0,
                     StreamInfo(1.5, 0, 0, "FLAC"),
-                    [Picture(PictureType.COVER_FRONT, "image/png", 400, 400, 0, b""), Picture(PictureType.COVER_BACK, "image/png", 400, 400, 0, b"")],
+                    [
+                        Picture(PictureInfo("image/png", 400, 400, 24, 1, b""), PictureType.COVER_FRONT, "", ()),
+                        Picture(PictureInfo("image/png", 400, 400, 24, 1, b""), PictureType.COVER_BACK, "", ()),
+                    ],
                 ),
             ],
         )
@@ -41,8 +47,22 @@ class TestCheckCoverUnique:
         album = Album(
             "",
             [
-                Track("1.flac", {}, 0, 0, StreamInfo(1.5, 0, 0, "FLAC"), [Picture(PictureType.COVER_FRONT, "image/png", 400, 400, 0, b"")]),
-                Track("2.flac", {}, 0, 0, StreamInfo(1.5, 0, 0, "FLAC"), [Picture(PictureType.COVER_FRONT, "imaStreamge/png", 500, 500, 0, b"")]),
+                Track(
+                    "1.flac",
+                    {},
+                    0,
+                    0,
+                    StreamInfo(1.5, 0, 0, "FLAC"),
+                    [Picture(PictureInfo("image/png", 400, 400, 24, 1, b""), PictureType.COVER_FRONT, "", ())],
+                ),
+                Track(
+                    "2.flac",
+                    {},
+                    0,
+                    0,
+                    StreamInfo(1.5, 0, 0, "FLAC"),
+                    [Picture(PictureInfo("image/png", 500, 500, 24, 1, b""), PictureType.COVER_FRONT, "", ())],
+                ),
             ],
         )
         result = CheckCoverUnique(Context()).check(album)
@@ -52,10 +72,21 @@ class TestCheckCoverUnique:
         assert result.fixer.options == []
 
     def test_has_unmarked_cover_source_file(self, mocker):
-        picture_files = {"cover.png": Picture(PictureType.COVER_FRONT, "image/png", 1000, 1000, 10000, b"")}
+        picture_files = {
+            "cover.png": PictureFile(Picture(PictureInfo("image/png", 1000, 1000, 24, 10000, b""), PictureType.COVER_FRONT, "", ()), 0, False)
+        }
         album = Album(
             "foo" + os.sep,
-            [Track("1.flac", {}, 0, 0, StreamInfo(1.5, 0, 0, "FLAC"), [Picture(PictureType.COVER_FRONT, "image/png", 400, 400, 400, b"")])],
+            [
+                Track(
+                    "1.flac",
+                    {},
+                    0,
+                    0,
+                    StreamInfo(1.5, 0, 0, "FLAC"),
+                    [Picture(PictureInfo("image/png", 400, 400, 24, 1, b""), PictureType.COVER_FRONT, "", ())],
+                )
+            ],
             [],
             [],
             picture_files,
@@ -93,8 +124,12 @@ class TestCheckCoverUnique:
 
     def test_multiple_cover_image_files_no_embedded(self, mocker):
         picture_files = {
-            "cover_big.png": Picture(PictureType.COVER_FRONT, "image/png", 1000, 1000, 100000, b"1111"),
-            "cover_small.png": Picture(PictureType.COVER_FRONT, "image/png", 1000, 1000, 1000, b"2222"),
+            "cover_big.png": PictureFile(
+                Picture(PictureInfo("image/png", 1000, 1000, 24, 10000, b"1111"), PictureType.COVER_FRONT, "", ()), 0, False
+            ),
+            "cover_small.png": PictureFile(
+                Picture(PictureInfo("image/png", 1000, 1000, 24, 1000, b"2222"), PictureType.COVER_FRONT, "", ()), 0, False
+            ),
         }
         album = Album("", [Track("1.flac", {}, 0, 0, StreamInfo(1.5, 0, 0, "FLAC"))], [], [], picture_files, 999)
         ctx = Context()
@@ -118,8 +153,10 @@ class TestCheckCoverUnique:
 
     def test_multiple_cover_image_files_with_cover_source(self, mocker):
         picture_files = {
-            "cover_big.png": Picture(PictureType.COVER_FRONT, "image/png", 1000, 1000, 100000, b"1111", "", None, None, 0, True),
-            "cover_small.png": Picture(PictureType.COVER_FRONT, "image/png", 1000, 1000, 1000, b"2222"),
+            "cover_big.png": PictureFile(Picture(PictureInfo("image/png", 1000, 1000, 24, 10000, b"1111"), PictureType.COVER_FRONT, "", ()), 0, True),
+            "cover_small.png": PictureFile(
+                Picture(PictureInfo("image/png", 1000, 1000, 24, 1000, b"2222"), PictureType.COVER_FRONT, "", ()), 0, False
+            ),
         }
         album = Album("", [Track("1.flac", {}, 0, 0, StreamInfo(1.5, 0, 0, "FLAC"))], [], [], picture_files, 999)
         ctx = Context()

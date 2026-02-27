@@ -1,10 +1,10 @@
 import json
 import logging
 import sqlite3
-from typing import Collection, Mapping, Sequence
+from typing import Any, Collection, Mapping, Sequence, Tuple
 
-from ..tagger.types import PictureType, StreamInfo
-from ..types import Album, Picture, ScanHistoryEntry, Track
+from ..tagger.types import Picture, PictureInfo, PictureType, StreamInfo
+from ..types import Album, PictureFile, ScanHistoryEntry, Track
 
 logger = logging.getLogger(__name__)
 
@@ -31,25 +31,22 @@ def load_album(db: sqlite3.Connection, album_id: int, load_track_tag: bool = Tru
             ignore_checks.append(name)
 
         tracks = list(_load_tracks(db, album_id, load_track_tag))
-        picture_files: dict[str, Picture] = dict(
+        picture_files: dict[str, PictureFile] = dict(
             (
                 filename,
-                Picture(
-                    PictureType.from_filename(filename),
-                    format,
-                    width,
-                    height,
-                    file_size,
-                    file_hash,
-                    "",
-                    None,
+                PictureFile(
+                    Picture(
+                        PictureInfo(format, width, height, depth_bpp, file_size, file_hash),
+                        PictureType.from_filename(filename),
+                        "",
+                        _load_load_issue(load_issue),
+                    ),
                     modify_timestamp,
-                    0,
                     bool(cover_source),
                 ),
             )
-            for (filename, file_size, modify_timestamp, file_hash, format, width, height, cover_source) in db.execute(
-                "SELECT filename, file_size, modify_timestamp, file_hash, format, width, height, cover_source FROM album_picture_file WHERE album_id = ? ORDER BY filename;",
+            for (filename, modify_timestamp, format, width, height, depth_bpp, file_size, file_hash, load_issue, cover_source) in db.execute(
+                "SELECT filename, modify_timestamp, format, width, height, depth_bpp, file_size, file_hash, load_issue, cover_source FROM album_picture_file WHERE album_id = ? ORDER BY filename;",
                 (album_id,),
             )
         )
@@ -139,44 +136,47 @@ def _insert_tracks(db: sqlite3.Connection, album_id: int, tracks: Sequence[Track
         for name, values in track.tags.items():
             for value in values:
                 db.execute("INSERT INTO track_tag (track_id, name, value) VALUES (?, ?, ?);", (track_id, name, value))
-        for picture in track.pictures:
+        for embed_ix, picture in enumerate(track.pictures):
             db.execute(
-                "INSERT INTO track_picture (track_id, picture_type, format, width, height, file_size, file_hash, description, load_issue, embed_ix) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);",
+                "INSERT INTO track_picture (track_id, picture_type, format, width, height, depth_bpp, file_size, file_hash, description, load_issue, embed_ix) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);",
                 (
                     track_id,
-                    picture.picture_type.value,
-                    picture.format,
-                    picture.width,
-                    picture.height,
-                    picture.file_size,
-                    picture.file_hash,
+                    picture.type.value,
+                    picture.file_info.mime_type,
+                    picture.file_info.width,
+                    picture.file_info.height,
+                    picture.file_info.depth_bpp,
+                    picture.file_info.file_size,
+                    picture.file_info.file_hash,
                     picture.description,
-                    json.dumps(picture.load_issue) if picture.load_issue else None,
-                    picture.embed_ix,
+                    json.dumps(dict(picture.load_issue)) if picture.load_issue else None,
+                    embed_ix,
                 ),
             )
 
 
-def update_picture_files(db: sqlite3.Connection, album_id: int, picture_files: Mapping[str, Picture]):
+def update_picture_files(db: sqlite3.Connection, album_id: int, picture_files: Mapping[str, PictureFile]):
     with db:
         db.execute("DELETE FROM album_picture_file WHERE album_id = ?;", (album_id,))
         _insert_picture_files(db, album_id, picture_files)
 
 
-def _insert_picture_files(db: sqlite3.Connection, album_id: int, picture_files: Mapping[str, Picture]):
-    for filename, picture in picture_files.items():
+def _insert_picture_files(db: sqlite3.Connection, album_id: int, picture_files: Mapping[str, PictureFile]):
+    for filename, file in picture_files.items():
         db.execute(
-            "INSERT INTO album_picture_file (album_id, filename, file_size, modify_timestamp, file_hash, format, width, height, cover_source) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);",
+            "INSERT INTO album_picture_file (album_id, filename, modify_timestamp, format, width, height, depth_bpp, file_size, file_hash, load_issue, cover_source) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);",
             (
                 album_id,
                 filename,
-                picture.file_size,
-                picture.modify_timestamp,
-                picture.file_hash,
-                picture.format,
-                picture.width,
-                picture.height,
-                1 if picture.cover_source else 0,
+                file.modify_timestamp,
+                file.picture.file_info.mime_type,
+                file.picture.file_info.width,
+                file.picture.file_info.height,
+                file.picture.file_info.depth_bpp,
+                file.picture.file_info.file_size,
+                file.picture.file_info.file_hash,
+                json.dumps(dict(file.picture.load_issue)) if file.picture.load_issue else None,
+                1 if file.cover_source else 0,
             ),
         )
 
@@ -218,22 +218,24 @@ def _load_tags(db: sqlite3.Connection, track_id: int):
 def _load_pictures(db: sqlite3.Connection, track_id: int):
     return [
         Picture(
+            PictureInfo(format, width, height, depth_bpp, file_size, file_hash),
             PictureType(picture_type),
-            format,
-            width,
-            height,
-            file_size,
-            file_hash,
             description,
-            json.loads(load_issue) if load_issue else None,
-            None,
-            embed_ix,
+            _load_load_issue(load_issue),
         )
-        for picture_type, format, width, height, file_size, file_hash, description, load_issue, embed_ix in db.execute(
-            "SELECT picture_type, format, width, height, file_size, file_hash, description, load_issue, embed_ix FROM track_picture WHERE track_id = ? ORDER BY embed_ix;",
+        for picture_type, format, width, height, depth_bpp, file_size, file_hash, description, load_issue in db.execute(
+            "SELECT picture_type, format, width, height, depth_bpp, file_size, file_hash, description, load_issue FROM track_picture WHERE track_id = ? ORDER BY embed_ix;",
             (track_id,),
         )
     ]
+
+
+def _load_load_issue(value: Any) -> Tuple[Tuple[str, str | int], ...]:
+    if not value:
+        return ()
+    load_issue = json.loads(value)
+    kv: dict[str, str | int] = load_issue  # pyright: ignore[reportUnknownVariableType]
+    return tuple([(k, v) for [k, v] in kv.items()])
 
 
 def record_full_scan(db: sqlite3.Connection, entry: ScanHistoryEntry):

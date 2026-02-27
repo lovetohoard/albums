@@ -2,11 +2,9 @@ import logging
 from collections import defaultdict
 from typing import Any
 
-from rich.markup import escape
-
 from ...interactive.image_table import render_image_table
-from ...tagger.types import PictureType
-from ...types import Album, CheckResult, Fixer, Picture, ProblemCategory
+from ...tagger.types import Picture, PictureType
+from ...types import Album, CheckResult, Fixer, ProblemCategory
 from ..base_check import Check
 from ..helpers import delete_files_except
 
@@ -23,27 +21,27 @@ class CheckDuplicateImage(Check):
 
     def check(self, album: Album) -> CheckResult | None:
         album_art = [(track.filename, True, track.pictures) for track in album.tracks]
-        album_art.extend([(filename, False, [picture]) for filename, picture in album.picture_files.items()])
+        album_art.extend([(filename, False, [file.picture]) for filename, file in album.picture_files.items()])
 
         pictures_by_type: defaultdict[PictureType, set[Picture]] = defaultdict(set)
         picture_sources: defaultdict[Picture, list[tuple[str, bool, int]]] = defaultdict(list)
         for filename, embedded, pictures in album_art:
             file_pics_by_type: defaultdict[PictureType, list[Picture]] = defaultdict(list)
             file_pics_by_content: defaultdict[Picture, list[Picture]] = defaultdict(list)
-            for picture in pictures:
-                if picture.picture_type != PictureType.COVER_FRONT and self.cover_only:
+            for embed_ix, picture in enumerate(pictures):
+                if picture.type != PictureType.COVER_FRONT and self.cover_only:
                     continue
-                picture_sources[picture].append((filename, embedded, picture.embed_ix))
-                pictures_by_type[picture.picture_type].add(picture)
+                picture_sources[picture].append((filename, embedded, embed_ix))
+                pictures_by_type[picture.type].add(picture)
                 if embedded:
-                    file_pics_by_type[picture.picture_type].append(picture)
+                    file_pics_by_type[picture.type].append(picture)
                     file_pics_by_content[picture].append(picture)
 
             # if we have duplicate or conflicting embedded images within one track, stop and fix - might have to do this for each track
             for unique_picture in file_pics_by_content:
                 if len(file_pics_by_content[unique_picture]) > 1:
                     # TODO: configurably allow duplicate image data if the picture_type is not the same
-                    pic_types = ", ".join(sorted(set(pic.picture_type.name for pic in file_pics_by_content[unique_picture])))
+                    pic_types = ", ".join(sorted(set(pic.type.name for pic in file_pics_by_content[unique_picture])))
                     return CheckResult(ProblemCategory.PICTURES, f"duplicate embedded image data in one or more files: {pic_types}")
             for picture_type in file_pics_by_type:
                 if len(file_pics_by_type[picture_type]) > 1:
@@ -70,9 +68,3 @@ class CheckDuplicateImage(Check):
                         "Select one file to KEEP and all the other files will be DELETED",
                     ),
                 )
-
-    def _describe_album_art(self, picture: Picture, picture_sources: dict[Picture, list[tuple[str, bool]]]):
-        sources = picture_sources[picture]
-        first_source = f"{escape(sources[0][0])}{f'#{picture.embed_ix}' if picture.embed_ix else ''}"
-        details = f"{picture.format}"
-        return f"{first_source}{f' (and {len(sources) - 1} more)' if len(sources) > 1 else ''} {details}"

@@ -2,13 +2,19 @@ import os
 
 from albums.app import Context
 from albums.checks.path.check_illegal_pathname import CheckIllegalPathname
-from albums.tagger.types import PictureType
-from albums.types import Album, PathCompatibilityOption, Picture, Track
+from albums.tagger.types import Picture, PictureInfo, PictureType
+from albums.types import Album, PathCompatibilityOption, PictureFile, Track
 
 
 class TestCheckIllegalPathname:
     def test_pathname_ok(self):
-        album = Album("Foo" + os.sep, [Track("normal.flac")], [], [], {"normal.jpg": Picture(PictureType.OTHER, "image/jpeg", 1, 1, 1, b"")})
+        album = Album(
+            "Foo" + os.sep,
+            [Track("normal.flac")],
+            [],
+            [],
+            {"normal.jpg": PictureFile(Picture(PictureInfo("image/png", 1, 1, 24, 1, b""), PictureType.OTHER, "", ()), 0, False)},
+        )
         assert not CheckIllegalPathname(Context()).check(album)
 
     def test_pathname_reserved_name_universal(self):

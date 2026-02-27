@@ -5,8 +5,8 @@ from unittest.mock import call, mock_open, patch
 from albums.app import Context
 from albums.checks.picture.check_cover_available import CheckCoverAvailable
 from albums.tagger.folder import AlbumTagger
-from albums.tagger.types import PictureType, StreamInfo, TaggerFile
-from albums.types import Album, Picture, Track
+from albums.tagger.types import Picture, PictureInfo, PictureType, StreamInfo, TaggerFile
+from albums.types import Album, PictureFile, Track
 
 from ...fixtures.create_library import make_image_data
 
@@ -28,8 +28,22 @@ class TestCheckCoverAvailable:
         album = Album(
             "foo" + os.sep,
             [
-                Track("1.flac", {}, 0, 0, StreamInfo(1.5, 0, 0, "FLAC"), [Picture(PictureType.COVER_BACK, "image/png", 400, 400, 0, b"")]),
-                Track("2.flac", {}, 0, 0, StreamInfo(1.5, 0, 0, "FLAC"), [Picture(PictureType.COVER_BACK, "image/png", 400, 400, 0, b"")]),
+                Track(
+                    "1.flac",
+                    {},
+                    0,
+                    0,
+                    StreamInfo(1.5, 0, 0, "FLAC"),
+                    [Picture(PictureInfo("image/png", 400, 400, 24, 1, b""), PictureType.COVER_BACK, "", ())],
+                ),
+                Track(
+                    "2.flac",
+                    {},
+                    0,
+                    0,
+                    StreamInfo(1.5, 0, 0, "FLAC"),
+                    [Picture(PictureInfo("image/png", 400, 400, 24, 1, b""), PictureType.COVER_BACK, "", ())],
+                ),
             ],
         )
         result = CheckCoverAvailable(Context()).check(album)
@@ -65,14 +79,14 @@ class TestCheckCoverAvailable:
             [Track("1.flac", {}, 0, 0, StreamInfo(1.5, 0, 0, "FLAC")), Track("2.flac", {}, 0, 0, StreamInfo(1.5, 0, 0, "FLAC"))],
             [],
             [],
-            {"other.png": Picture(PictureType.COVER_BACK, "image/png", 400, 400, 0, b"")},
+            {"other.png": PictureFile(Picture(PictureInfo("image/png", 400, 400, 24, 1, b""), PictureType.OTHER, "", ()), 0, False)},
         )
         result = CheckCoverAvailable(Context()).check(album)
         assert result is not None
         assert "album has pictures but none is COVER_FRONT picture" in result.message
 
         assert result.fixer is not None
-        assert result.fixer.options == ["other.png image/png COVER_BACK"]
+        assert result.fixer.options == ["other.png image/png OTHER"]
         assert result.fixer.option_automatic_index == 0
 
         mock_rename = mocker.patch("albums.checks.picture.check_cover_available.rename")
@@ -84,19 +98,33 @@ class TestCheckCoverAvailable:
         album = Album(
             "",
             [
-                Track("1.flac", {}, 0, 0, StreamInfo(1.5, 0, 0, "FLAC"), [Picture(PictureType.COVER_BACK, "image/png", 400, 400, 0, b"")]),
-                Track("2.flac", {}, 0, 0, StreamInfo(1.5, 0, 0, "FLAC"), [Picture(PictureType.COVER_BACK, "image/png", 400, 400, 0, b"")]),
+                Track(
+                    "1.flac",
+                    {},
+                    0,
+                    0,
+                    StreamInfo(1.5, 0, 0, "FLAC"),
+                    [Picture(PictureInfo("image/png", 400, 400, 24, 1, b""), PictureType.OTHER, "", ())],
+                ),
+                Track(
+                    "2.flac",
+                    {},
+                    0,
+                    0,
+                    StreamInfo(1.5, 0, 0, "FLAC"),
+                    [Picture(PictureInfo("image/png", 400, 400, 24, 1, b""), PictureType.OTHER, "", ())],
+                ),
             ],
             [],
             [],
-            {"other.png": Picture(PictureType.COVER_BACK, "image/png", 400, 400, 0, b"")},
+            {"other.png": PictureFile(Picture(PictureInfo("image/png", 400, 400, 24, 1, b""), PictureType.OTHER, "", ()), 0, False)},
         )
         result = CheckCoverAvailable(Context()).check(album)
         assert result is not None
         assert "album has pictures but none is COVER_FRONT picture" in result.message
 
         assert result.fixer is not None
-        assert result.fixer.options == ["1.flac#0 (and 2 more) image/png COVER_BACK"]
+        assert result.fixer.options == ["1.flac#0 (and 2 more) image/png OTHER"]
         assert result.fixer.option_automatic_index == 0
 
         # same image was found embedded and in other.png - rename other.png instead of creating new cover.png

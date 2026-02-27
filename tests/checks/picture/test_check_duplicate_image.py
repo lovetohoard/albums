@@ -3,8 +3,8 @@ from unittest.mock import call
 
 from albums.app import Context
 from albums.checks.picture.check_duplicate_image import CheckDuplicateImage
-from albums.tagger.types import PictureType, StreamInfo
-from albums.types import Album, Picture, Track
+from albums.tagger.types import Picture, PictureInfo, PictureType, StreamInfo
+from albums.types import Album, PictureFile, Track
 
 
 class TestCheckDuplicateImage:
@@ -18,7 +18,10 @@ class TestCheckDuplicateImage:
                     0,
                     0,
                     StreamInfo(1.5, 0, 0, "FLAC"),
-                    [Picture(PictureType.COVER_FRONT, "image/png", 400, 400, 0, b""), Picture(PictureType.COVER_BACK, "image/png", 400, 400, 0, b"")],
+                    [
+                        Picture(PictureInfo("image/png", 400, 400, 24, 1, b""), PictureType.COVER_FRONT, "", ()),
+                        Picture(PictureInfo("image/png", 400, 400, 24, 1, b""), PictureType.COVER_BACK, "", ()),
+                    ],
                 ),
                 Track(
                     "2.flac",
@@ -26,7 +29,10 @@ class TestCheckDuplicateImage:
                     0,
                     0,
                     StreamInfo(1.5, 0, 0, "FLAC"),
-                    [Picture(PictureType.COVER_FRONT, "image/png", 400, 400, 0, b""), Picture(PictureType.COVER_BACK, "image/png", 400, 400, 0, b"")],
+                    [
+                        Picture(PictureInfo("image/png", 400, 400, 24, 1, b""), PictureType.COVER_FRONT, "", ()),
+                        Picture(PictureInfo("image/png", 400, 400, 24, 1, b""), PictureType.COVER_BACK, "", ()),
+                    ],
                 ),
             ],
         )
@@ -34,8 +40,8 @@ class TestCheckDuplicateImage:
 
     def test_multiple_images_in_track(self):
         pictures = [
-            Picture(PictureType.COVER_BACK, "image/png", 400, 400, 0, b"1111"),
-            Picture(PictureType.COVER_BACK, "image/png", 400, 400, 0, b"2222"),
+            Picture(PictureInfo("image/png", 400, 400, 24, 1, b"1111"), PictureType.COVER_BACK, "", ()),
+            Picture(PictureInfo("image/png", 400, 400, 24, 1, b"2222"), PictureType.COVER_BACK, "", ()),
         ]
         album = Album("", [Track("1.flac", {}, 0, 0, StreamInfo(1.5, 0, 0, "FLAC"), pictures)])
         result = CheckDuplicateImage(Context()).check(album)
@@ -44,8 +50,8 @@ class TestCheckDuplicateImage:
 
     def test_duplicate_image_in_track(self):
         pictures = [
-            Picture(PictureType.COVER_BACK, "image/png", 400, 400, 0, b""),
-            Picture(PictureType.COVER_BACK, "image/png", 400, 400, 0, b""),
+            Picture(PictureInfo("image/png", 400, 400, 24, 1, b""), PictureType.COVER_BACK, "", ()),
+            Picture(PictureInfo("image/png", 400, 400, 24, 1, b""), PictureType.COVER_BACK, "", ()),
         ]
         album = Album("", [Track("1.flac", {}, 0, 0, StreamInfo(1.5, 0, 0, "FLAC"), pictures)])
         result = CheckDuplicateImage(Context()).check(album)
@@ -53,8 +59,8 @@ class TestCheckDuplicateImage:
         assert "duplicate embedded image data in one or more files: COVER_BACK" in result.message
 
     def test_cover_duplicate_files(self, mocker):
-        pic = Picture(PictureType.COVER_FRONT, "image/png", 400, 400, 0, b"")
-        picture_files = {"folder.png": pic, "cover.png": pic}
+        pic = Picture(PictureInfo("image/png", 400, 400, 24, 1, b""), PictureType.COVER_FRONT, "", ())
+        picture_files = {"folder.png": PictureFile(pic, 0, False), "cover.png": PictureFile(pic, 0, False)}
         album = Album("", [Track("1.flac", {}, 0, 0, StreamInfo(1.5, 0, 0, "FLAC"), [pic])], [], [], picture_files)
         result = CheckDuplicateImage(Context()).check(album)
         assert result is not None

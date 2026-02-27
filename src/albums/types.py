@@ -1,58 +1,16 @@
-import base64
 import logging
 from dataclasses import dataclass, field
 from enum import Enum, StrEnum, auto
 from pathlib import Path
-from typing import Any, Callable, Collection, Dict, Iterator, Mapping, Sequence, Tuple, Union
+from typing import Callable, Collection, Dict, Iterator, Mapping, Sequence, Tuple, Union
 
 from rich.console import RenderableType
 
-from .tagger.types import PictureType, StreamInfo
+from .tagger.types import Picture, StreamInfo
 
 type CheckConfiguration = Dict[str, Union[str, int, float, bool, Sequence[str]]]
 
 logger = logging.getLogger(__name__)
-
-
-@dataclass
-class Picture:
-    picture_type: PictureType
-    format: str
-    width: int
-    height: int
-    file_size: int
-    file_hash: bytes  # 32 bit xxhash
-    description: str = ""
-
-    # fields below are not part of equality/identity of the image
-
-    load_issue: dict[str, str | int] | None = None  # load-time issues report is NOT part of equality, only real image data
-    modify_timestamp: int | None = None  # timestamp is NOT part of equality and is only present if the picture is not embedded
-    embed_ix: int = 0  # the index of this image (the first image loaded from a file is 0, etc) also NOT part of equality
-    cover_source: bool = False  # if this file is the high-resolution source for embedded front cover art (picture_type must be FRONT_COVER)
-
-    def to_dict(self):
-        result = dict(self.__dict__)
-        result["file_hash"] = base64.b64encode(self.file_hash).decode()
-        if self.load_issue is None:
-            del result["load_issue"]
-        if self.modify_timestamp is None:
-            del result["modify_timestamp"]
-        if not self.cover_source:
-            del result["cover_source"]
-        return result
-
-    # Keep modify_timestamp and load info with this object, but also deduplicate images easily (ignoring those two fields)
-    def __eq__(self, other: Any):
-        if not isinstance(other, Picture):
-            return NotImplemented
-        return self._comparable() == other._comparable()
-
-    def __hash__(self):
-        return hash(self._comparable())
-
-    def _comparable(self):
-        return frozenset((k, v) for k, v in self.__dict__.items() if k not in {"load_issue", "modify_timestamp", "embed_ix", "cover_source"})
 
 
 @dataclass
@@ -75,18 +33,28 @@ class Track:
 
 
 @dataclass
+class PictureFile:
+    picture: Picture
+    modify_timestamp: int
+    cover_source: bool
+
+    def to_dict(self):
+        return self.__dict__ | {"picture": self.picture.to_dict()}
+
+
+@dataclass
 class Album:
     path: str
     tracks: Sequence[Track] = field(default_factory=list[Track])
     collections: Collection[str] = field(default_factory=list[str])
     ignore_checks: Collection[str] = field(default_factory=list[str])
-    picture_files: Mapping[str, Picture] = field(default_factory=dict[str, Picture])
+    picture_files: Mapping[str, PictureFile] = field(default_factory=dict[str, PictureFile])
     album_id: int | None = None
     scanner: int = 0
 
     def to_dict(self):
         pictures = dict((filename, picture.to_dict()) for (filename, picture) in self.picture_files.items())
-        return self.__dict__ | {"tracks": [t.to_dict() for t in self.tracks] if self.tracks else []} | {"picture_files": pictures}
+        return self.__dict__ | {"tracks": [track.to_dict() for track in self.tracks]} | {"picture_files": pictures}
 
     def codec(self):
         codecs = {track.stream.codec if track.stream else "unknown" for track in self.tracks}

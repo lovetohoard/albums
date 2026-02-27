@@ -9,7 +9,7 @@ from mutagen.flac import Picture as FlacPicture
 from .base_mutagen import AbstractMutagenTagger
 from .helpers import album_picture_to_flac, scan_flac_picture, vorbis_comment_set_tag, vorbis_comment_tags
 from .picture import PictureScanner
-from .types import AlbumPicture, BasicTag
+from .types import BasicTag, Picture
 
 
 class FlacTagger(AbstractMutagenTagger):
@@ -27,19 +27,19 @@ class FlacTagger(AbstractMutagenTagger):
         vorbis_comment_set_tag(self._file.tags, tag, value)  # pyright: ignore[reportArgumentType]
 
     @override
-    def get_pictures(self) -> Generator[Tuple[AlbumPicture, bytes], None, None]:
+    def get_pictures(self) -> Generator[Tuple[Picture, bytes], None, None]:
         flac_pics: list[FlacPicture] = self._file.pictures  # pyright: ignore[reportUnknownVariableType, reportUnknownMemberType]
         for pic in flac_pics:
             yield scan_flac_picture(pic, self._picture_scanner)
 
     @override
-    def add_picture(self, new_picture: AlbumPicture, image_data: bytes) -> None:
+    def add_picture(self, new_picture: Picture, image_data: bytes) -> None:
         flac_picture = album_picture_to_flac(new_picture, image_data)
         self._file.add_picture(flac_picture)  # pyright: ignore[reportUnknownMemberType]
 
     @override
-    def remove_picture(self, remove_picture: AlbumPicture) -> None:
-        pictures: list[tuple[AlbumPicture, bytes]] = [(copy(pic), image_data) for pic, image_data in self.get_pictures() if pic != remove_picture]
+    def remove_picture(self, remove_picture: Picture) -> None:
+        pictures: list[tuple[Picture, bytes]] = [(copy(pic), image_data) for pic, image_data in self.get_pictures() if pic != remove_picture]
         self._file.clear_pictures()
         for pic, data in pictures:
             self.add_picture(pic, data)

@@ -39,7 +39,7 @@ class CheckCoverFilename(Check):
 
     def check(self, album: Album):
         if album.picture_files and not any(self._matches(filename, True) for filename in album.picture_files.keys()):
-            cover_files = [filename for filename, pic in album.picture_files.items() if pic.picture_type == PictureType.COVER_FRONT]
+            cover_files = [filename for filename, file in album.picture_files.items() if file.picture.type == PictureType.COVER_FRONT]
             if len(cover_files) > 1:
                 return CheckResult(
                     ProblemCategory.FILENAMES,

@@ -8,8 +8,8 @@ from albums.checks.picture.check_embedded_picture_metadata import CheckEmbeddedP
 from albums.database import connection, selector
 from albums.library.scanner import scan
 from albums.tagger.folder import AlbumTagger
-from albums.tagger.types import AlbumPicture, PictureInfo, PictureType, StreamInfo
-from albums.types import Album, Picture, Track
+from albums.tagger.types import Picture, PictureInfo, PictureType, StreamInfo
+from albums.types import Album, Track
 
 from ...fixtures.create_library import create_library, make_image_data
 
@@ -25,7 +25,14 @@ class TestCheckEmbeddedPictureMetadata:
                     0,
                     0,
                     StreamInfo(1.5, 0, 0, "FLAC"),
-                    [Picture(PictureType.COVER_FRONT, "image/png", 400, 400, 0, b"", "", {"format": "image/jpeg", "width": 0, "height": 0})],
+                    [
+                        Picture(
+                            PictureInfo("image/png", 400, 400, 24, 0, b""),
+                            PictureType.COVER_FRONT,
+                            "",
+                            (("format", "image/jpeg"), ("width", 0), ("height", 0)),
+                        )
+                    ],
                 )
             ],
         )
@@ -65,9 +72,9 @@ class TestCheckEmbeddedPictureMetadata:
             result = list(selector.select_albums(ctx.db, [], [], False))
             assert len(result[0].tracks[0].pictures) == 1
             assert not result[0].tracks[0].pictures[0].load_issue
-            assert result[0].tracks[0].pictures[0].format == "image/png"
-            assert result[0].tracks[0].pictures[0].width == 400
-            assert result[0].tracks[0].pictures[0].height == 400
+            assert result[0].tracks[0].pictures[0].file_info.mime_type == "image/png"
+            assert result[0].tracks[0].pictures[0].file_info.width == 400
+            assert result[0].tracks[0].pictures[0].file_info.height == 400
             result = CheckEmbeddedPictureMetadata(ctx).check(result[0])
             assert result is None
 
@@ -80,9 +87,9 @@ class TestCheckEmbeddedPictureMetadata:
         image_data = make_image_data(width=400, height=400, format="PNG")
         pic_scan = tagger.get_picture_scanner().scan(image_data)
         # wrong mime type:
-        pic_info = PictureInfo("image/jpeg", 400, 400, 24, pic_scan.picture_info.file_size, pic_scan.picture_info.hash)
+        pic_info = PictureInfo("image/jpeg", 400, 400, 24, pic_scan.picture_info.file_size, pic_scan.picture_info.file_hash)
         with tagger.open(album.tracks[0].filename) as tags:
-            tags.add_picture(AlbumPicture(pic_info, PictureType.COVER_FRONT, "", pic_scan.load_issue), image_data)
+            tags.add_picture(Picture(pic_info, PictureType.COVER_FRONT, "", pic_scan.load_issue), image_data)
 
         with contextlib.closing(connection.open(connection.MEMORY)) as ctx.db:
             scan(ctx)
@@ -99,8 +106,8 @@ class TestCheckEmbeddedPictureMetadata:
             result = list(selector.select_albums(ctx.db, [], [], False))
             assert len(result[0].tracks[0].pictures) == 1
             assert not result[0].tracks[0].pictures[0].load_issue
-            assert result[0].tracks[0].pictures[0].format == "image/png"
-            assert result[0].tracks[0].pictures[0].width == 400
-            assert result[0].tracks[0].pictures[0].height == 400
+            assert result[0].tracks[0].pictures[0].file_info.mime_type == "image/png"
+            assert result[0].tracks[0].pictures[0].file_info.width == 400
+            assert result[0].tracks[0].pictures[0].file_info.height == 400
             result = CheckEmbeddedPictureMetadata(ctx).check(result[0])
             assert result is None

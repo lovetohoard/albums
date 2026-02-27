@@ -46,8 +46,8 @@ class AbstractMutagenTagger(TaggerFile):
         if pic_info is None:
             raise ValueError(f"cannot read image#{embed_ix} from {self._get_file().filename}")
         (picture, image_data) = pic_info
-        if picture.picture_type != picture_type:
-            raise ValueError(f"image #{embed_ix} in {self._get_file().filename} expected type {picture_type} but was {picture.picture_type}")
+        if picture.type != picture_type:
+            raise ValueError(f"image #{embed_ix} in {self._get_file().filename} expected type {picture_type} but was {picture.type}")
         return image_data
 
     @override

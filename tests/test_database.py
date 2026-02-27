@@ -7,12 +7,12 @@ from pathlib import Path
 import pytest
 
 from albums.database import connection, operations, schema, selector
-from albums.tagger.types import PictureType, StreamInfo
-from albums.types import Album, Picture, ScanHistoryEntry, Track
+from albums.tagger.types import Picture, PictureInfo, PictureType, StreamInfo
+from albums.types import Album, PictureFile, ScanHistoryEntry, Track
 
-embedded_cover = Picture(PictureType.COVER_FRONT, "image/jpeg", 200, 200, 1024, b"1234", "", {"format": "image/png"}, None, 0)
+embedded_cover = Picture(PictureInfo("image/jpeg", 200, 200, 24, 1024, b"1234"), PictureType.COVER_FRONT, "", (("format", "image/png"),))
 track = Track("1.flac", {"artist": ["Bar"]}, 0, 0, StreamInfo(1.0, 128000, 2, "FLAC", 44100), [embedded_cover])
-folder_jpg = {"folder.jpg": Picture(PictureType.COVER_FRONT, "test", 100, 100, 4096, b"1234", "", None, 999, 0, True)}
+folder_jpg = {"folder.jpg": PictureFile(Picture(PictureInfo("test", 100, 100, 24, 4096, b"1234"), PictureType.COVER_FRONT, "", ()), 999, True)}
 album = Album("foo" + os.sep, [track], ["test"], ["artist-tag"], folder_jpg, None, 3)
 
 
@@ -64,20 +64,19 @@ class TestDatabase:
             assert result[0].tracks[0].stream.length == 1.0
             assert result[0].tracks[0].stream.codec == "FLAC"
             assert len(result[0].tracks[0].pictures) == 1
-            assert result[0].tracks[0].pictures[0].picture_type == PictureType.COVER_FRONT
-            assert result[0].tracks[0].pictures[0].file_size == 1024
-            assert result[0].tracks[0].pictures[0].embed_ix == 0
+            assert result[0].tracks[0].pictures[0].type == PictureType.COVER_FRONT
+            assert result[0].tracks[0].pictures[0].file_info.file_size == 1024
 
             assert len(result[0].picture_files) == 1
-            pic = result[0].picture_files.get("folder.jpg")
-            assert pic
-            assert pic.picture_type == PictureType.COVER_FRONT
-            assert pic.format == "test"
-            assert pic.width == pic.height == 100
-            assert pic.file_size == 4096
-            assert pic.file_hash == b"1234"
-            assert pic.modify_timestamp == 999
-            assert pic.cover_source
+            file = result[0].picture_files.get("folder.jpg")
+            assert file
+            assert file.picture.type == PictureType.COVER_FRONT
+            assert file.picture.file_info.mime_type == "test"
+            assert file.picture.file_info.width == file.picture.file_info.height == 100
+            assert file.picture.file_info.file_size == 4096
+            assert file.picture.file_info.file_hash == b"1234"
+            assert file.modify_timestamp == 999
+            assert file.cover_source
 
     def test_select_multiple_and_regex(self):
         album2 = copy(album)
@@ -140,22 +139,22 @@ class TestDatabase:
 
             # modify existing image file + add one
             picture_files["folder.jpg"].cover_source = False
-            new_pic = Picture(PictureType.OTHER, "test", 200, 200, 2048, b"abcd", "", None, 999)
-            operations.update_picture_files(db, album_id, dict(picture_files) | {"other.jpg": new_pic})
+            new_pic = Picture(PictureInfo("test", 200, 200, 24, 2048, b"abcd"), PictureType.OTHER, "", ())
+            operations.update_picture_files(db, album_id, dict(picture_files) | {"other.jpg": PictureFile(new_pic, 999, False)})
 
             picture_files = list(selector.select_albums(db, [], [], False))[0].picture_files
             pic_folder = picture_files.get("folder.jpg")
             assert pic_folder
-            assert pic_folder.picture_type == PictureType.COVER_FRONT
-            assert pic_folder.file_hash == b"1234"
+            assert pic_folder.picture.type == PictureType.COVER_FRONT
+            assert pic_folder.picture.file_info.file_hash == b"1234"
             assert not pic_folder.cover_source
             pic_other = picture_files.get("other.jpg")
             assert pic_other
-            assert pic_other.picture_type == PictureType.OTHER
-            assert pic_other.format == "test"
-            assert pic_other.width == pic_other.height == 200
-            assert pic_other.file_size == 2048
-            assert pic_other.file_hash == b"abcd"
+            assert pic_other.picture.type == PictureType.OTHER
+            assert pic_other.picture.file_info.mime_type == "test"
+            assert pic_other.picture.file_info.width == pic_other.picture.file_info.height == 200
+            assert pic_other.picture.file_info.file_size == 2048
+            assert pic_other.picture.file_info.file_hash == b"abcd"
 
     def test_remove_album(self):
         album2 = copy(album)

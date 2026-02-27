@@ -7,7 +7,6 @@ from PIL import Image
 
 from albums.tagger.folder import AlbumTagger, BasicTag
 from albums.tagger.picture import mime_to_pillow_format
-from albums.tagger.types import AlbumPicture, PictureInfo
 from albums.types import Album, Track
 
 from .empty_files import EMPTY_FLAC_FILE_BYTES, EMPTY_MP3_FILE_BYTES, EMPTY_OGG_VORBIS_FILE_BYTES, EMPTY_WMA_FILE_BYTES
@@ -29,11 +28,8 @@ def create_track_file(path: Path, spec: Track):
     tagger = AlbumTagger(path, padding=lambda _: 0)
     with tagger.open(spec.filename) as tags:
         for pic in spec.pictures:
-            image_data = make_image_data(pic.width, pic.height, mime_to_pillow_format(pic.format, "PNG"))
-            tags.add_picture(
-                AlbumPicture(PictureInfo(pic.format, pic.width, pic.height, 24, pic.file_size, pic.file_hash), pic.picture_type, pic.description, ()),
-                image_data,
-            )
+            image_data = make_image_data(pic.file_info.width, pic.file_info.height, mime_to_pillow_format(pic.file_info.mime_type, "PNG"))
+            tags.add_picture(pic, image_data)
         for tag_name, values in spec.tags.items():
             tags.set_tag(BasicTag(tag_name), list(values))
 
@@ -48,8 +44,8 @@ def create_album_in_library(library_path: Path, album: Album):
     os.makedirs(path)
     for track in album.tracks:
         create_track_file(path, track)
-    for filename, pic in album.picture_files.items():
-        create_picture_file(path / filename, pic.width, pic.height)
+    for filename, file in album.picture_files.items():
+        create_picture_file(path / filename, file.picture.file_info.width, file.picture.file_info.height)
 
 
 def create_library(library_name: str, albums: list[Album]):

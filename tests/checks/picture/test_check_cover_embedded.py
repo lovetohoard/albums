@@ -8,8 +8,8 @@ from PIL import Image
 from albums.app import Context
 from albums.checks.picture.check_cover_embedded import CheckCoverEmbedded
 from albums.tagger.provider import AlbumTagger
-from albums.tagger.types import AlbumPicture, PictureInfo, PictureType, StreamInfo, TaggerFile
-from albums.types import Album, Picture, Track
+from albums.tagger.types import Picture, PictureInfo, PictureType, StreamInfo, TaggerFile
+from albums.types import Album, PictureFile, Track
 
 from ...fixtures.create_library import make_image_data
 
@@ -19,8 +19,22 @@ class TestCheckCoverEmbedded:
         album = Album(
             "",
             [
-                Track("1.flac", {}, 0, 0, StreamInfo(1.5, 0, 0, "FLAC"), [Picture(PictureType.COVER_FRONT, "image/png", 400, 400, 0, b"")]),
-                Track("2.flac", {}, 0, 0, StreamInfo(1.5, 0, 0, "FLAC"), [Picture(PictureType.COVER_FRONT, "image/png", 400, 400, 0, b"")]),
+                Track(
+                    "1.flac",
+                    {},
+                    0,
+                    0,
+                    StreamInfo(1.5, 0, 0, "FLAC"),
+                    [Picture(PictureInfo("image/png", 400, 400, 24, 1, b""), PictureType.COVER_FRONT, "", ())],
+                ),
+                Track(
+                    "2.flac",
+                    {},
+                    0,
+                    0,
+                    StreamInfo(1.5, 0, 0, "FLAC"),
+                    [Picture(PictureInfo("image/png", 400, 400, 24, 1, b""), PictureType.COVER_FRONT, "", ())],
+                ),
             ],
         )
         result = CheckCoverEmbedded(Context()).check(album)
@@ -30,7 +44,14 @@ class TestCheckCoverEmbedded:
         album = Album(
             "",
             [
-                Track("1.flac", {}, 0, 0, StreamInfo(1.5, 0, 0, "FLAC"), [Picture(PictureType.COVER_FRONT, "image/png", 400, 400, 0, b"")]),
+                Track(
+                    "1.flac",
+                    {},
+                    0,
+                    0,
+                    StreamInfo(1.5, 0, 0, "FLAC"),
+                    [Picture(PictureInfo("image/png", 400, 400, 24, 0, b""), PictureType.COVER_FRONT, "", ())],
+                ),
                 Track("2.flac", {}, 0, 0, StreamInfo(1.5, 0, 0, "FLAC")),
             ],
         )
@@ -54,7 +75,11 @@ class TestCheckCoverEmbedded:
             result.fixer.fix(result.fixer.options[result.fixer.option_automatic_index])
         assert mock_read_image.call_count == 1
         assert mock_update_picture_files.call_count == 1
-        assert mock_update_picture_files.call_args.args == (True, 1, {"cover.png": Picture(PictureType.COVER_FRONT, "image/png", 0, 0, 0, b"")})
+        assert mock_update_picture_files.call_args.args == (
+            True,
+            1,
+            {"cover.png": PictureFile(Picture(PictureInfo("image/png", 0, 0, 0, 0, b""), PictureType.COVER_FRONT, "", ()), 0, True)},
+        )
         m_open.assert_has_calls([call(Path(".") / album.path / "cover.png", "wb")])
 
         mock_handle = m_open.return_value
@@ -65,12 +90,19 @@ class TestCheckCoverEmbedded:
         album = Album(
             "foo" + os.sep,
             [
-                Track("1.flac", {}, 0, 0, StreamInfo(1.5, 0, 0, "FLAC"), [Picture(PictureType.COVER_FRONT, "image/png", 400, 400, 0, b"")]),
+                Track(
+                    "1.flac",
+                    {},
+                    0,
+                    0,
+                    StreamInfo(1.5, 0, 0, "FLAC"),
+                    [Picture(PictureInfo("image/png", 400, 400, 24, 1, b""), PictureType.COVER_FRONT, "", ())],
+                ),
                 Track("2.flac", {}, 0, 0, StreamInfo(1.5, 0, 0, "FLAC")),
             ],
             [],
             [],
-            {"cover.png": Picture(PictureType.COVER_FRONT, "image/png", 400, 400, 0, b"", "", None, 999, 0, True)},
+            {"cover.png": PictureFile(Picture(PictureInfo("image/png", 0, 0, 0, 0, b""), PictureType.COVER_FRONT, "", ()), 0, True)},
         )
         album.album_id = 1
         ctx = Context()
@@ -92,7 +124,7 @@ class TestCheckCoverEmbedded:
         mock_remove_picture = mocker.patch.object(tagger, "remove_picture")
 
         mock_get_pictures = mocker.patch.object(tagger, "get_pictures")
-        pic_found = [(AlbumPicture(PictureInfo("", 0, 0, 0, 0, b""), PictureType.COVER_FRONT, "", ()), b"")]
+        pic_found = [(Picture(PictureInfo("", 0, 0, 0, 0, b""), PictureType.COVER_FRONT, "", ()), b"")]
         mock_get_pictures.side_effect = [pic_found, []]
 
         table = result.fixer.get_table()
@@ -105,9 +137,9 @@ class TestCheckCoverEmbedded:
         assert mock_read_binary_file.call_count == 2
         assert mock_get_pictures.call_count == 2
         assert mock_add_picture.call_count == 2
-        assert mock_add_picture.call_args_list[0][0][0].picture_type == PictureType.COVER_FRONT
+        assert mock_add_picture.call_args_list[0][0][0].type == PictureType.COVER_FRONT
         data0 = mock_add_picture.call_args_list[0][0][1]
-        assert mock_add_picture.call_args_list[1][0][0].picture_type == PictureType.COVER_FRONT
+        assert mock_add_picture.call_args_list[1][0][0].type == PictureType.COVER_FRONT
         data1 = mock_add_picture.call_args_list[1][0][1]
         assert isinstance(data0, bytes)
         assert data0 == data1
@@ -116,17 +148,4 @@ class TestCheckCoverEmbedded:
         assert image.format == "JPEG"
 
         assert mock_remove_picture.call_count == 1
-        assert mock_remove_picture.call_args_list[0][0][0].picture_type == PictureType.COVER_FRONT
-
-        # assert mock_replace_embedded_image.call_count == 1
-        # assert mock_replace_embedded_image.call_args_list[0][0][0] == Path("foo") / album.tracks[0].filename
-        # assert mock_replace_embedded_image.call_args_list[0][0][1] == "FLAC"
-        # assert mock_replace_embedded_image.call_args_list[0][0][2] == album.tracks[0].pictures[0]
-
-        # assert mock_add_embedded_image.call_count == 1
-        # assert mock_add_embedded_image.call_args_list[0][0][0] == Path("foo") / album.tracks[1].filename
-        # assert mock_add_embedded_image.call_args_list[0][0][1] == "FLAC"
-        # pic: Picture = mock_add_embedded_image.call_args_list[0][0][2]
-        # assert pic.picture_type == PictureType.COVER_FRONT
-        # assert pic.format == "image/jpeg"
-        # assert pic.width == pic.height == 400
+        assert mock_remove_picture.call_args_list[0][0][0].type == PictureType.COVER_FRONT

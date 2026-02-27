@@ -7,8 +7,8 @@ from typing import Any, Dict, List, Mapping, Sequence, Tuple
 from rich.markup import escape
 
 from ...interactive.image_table import render_image_table
-from ...tagger.types import PictureType
-from ...types import Album, CheckResult, Fixer, Picture, ProblemCategory
+from ...tagger.types import Picture, PictureType
+from ...types import Album, CheckResult, Fixer, ProblemCategory
 from ..base_check import Check
 from ..helpers import FRONT_COVER_FILENAME
 
@@ -24,19 +24,19 @@ class CheckCoverAvailable(Check):
         self.cover_required = bool(check_config.get("cover_required", CheckCoverAvailable.default_config["cover_required"]))
 
     def check(self, album: Album) -> CheckResult | None:
-        if album.codec() not in {"FLAC", "MP3", "Ogg Vorbis"} and self.cover_required:
+        if self.cover_required and not self.tagger.get(album.path).supports(*(track.filename for track in album.tracks)):
             # if cover is required, only run check on albums where embedded pictures are supported
             return None
 
         album_art = [(track.filename, True, track.pictures) for track in album.tracks]
-        album_art.extend([(filename, False, [picture]) for filename, picture in album.picture_files.items()])
+        album_art.extend([(filename, False, [file.picture]) for filename, file in album.picture_files.items()])
 
         pictures_by_type: defaultdict[PictureType, set[Picture]] = defaultdict(set)
         picture_sources: Dict[Picture, List[Tuple[str, bool, int]]] = defaultdict(list)
         for filename, embedded, pictures in album_art:
-            for picture in pictures:
-                picture_sources[picture].append((filename, embedded, picture.embed_ix))
-                pictures_by_type[picture.picture_type].add(picture)
+            for embed_ix, picture in enumerate(pictures):
+                picture_sources[picture].append((filename, embedded, embed_ix))
+                pictures_by_type[picture.type].add(picture)
 
         front_covers: set[Picture] = pictures_by_type.get(PictureType.COVER_FRONT, set())
         if not front_covers:
@@ -71,7 +71,7 @@ class CheckCoverAvailable(Check):
         sources = picture_sources[picture]
         (filename, embedded, embed_ix) = sources[0]
         first_source = f"{escape(filename)}{f'#{embed_ix}' if embedded else ''}"
-        details = f"{picture.format} {picture.picture_type.name}"
+        details = f"{picture.file_info.mime_type} {picture.type.name}"
         return f"{first_source}{f' (and {len(sources) - 1} more)' if len(sources) > 1 else ''} {details}"
 
     def _fix_set_cover(
@@ -88,10 +88,10 @@ class CheckCoverAvailable(Check):
         else:
             (filename, _, embed_ix) = sources[pic][0]
             with self.tagger.get(album.path).open(filename) as tags:
-                image_data = tags.get_image_data(pic.picture_type, embed_ix)
-            suffix = mimetypes.guess_extension(pic.format)
+                image_data = tags.get_image_data(pic.type, embed_ix)
+            suffix = mimetypes.guess_extension(pic.file_info.mime_type)
             new_filename = f"{FRONT_COVER_FILENAME}{suffix}"
-            self.ctx.console.print(f"Creating {len(image_data)} byte {pic.format} file {new_filename}")
+            self.ctx.console.print(f"Creating {len(image_data)} byte {pic.file_info.mime_type} file {new_filename}")
             new_path = self.ctx.config.library / album.path / new_filename
             if new_path.exists():
                 self.ctx.console.print(f"Error: the file {escape(str(new_path))} already exists (scan again)")

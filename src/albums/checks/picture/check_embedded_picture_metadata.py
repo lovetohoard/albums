@@ -2,7 +2,7 @@ import logging
 
 from rich.markup import escape
 
-from ...tagger.types import AlbumPicture
+from ...tagger.types import Picture
 from ...types import Album, CheckResult, Fixer, ProblemCategory
 from ..base_check import Check
 
@@ -21,17 +21,18 @@ class CheckEmbeddedPictureMetadata(Check):
         for track_index, track in enumerate(album.tracks):
             mismatch = False
             for picture in track.pictures:
-                if picture.load_issue and any(issue in picture.load_issue for issue in ["format", "width", "height"]):
+                load_issue = dict(picture.load_issue)
+                if picture.load_issue and any(issue in load_issue for issue in ["format", "width", "height"]):
                     mismatch = True
                     if not example:
-                        actual = f"{picture.format} {picture.width}x{picture.height}"
-                        if "height" in picture.load_issue or "width" in picture.load_issue:
+                        actual = f"{picture.file_info.mime_type} {picture.file_info.width}x{picture.file_info.height}"
+                        if "height" in load_issue or "width" in load_issue:
                             expect_dimensions = (
-                                f" {picture.load_issue.get('width', picture.width)}x{picture.load_issue.get('height', picture.height)}"
+                                f" {load_issue.get('width', picture.file_info.width)}x{load_issue.get('height', picture.file_info.height)}"
                             )
                         else:
                             expect_dimensions = ""
-                        format = picture.load_issue.get("format", picture.format)
+                        format = load_issue.get("format", picture.file_info.mime_type)
                         reported = f"{format if format else '(no MIME type)'}" + expect_dimensions
                         example = f"{actual} but container says {reported}"
             if mismatch:
@@ -65,6 +66,6 @@ class CheckEmbeddedPictureMetadata(Check):
                     tags.remove_picture(pic)
                 for pic, image_data in all_pictures:
                     new_pic_scan = tagger.get_picture_scanner().scan(image_data)
-                    new_pic = AlbumPicture(new_pic_scan.picture_info, pic.picture_type, pic.description, new_pic_scan.load_issue)
+                    new_pic = Picture(new_pic_scan.picture_info, pic.type, pic.description, new_pic_scan.load_issue)
                     tags.add_picture(new_pic, image_data)
         return True

@@ -9,7 +9,7 @@ from mutagen.oggvorbis import OggVorbis
 from .base_mutagen import AbstractMutagenTagger
 from .helpers import album_picture_to_flac, scan_flac_picture, vorbis_comment_set_tag, vorbis_comment_tags
 from .picture import PictureScanner
-from .types import AlbumPicture, BasicTag
+from .types import BasicTag, Picture
 
 
 class OggVorbisTagger(AbstractMutagenTagger):
@@ -26,18 +26,18 @@ class OggVorbisTagger(AbstractMutagenTagger):
         vorbis_comment_set_tag(self._file.tags, tag, value)  # pyright: ignore[reportArgumentType]
 
     @override
-    def get_pictures(self) -> Generator[Tuple[AlbumPicture, bytes], None, None]:
+    def get_pictures(self) -> Generator[Tuple[Picture, bytes], None, None]:
         yield from (scan_flac_picture(flac_picture, self._picture_scanner) for flac_picture in self._load_flac_pictures())
 
     @override
-    def add_picture(self, new_picture: AlbumPicture, image_data: bytes) -> None:
+    def add_picture(self, new_picture: Picture, image_data: bytes) -> None:
         flac_picture = album_picture_to_flac(new_picture, image_data)
         new_pictures = self._get_picture_blocks()
         new_pictures.append(base64.b64encode(flac_picture.write()).decode("ascii"))
         self._file.tags["metadata_block_picture"] = new_pictures  # pyright: ignore[reportOptionalSubscript]
 
     @override
-    def remove_picture(self, remove_picture: AlbumPicture) -> None:
+    def remove_picture(self, remove_picture: Picture) -> None:
         new_picture_blocks = [
             base64_block
             for base64_block in self._get_picture_blocks()

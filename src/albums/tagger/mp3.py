@@ -11,7 +11,7 @@ from mutagen.mp3 import MP3
 
 from .base_mutagen import AbstractMutagenTagger
 from .picture import PictureScanner
-from .types import AlbumPicture, BasicTag, PictureType
+from .types import BasicTag, Picture, PictureType
 
 logger = logging.getLogger(__name__)
 
@@ -87,7 +87,7 @@ class MP3Tagger(AbstractMutagenTagger):
                     (track_number, _) = self._get_trck()
                     self._set_trck(track_number, value_list[0] if value_list[0] else None)
 
-    def get_pictures(self) -> Generator[Tuple[AlbumPicture, bytes], None, None]:
+    def get_pictures(self) -> Generator[Tuple[Picture, bytes], None, None]:
         tags: ID3 = self._file.tags  # type: ignore
         picture_frames: list[APIC] = tags.getall("APIC") if tags else []  # pyright: ignore[reportUnknownVariableType, reportUnknownMemberType]
         for frame in picture_frames:
@@ -97,27 +97,27 @@ class MP3Tagger(AbstractMutagenTagger):
             description = str(frame.desc)  # type: ignore
 
             result = self._picture_scanner.scan(image_data, expect_mime_type)
-            picture = AlbumPicture(result.picture_info, picture_type, description, result.load_issue)
+            picture = Picture(result.picture_info, picture_type, description, result.load_issue)
             yield (picture, image_data)
 
     @override
-    def add_picture(self, new_picture: AlbumPicture, image_data: bytes) -> None:
+    def add_picture(self, new_picture: Picture, image_data: bytes) -> None:
         id3 = self._ensure_id3()
         description = new_picture.description
-        apic = APIC(mime=new_picture.file_info.mime_type, type=new_picture.picture_type, data=image_data, desc=description)
+        apic = APIC(mime=new_picture.file_info.mime_type, type=new_picture.type, data=image_data, desc=description)
 
         # with future mutagen 1.48 or later, docs indicate we will be able to ensure distinct hash key like this:
         # while apic.HashKey in tags:
         #     apic.salt += "x"
         while apic.HashKey in id3:  # TODO don't alter description
             description += " "
-            apic = APIC(mime=new_picture.file_info.mime_type, type=new_picture.picture_type, data=image_data, desc=description)
+            apic = APIC(mime=new_picture.file_info.mime_type, type=new_picture.type, data=image_data, desc=description)
         id3.add(apic)  # pyright: ignore[reportUnknownMemberType]
 
     @override
-    def remove_picture(self, remove_picture: AlbumPicture) -> None:
+    def remove_picture(self, remove_picture: Picture) -> None:
         if not self._file.tags:  # pyright: ignore[reportUnknownMemberType]
-            logger.warning(f"could not remove {remove_picture.picture_type.name} picture from {self._file.filename}: no ID3 tag")
+            logger.warning(f"could not remove {remove_picture.type.name} picture from {self._file.filename}: no ID3 tag")
             return
         id3: ID3 = self._file.tags  # pyright: ignore[reportUnknownVariableType, reportUnknownMemberType]
         pictures = list((pic, data) for pic, data in self.get_pictures() if pic != remove_picture)

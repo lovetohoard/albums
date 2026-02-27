@@ -9,8 +9,8 @@ import humanize
 from ..app import SCANNER_VERSION
 from ..tagger.folder import AlbumTagger
 from ..tagger.picture import PictureScanner
-from ..tagger.types import PictureType, StreamInfo
-from ..types import Album, Picture, Track
+from ..tagger.types import Picture, PictureType
+from ..types import Album, PictureFile, Track
 
 logger = logging.getLogger(__name__)
 
@@ -76,8 +76,8 @@ def scan_folder(scan_root: Path, album_relpath: str, stored_album: Album | None,
     return (None, AlbumScanResult.NO_TRACKS)
 
 
-def _load_picture_files(paths: Sequence[Path], picture_scanner: PictureScanner) -> Mapping[str, Picture]:
-    picture_files: dict[str, Picture] = {}
+def _load_picture_files(paths: Sequence[Path], picture_scanner: PictureScanner) -> Mapping[str, PictureFile]:
+    picture_files: dict[str, PictureFile] = {}
     for path in paths:
         picture = _picture_from_path(path, picture_scanner)
         if picture:
@@ -85,13 +85,13 @@ def _load_picture_files(paths: Sequence[Path], picture_scanner: PictureScanner) 
     return picture_files
 
 
-def _picture_files_modified(picture_files: Mapping[str, Picture], picture_paths: Sequence[Path]):
+def _picture_files_modified(picture_files: Mapping[str, PictureFile], picture_paths: Sequence[Path]):
     if set(picture_files.keys()) != set(path.name for path in picture_paths):
         return True  # different number of files or different filenames
     for path in picture_paths:
         stored = picture_files[path.name]
         stat = path.stat()
-        if stored.file_size != stat.st_size or stored.modify_timestamp != int(stat.st_mtime):
+        if stored.picture.file_info.file_size != stat.st_size or stored.modify_timestamp != int(stat.st_mtime):
             return True
     return False
 
@@ -101,28 +101,8 @@ def _load_track_metadata(tracks: Sequence[Track], tagger: AlbumTagger):
         with tagger.open(track.filename) as tags:
             scan_result = tags.scan()
             track.tags = dict((tag.value, list(values)) for tag, values in scan_result.tags)
-            track.pictures = [
-                Picture(
-                    pic.picture_type,
-                    pic.file_info.mime_type,
-                    pic.file_info.width,
-                    pic.file_info.height,
-                    pic.file_info.file_size,
-                    pic.file_info.hash,
-                    pic.description,
-                    dict(pic.load_issue) if pic.load_issue else None,
-                    None,
-                    embed_ix,
-                )
-                for embed_ix, pic in enumerate(scan_result.pictures)
-            ]
-            track.stream = StreamInfo(
-                scan_result.stream.length,
-                scan_result.stream.bitrate,
-                scan_result.stream.channels,
-                scan_result.stream.codec,
-                scan_result.stream.sample_rate,
-            )
+            track.pictures = scan_result.pictures
+            track.stream = scan_result.stream
 
 
 def _track_files_modified(tracks1: Sequence[Track], tracks2: Sequence[Track]):
@@ -139,16 +119,13 @@ def _track_files_modified(tracks1: Sequence[Track], tracks2: Sequence[Track]):
 
 def _missing_metadata(album: Album):
     return any(
-        not track.tags
-        or not track.stream
-        or any(name.startswith("apic") for name in track.tags)
-        or (len(track.pictures) > 1 and max(pic.embed_ix for pic in track.pictures) == 0)
+        not track.tags or not track.stream
         # or any(pic.load_issue and "error" in pic.load_issue for pic in track.pictures)
         for track in album.tracks
     )  # or any(pic.load_issue and "error" for pic in album.picture_files.values())
 
 
-def _picture_from_path(file: Path, picture_scanner: PictureScanner) -> Picture | None:
+def _picture_from_path(file: Path, picture_scanner: PictureScanner) -> PictureFile | None:
     stat = file.stat()
     if stat.st_size > MAX_IMAGE_SIZE:
         logger.warning(
@@ -157,21 +134,10 @@ def _picture_from_path(file: Path, picture_scanner: PictureScanner) -> Picture |
         # TODO: record the existence of the large image even if we do not load its metadata, just like we would with a load error
         # Note: recording images that are valid but lack metadata would cause issues with detecting duplicates and assigning cover art
         return None
-    image_data = read_binary_file(file)
-    scan_result = picture_scanner.scan(image_data)
-    picture_type = PictureType.from_filename(file.name)
-    picture = Picture(
-        picture_type,
-        scan_result.picture_info.mime_type,
-        scan_result.picture_info.width,
-        scan_result.picture_info.height,
-        scan_result.picture_info.file_size,
-        scan_result.picture_info.hash,
-        "",
-        dict(scan_result.load_issue) if scan_result.load_issue else None,
-        int(stat.st_mtime),
-    )
-    return picture
+
+    scan_result = picture_scanner.scan(read_binary_file(file))
+    picture = Picture(scan_result.picture_info, PictureType.from_filename(file.name), "", scan_result.load_issue)
+    return PictureFile(picture, int(stat.st_mtime), False)
 
 
 def read_binary_file(path: Path) -> bytes:
