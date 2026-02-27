@@ -49,7 +49,7 @@ class AlbumTagger:
             yield tagger_file
         finally:
             if tagger_file is not None:
-                tagger_file.save()
+                tagger_file.save_if_changed()
 
     def get_picture_scanner(self) -> PictureScanner:
         return self._picture_scanner

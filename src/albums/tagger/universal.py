@@ -7,7 +7,7 @@ from mutagen._tags import PaddingInfo
 
 from .base_mutagen import AbstractMutagenTagger
 from .helpers import vorbis_comment_set_tag, vorbis_comment_tags
-from .types import BasicTag, MutagenFileType, Picture, PictureType
+from .types import BasicTag, MutagenFileType, Picture
 
 logger = logging.getLogger(__name__)
 
@@ -23,19 +23,20 @@ class UniversalTagger(AbstractMutagenTagger):
         self._file = file
 
     @override
-    def set_tag(self, tag: BasicTag, value: str | List[str] | None):
-        try:
-            vorbis_comment_set_tag(self._file, tag, value)  # pyright: ignore[reportArgumentType]
-        except Exception as ex:
-            logger.warning(f"error setting {tag} in {self._file.filename}: {repr(ex)}")
+    def _get_file(self):
+        return self._file
 
     @override
     def get_pictures(self) -> Generator[Tuple[Picture, bytes], None, None]:
         yield from ()
 
     @override
-    def get_image_data(self, picture_type: PictureType, embed_ix: int) -> bytes:
-        raise NotImplementedError(f"unsupported file: cannot read image#{embed_ix} type {picture_type} from {self._file.filename}")
+    def _add_picture(self, new_picture: Picture, image_data: bytes) -> None:
+        raise NotImplementedError(f"unsupported file: cannot add {new_picture.type} picture to {self._file.filename}")
+
+    @override
+    def _remove_picture(self, remove_picture: Picture) -> None:
+        raise NotImplementedError(f"unsupported file: cannot remove {remove_picture.type} picture from {self._file.filename}")
 
     @override
     def _scan_tags(self):
@@ -46,5 +47,8 @@ class UniversalTagger(AbstractMutagenTagger):
             return ()
 
     @override
-    def _get_file(self):
-        return self._file
+    def _set_tag(self, tag: BasicTag, value: str | List[str] | None):
+        try:
+            vorbis_comment_set_tag(self._file, tag, value)  # pyright: ignore[reportArgumentType]
+        except Exception as ex:
+            logger.warning(f"error setting {tag} in {self._file.filename}: {repr(ex)}")

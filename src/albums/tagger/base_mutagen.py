@@ -1,9 +1,9 @@
 import logging
-from typing import Any, Callable, Tuple, override
+from typing import Any, Callable, List, Tuple, override
 
 from mutagen._tags import PaddingInfo
 
-from .types import BasicTag, MutagenFileType, PictureType, ScanResult, StreamInfo, TaggerFile
+from .types import BasicTag, MutagenFileType, Picture, PictureType, ScanResult, StreamInfo, TaggerFile
 
 ALL_BASIC_TAGS = frozenset(tag.value for tag in BasicTag)
 MAX_BASIC_TAG_VALUE_LENGTH = 4096
@@ -12,17 +12,18 @@ logger = logging.getLogger(__name__)
 
 
 class AbstractMutagenTagger(TaggerFile):
+    _changed = False
     _padding: Callable[[PaddingInfo], int]
 
     def __init__(self, padding: Callable[[PaddingInfo], int]):
         self._padding = padding
 
-    # subclass MUST implement
-    def _get_file(self) -> MutagenFileType: ...  # subclass must override to open correct file type
-
-    # subclass SHOULD implement
-    def _scan_tags(self) -> Tuple[Tuple[BasicTag, Tuple[str, ...]], ...]:
-        return ()
+    # subclass must implement
+    def _get_file(self) -> MutagenFileType: ...
+    def _scan_tags(self) -> Tuple[Tuple[BasicTag, Tuple[str, ...]], ...]: ...
+    def _set_tag(self, tag: BasicTag, value: str | List[str] | None) -> None: ...
+    def _add_picture(self, new_picture: Picture, image_data: bytes) -> None: ...
+    def _remove_picture(self, remove_picture: Picture) -> None: ...
 
     # subclass MAY implement
     def _get_codec(self) -> str:
@@ -50,9 +51,22 @@ class AbstractMutagenTagger(TaggerFile):
             raise ValueError(f"image #{embed_ix} in {self._get_file().filename} expected type {picture_type} but was {picture.type}")
         return image_data
 
+    def set_tag(self, tag: BasicTag, value: str | List[str] | None) -> None:
+        self._set_tag(tag, value)
+        self._changed = True
+
+    def add_picture(self, new_picture: Picture, image_data: bytes) -> None:
+        self._add_picture(new_picture, image_data)
+        self._changed = True
+
+    def remove_picture(self, remove_picture: Picture) -> None:
+        self._remove_picture(remove_picture)
+        self._changed = True
+
     @override
-    def save(self):
-        self._get_file().save(padding=self._padding)  # pyright: ignore[reportUnknownMemberType]
+    def save_if_changed(self):
+        if self._changed:
+            self._get_file().save(padding=self._padding)  # pyright: ignore[reportUnknownMemberType]
 
 
 def _get_stream_info(filename: str, mutagen_file_info: Any, codec: str) -> StreamInfo:

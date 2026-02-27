@@ -38,8 +38,75 @@ class MP3Tagger(AbstractMutagenTagger):
         self._file = MP3(path)
         self._picture_scanner = picture_scanner
 
+    def get_pictures(self) -> Generator[Tuple[Picture, bytes], None, None]:
+        tags: ID3 = self._file.tags  # type: ignore
+        picture_frames: list[APIC] = tags.getall("APIC") if tags else []  # pyright: ignore[reportUnknownVariableType, reportUnknownMemberType]
+        for frame in picture_frames:
+            image_data: bytes = bytes(frame.data)  # type: ignore
+            picture_type = PictureType(frame.type)  # type: ignore
+            expect_mime_type = str(frame.mime) if frame.mime and isinstance(frame.mime, str) else "Unknown"  # type: ignore
+            description = str(frame.desc)  # type: ignore
+
+            result = self._picture_scanner.scan(image_data, expect_mime_type)
+            picture = Picture(result.picture_info, picture_type, description, result.load_issue)
+            yield (picture, image_data)
+
     @override
-    def set_tag(self, tag: BasicTag, value: str | List[str] | None):
+    def _add_picture(self, new_picture: Picture, image_data: bytes) -> None:
+        id3 = self._ensure_id3()
+        description = new_picture.description
+        apic = APIC(mime=new_picture.file_info.mime_type, type=new_picture.type, data=image_data, desc=description)
+
+        # with future mutagen 1.48 or later, docs indicate we will be able to ensure distinct hash key like this:
+        # while apic.HashKey in tags:
+        #     apic.salt += "x"
+        while apic.HashKey in id3:  # TODO don't alter description
+            description += " "
+            apic = APIC(mime=new_picture.file_info.mime_type, type=new_picture.type, data=image_data, desc=description)
+        id3.add(apic)  # pyright: ignore[reportUnknownMemberType]
+
+    @override
+    def _get_codec(self):
+        return "MP3"
+
+    @override
+    def _get_file(self):
+        return self._file
+
+    @override
+    def _remove_picture(self, remove_picture: Picture) -> None:
+        if not self._file.tags:  # pyright: ignore[reportUnknownMemberType]
+            logger.warning(f"could not remove {remove_picture.type.name} picture from {self._file.filename}: no ID3 tag")
+            return
+        id3: ID3 = self._file.tags  # pyright: ignore[reportUnknownVariableType, reportUnknownMemberType]
+        pictures = list((pic, data) for pic, data in self.get_pictures() if pic != remove_picture)
+        id3.delall("APIC")  # pyright: ignore[reportUnknownMemberType]
+        for pic, data in pictures:
+            self.add_picture(pic, data)
+
+    @override
+    def _scan_tags(self) -> Tuple[Tuple[BasicTag, Tuple[str, ...]], ...]:
+        basic_tags: list[Tuple[BasicTag, Tuple[str, ...]]] = []
+        if self._file.tags:  # pyright: ignore[reportUnknownMemberType]
+            id3 = self._ensure_id3()
+            basic_tags.extend((tag, tuple(_must_get_text(id3, frame))) for tag, frame in BASIC_ID3_TEXT_FRAMES if frame in id3)
+
+            (track_number, track_total) = self._get_trck()
+            if track_number is not None:
+                basic_tags.append((BasicTag.TRACKNUMBER, (track_number,)))
+            if track_total is not None:
+                basic_tags.append((BasicTag.TRACKTOTAL, (track_total,)))
+
+            (disc_number, disc_total) = self._get_tpos()
+            if disc_number is not None:
+                basic_tags.append((BasicTag.DISCNUMBER, (disc_number,)))
+            if disc_total is not None:
+                basic_tags.append((BasicTag.DISCTOTAL, (disc_total,)))
+
+        return tuple(basic_tags)
+
+    @override
+    def _set_tag(self, tag: BasicTag, value: str | List[str] | None):
         tags = self._ensure_id3()
         if value is None:
             match tag:
@@ -87,73 +154,6 @@ class MP3Tagger(AbstractMutagenTagger):
                     (track_number, _) = self._get_trck()
                     self._set_trck(track_number, value_list[0] if value_list[0] else None)
 
-    def get_pictures(self) -> Generator[Tuple[Picture, bytes], None, None]:
-        tags: ID3 = self._file.tags  # type: ignore
-        picture_frames: list[APIC] = tags.getall("APIC") if tags else []  # pyright: ignore[reportUnknownVariableType, reportUnknownMemberType]
-        for frame in picture_frames:
-            image_data: bytes = bytes(frame.data)  # type: ignore
-            picture_type = PictureType(frame.type)  # type: ignore
-            expect_mime_type = str(frame.mime) if frame.mime and isinstance(frame.mime, str) else "Unknown"  # type: ignore
-            description = str(frame.desc)  # type: ignore
-
-            result = self._picture_scanner.scan(image_data, expect_mime_type)
-            picture = Picture(result.picture_info, picture_type, description, result.load_issue)
-            yield (picture, image_data)
-
-    @override
-    def add_picture(self, new_picture: Picture, image_data: bytes) -> None:
-        id3 = self._ensure_id3()
-        description = new_picture.description
-        apic = APIC(mime=new_picture.file_info.mime_type, type=new_picture.type, data=image_data, desc=description)
-
-        # with future mutagen 1.48 or later, docs indicate we will be able to ensure distinct hash key like this:
-        # while apic.HashKey in tags:
-        #     apic.salt += "x"
-        while apic.HashKey in id3:  # TODO don't alter description
-            description += " "
-            apic = APIC(mime=new_picture.file_info.mime_type, type=new_picture.type, data=image_data, desc=description)
-        id3.add(apic)  # pyright: ignore[reportUnknownMemberType]
-
-    @override
-    def remove_picture(self, remove_picture: Picture) -> None:
-        if not self._file.tags:  # pyright: ignore[reportUnknownMemberType]
-            logger.warning(f"could not remove {remove_picture.type.name} picture from {self._file.filename}: no ID3 tag")
-            return
-        id3: ID3 = self._file.tags  # pyright: ignore[reportUnknownVariableType, reportUnknownMemberType]
-        pictures = list((pic, data) for pic, data in self.get_pictures() if pic != remove_picture)
-        id3.delall("APIC")  # pyright: ignore[reportUnknownMemberType]
-        for pic, data in pictures:
-            self.add_picture(pic, data)
-
-    @override
-    def _get_file(self):
-        return self._file
-
-    @override
-    def _get_codec(self):
-        return "MP3"
-
-    @override
-    def _scan_tags(self) -> Tuple[Tuple[BasicTag, Tuple[str, ...]], ...]:
-        basic_tags: list[Tuple[BasicTag, Tuple[str, ...]]] = []
-        if self._file.tags:  # pyright: ignore[reportUnknownMemberType]
-            id3 = self._ensure_id3()
-            basic_tags.extend((tag, tuple(_must_get_text(id3, frame))) for tag, frame in BASIC_ID3_TEXT_FRAMES if frame in id3)
-
-            (track_number, track_total) = self._get_trck()
-            if track_number is not None:
-                basic_tags.append((BasicTag.TRACKNUMBER, (track_number,)))
-            if track_total is not None:
-                basic_tags.append((BasicTag.TRACKTOTAL, (track_total,)))
-
-            (disc_number, disc_total) = self._get_tpos()
-            if disc_number is not None:
-                basic_tags.append((BasicTag.DISCNUMBER, (disc_number,)))
-            if disc_total is not None:
-                basic_tags.append((BasicTag.DISCTOTAL, (disc_total,)))
-
-        return tuple(basic_tags)
-
     def _ensure_id3(self) -> ID3:
         if not self._file.tags:  # pyright: ignore[reportUnknownMemberType]
             self._file.tags = ID3()
@@ -168,6 +168,18 @@ class MP3Tagger(AbstractMutagenTagger):
         if str.count(value, "/") == 1:
             (disc_number, disc_total) = value.split("/")
             return (disc_number, disc_total)
+        # else
+        return (value, None)
+
+    def _get_trck(self) -> Tuple[str | None, str | None]:
+        values = _get_text(self._file.tags, "TRCK")  # pyright: ignore[reportUnknownArgumentType, reportUnknownMemberType]
+        value = values[0] if values else None
+        if value is None:
+            return (None, None)
+        # else
+        if str.count(value, "/") == 1:
+            (track_number, track_total) = value.split("/")
+            return (track_number, track_total)
         # else
         return (value, None)
 
@@ -188,18 +200,6 @@ class MP3Tagger(AbstractMutagenTagger):
             id3.add(TPOS(encoding=Encoding.UTF8, text=[value]))  # pyright: ignore[reportUnknownMemberType]
         elif value is not None and id3["TPOS"].text != [value]:  # pyright: ignore[reportUnknownMemberType]
             id3["TPOS"] = TPOS(encoding=Encoding.UTF8, text=[value])
-
-    def _get_trck(self) -> Tuple[str | None, str | None]:
-        values = _get_text(self._file.tags, "TRCK")  # pyright: ignore[reportUnknownArgumentType, reportUnknownMemberType]
-        value = values[0] if values else None
-        if value is None:
-            return (None, None)
-        # else
-        if str.count(value, "/") == 1:
-            (track_number, track_total) = value.split("/")
-            return (track_number, track_total)
-        # else
-        return (value, None)
 
     def _set_trck(self, track_number: str | None, track_total: str | None):
         if track_number is None and track_total is None:
