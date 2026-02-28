@@ -13,9 +13,8 @@ from ...fixtures.create_library import make_image_data
 
 
 class TestCheckCoverFilename:
-    def test_cover_filename_ok(self):
-        o = CheckCoverFilename(Context())
-        assert not o.check(
+    def test_cover_filename_ok1(self):
+        assert not CheckCoverFilename(Context()).check(
             Album(
                 "",
                 [Track("1.flac")],
@@ -24,13 +23,26 @@ class TestCheckCoverFilename:
                 {"cover.jpg": PictureFile(Picture(PictureInfo("image/jpeg", 1, 1, 1, 1, b""), PictureType.COVER_FRONT, "", ()), 0, False)},
             )
         )
-        assert not o.check(
+
+    def test_cover_filename_ok2(self):
+        assert not CheckCoverFilename(Context()).check(
             Album(
                 "",
                 [Track("1.flac")],
                 [],
                 [],
                 {"cover.png": PictureFile(Picture(PictureInfo("image/png", 1, 1, 1, 1, b""), PictureType.COVER_FRONT, "", ()), 0, False)},
+            )
+        )
+
+    def test_cover_filename_ok3(self):
+        assert not CheckCoverFilename(Context()).check(
+            Album(
+                "",
+                [Track("1.flac")],
+                [],
+                [],
+                {"other.jpg": PictureFile(Picture(PictureInfo("image/jpeg", 1, 1, 1, 1, b""), PictureType.OTHER, "", ()), 0, False)},
             )
         )
 

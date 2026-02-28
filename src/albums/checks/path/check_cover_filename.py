@@ -40,6 +40,8 @@ class CheckCoverFilename(Check):
     def check(self, album: Album):
         if album.picture_files and not any(self._matches(filename, True) for filename in album.picture_files.keys()):
             cover_files = [filename for filename, file in album.picture_files.items() if file.picture.type == PictureType.COVER_FRONT]
+            if not cover_files:
+                return None  # none of the image filenames are recognized as cover images
             if len(cover_files) > 1:
                 return CheckResult(
                     ProblemCategory.FILENAMES,
