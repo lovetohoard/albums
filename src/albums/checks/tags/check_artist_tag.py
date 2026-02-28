@@ -6,7 +6,7 @@ from typing import Any
 from rich.markup import escape
 
 from ...tagger.folder import AlbumTagger, Cap
-from ...types import Album, CheckResult, Fixer, ProblemCategory
+from ...types import Album, CheckResult, Fixer
 from ..base_check import Check
 from ..helpers import show_tag
 
@@ -70,7 +70,6 @@ class CheckArtistTag(Check):
         option_free_text = True
         option_automatic_index = 0 if len(candidates) == 1 else None
         return CheckResult(
-            ProblemCategory.TAGS,
             f"{len(artist_values[''])} tracks missing artist tag",
             Fixer(
                 lambda option: self._fix(album, option, artist_values[""]),

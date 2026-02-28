@@ -3,7 +3,7 @@ from typing import Any
 
 import humanize
 
-from ...types import Album, CheckResult, ProblemCategory
+from ...types import Album, CheckResult
 from ..base_check import Check
 
 logger = logging.getLogger(__name__)
@@ -39,4 +39,4 @@ class CheckAlbumArt(Check):
             # TODO apply other configurable rules to all album art
 
         if issues:
-            return CheckResult(ProblemCategory.PICTURES, ", ".join(list(issues)))
+            return CheckResult(", ".join(list(issues)))

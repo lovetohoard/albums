@@ -4,7 +4,7 @@ from typing import Any
 
 from ...interactive.image_table import render_image_table
 from ...tagger.types import Picture, PictureType
-from ...types import Album, CheckResult, Fixer, ProblemCategory
+from ...types import Album, CheckResult, Fixer
 from ..base_check import Check
 from ..helpers import delete_files_except
 
@@ -42,11 +42,11 @@ class CheckDuplicateImage(Check):
                 if len(file_pics_by_content[unique_picture]) > 1:
                     # TODO: configurably allow duplicate image data if the picture_type is not the same
                     pic_types = ", ".join(sorted(set(pic.type.name for pic in file_pics_by_content[unique_picture])))
-                    return CheckResult(ProblemCategory.PICTURES, f"duplicate embedded image data in one or more files: {pic_types}")
+                    return CheckResult(f"duplicate embedded image data in one or more files: {pic_types}")
             for picture_type in file_pics_by_type:
                 if len(file_pics_by_type[picture_type]) > 1:
                     message = f"there are {len(file_pics_by_type[picture_type])} different images for {picture_type.name} in one or more files"
-                    return CheckResult(ProblemCategory.PICTURES, message)
+                    return CheckResult(message)
 
         # TODO dedup for all pictures, if not self.cover_only
         front_covers = pictures_by_type.get(PictureType.COVER_FRONT, [])
@@ -57,7 +57,6 @@ class CheckDuplicateImage(Check):
                 table = (filenames, lambda: render_image_table(self.ctx, self.tagger.get(album.path), [pic] * len(filenames), picture_sources))
                 option_automatic_index = filenames.index(min(filenames, key=lambda s: len(s)))  # pick shortest filename
                 return CheckResult(
-                    ProblemCategory.PICTURES,
                     f"same image data in multiple files: {', '.join(filenames)}",
                     Fixer(
                         lambda option: delete_files_except(self.ctx, option, album, filenames),

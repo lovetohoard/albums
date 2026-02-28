@@ -1,7 +1,7 @@
 from typing import Any
 
 from ...tagger.folder import AlbumTagger, Cap
-from ...types import Album, CheckResult, ProblemCategory
+from ...types import Album, CheckResult
 from ..base_check import Check
 
 
@@ -28,4 +28,4 @@ class CheckRequiredTags(Check):
                 missing_required_tags[tag] = missing_required_tags.get(tag, 0) + 1
 
         if len(missing_required_tags) > 0:
-            return CheckResult(ProblemCategory.TAGS, f"tracks missing required tags {missing_required_tags}")
+            return CheckResult(f"tracks missing required tags {missing_required_tags}")

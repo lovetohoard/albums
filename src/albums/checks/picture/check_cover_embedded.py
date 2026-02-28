@@ -12,7 +12,7 @@ from ...library.folder import read_binary_file
 from ...picture.format import MIME_PILLOW_FORMAT
 from ...picture.info import PictureInfo
 from ...tagger.types import Picture, PictureType
-from ...types import Album, CheckResult, Fixer, PictureFile, ProblemCategory
+from ...types import Album, CheckResult, Fixer, PictureFile
 from ..base_check import Check
 from ..helpers import FRONT_COVER_FILENAME
 
@@ -71,7 +71,6 @@ class CheckCoverEmbedded(Check):
                 if len(unique_track_covers) > 1:
                     # TODO we could offer a non-automatic fix if user wants to overwrite non-unique covers
                     return CheckResult(
-                        ProblemCategory.PICTURES,
                         f"{problem_summary}, but more than one unique embedded cover image, and images are not {expect_w} x {expect_h} {self.create_mime_type} as expected",
                     )
 
@@ -95,7 +94,6 @@ class CheckCoverEmbedded(Check):
                 options = [">> Embed new cover art in all tracks"]
                 option_automatic_index = 0
                 return CheckResult(
-                    ProblemCategory.PICTURES,
                     f"{problem_summary}, can re-embed from front cover source",
                     Fixer(
                         lambda _: self._fix_embed_cover_in_all_tracks(album, cover_source_filename, cover_source_file.picture),
@@ -128,7 +126,6 @@ class CheckCoverEmbedded(Check):
             unique_covers = unique_track_covers.union(file.picture for _, file in cover_files)
             if len(unique_covers) > 1:
                 return CheckResult(
-                    ProblemCategory.PICTURES,
                     f"{problem_summary}, but there are {len(unique_covers)} unique front covers and no cover_source (enable cover-unique for fixes)",
                 )
             # else
@@ -141,7 +138,6 @@ class CheckCoverEmbedded(Check):
                     option_automatic_index = 0
                     table = ([filename], lambda: render_image_table(self.ctx, self.tagger.get(album.path), [cover], {cover: [(filename, False, 0)]}))
                     return CheckResult(
-                        ProblemCategory.PICTURES,
                         f"{problem_summary}, but the file {filename} can be marked as cover_source (afterwards, a recheck can fix tracks)",
                         Fixer(lambda _: self._fix_mark_cover_source(album, filename), options, False, option_automatic_index, table),
                     )
@@ -155,7 +151,6 @@ class CheckCoverEmbedded(Check):
                     lambda: render_image_table(self.ctx, self.tagger.get(album.path), [cover], {cover: [(filename, True, embed_ix)]}),
                 )
                 return CheckResult(
-                    ProblemCategory.PICTURES,
                     f"{problem_summary}, but the cover can be extracted and marked as cover_source (afterwards, a recheck can fix tracks)",
                     Fixer(lambda _: self._fix_extract_cover_source(album, filename, cover, embed_ix), options, False, option_automatic_index, table),
                 )

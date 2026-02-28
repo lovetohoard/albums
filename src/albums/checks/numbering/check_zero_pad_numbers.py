@@ -6,7 +6,7 @@ from rich.console import RenderableType
 from rich.markup import escape
 
 from ...tagger.folder import AlbumTagger, Cap
-from ...types import Album, CheckResult, Fixer, ProblemCategory, Track
+from ...types import Album, CheckResult, Fixer, Track
 from ..base_check import Check
 from ..helpers import get_tracks_by_disc
 from .check_track_numbering import describe_track_number
@@ -62,7 +62,7 @@ class CheckZeroPadNumbers(Check):
 
         tracks_by_disc = get_tracks_by_disc(album.tracks)
         if tracks_by_disc is None:
-            return CheckResult(ProblemCategory.TAGS, "couldn't arrange tracks by disc - invalid-track-or-disc-number check must pass first")
+            return CheckResult("couldn't arrange tracks by disc - invalid-track-or-disc-number check must pass first")
 
         total_discs = len(tracks_by_disc.keys())
         table_rows: Sequence[Sequence[RenderableType]] = []
@@ -115,7 +115,6 @@ class CheckZeroPadNumbers(Check):
             option_automatic_index = 0
             option_free_text = False
             return CheckResult(
-                ProblemCategory.TAGS,
                 f"incorrect zero padding for {' and '.join(problems)}",
                 Fixer(
                     lambda option: self._fix(album, option, tracks_by_disc),

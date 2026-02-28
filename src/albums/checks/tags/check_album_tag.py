@@ -6,7 +6,7 @@ from typing import Any
 from rich.markup import escape
 
 from ...tagger.folder import AlbumTagger, Cap
-from ...types import Album, CheckResult, Fixer, ProblemCategory
+from ...types import Album, CheckResult, Fixer
 from ..base_check import Check
 from ..helpers import show_tag
 
@@ -47,12 +47,12 @@ class CheckAlbumTag(Check):
         if len(candidates) > 1:  # multiple conflicting album names (not including folder name)
             if folder_str not in candidates:
                 candidates.append(folder_str)
-            return CheckResult(ProblemCategory.TAGS, f"{len(candidates)} conflicting album tag values", self._make_fixer(album, candidates))
+            return CheckResult(f"{len(candidates)} conflicting album tag values", self._make_fixer(album, candidates))
 
         if track_album_tags[""] > 0:  # tracks missing album tag
             if folder_str not in candidates:
                 candidates.append(folder_str)
-            return CheckResult(ProblemCategory.TAGS, f"{track_album_tags['']} tracks missing album tag", self._make_fixer(album, candidates))
+            return CheckResult(f"{track_album_tags['']} tracks missing album tag", self._make_fixer(album, candidates))
 
         return None
 

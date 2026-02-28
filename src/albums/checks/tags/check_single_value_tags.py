@@ -5,7 +5,7 @@ import yaml
 from rich.markup import escape
 
 from ...tagger.folder import AlbumTagger, Cap
-from ...types import Album, CheckResult, Fixer, ProblemCategory
+from ...types import Album, CheckResult, Fixer
 from ..base_check import Check
 from ..helpers import describe_track_number, ordered_tracks
 
@@ -47,7 +47,6 @@ class CheckSingleValueTags(Check):
             options.extend([OPTION_CONCATENATE_SLASH, OPTION_CONCATENATE_DASH])
             option_automatic_index = 0 if duplicates else None
             return CheckResult(
-                ProblemCategory.TAGS,
                 f"multiple values for single value tags\n{yaml.dump(multiple_value_tags)}",
                 Fixer(
                     lambda option: self._fix(album, option),

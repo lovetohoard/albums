@@ -4,7 +4,7 @@ from rich.markup import escape
 
 from ...tagger.folder import AlbumTagger, Cap
 from ...tagger.types import Picture
-from ...types import Album, CheckResult, Fixer, ProblemCategory
+from ...types import Album, CheckResult, Fixer
 from ..base_check import Check
 
 logger = logging.getLogger(__name__)
@@ -48,7 +48,6 @@ class CheckEmbeddedPictureMetadata(Check):
             tracks = [[escape(track.filename), "yes" if ix in mismatches else ""] for ix, track in enumerate(album.tracks)]
             table = (["filename", "image metadata issues"], tracks)
             return CheckResult(
-                ProblemCategory.PICTURES,
                 f"embedded image metadata mismatch on {len(mismatches)} tracks, example {example}",
                 Fixer(lambda _: self._fix(album, mismatches), options, False, option_automatic_index, table),
             )

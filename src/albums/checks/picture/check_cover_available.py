@@ -9,7 +9,7 @@ from rich.markup import escape
 from ...interactive.image_table import render_image_table
 from ...tagger.folder import AlbumTagger, Cap
 from ...tagger.types import Picture, PictureType
-from ...types import Album, CheckResult, Fixer, ProblemCategory
+from ...types import Album, CheckResult, Fixer
 from ..base_check import Check
 from ..helpers import FRONT_COVER_FILENAME
 
@@ -48,7 +48,6 @@ class CheckCoverAvailable(Check):
                 option_automatic_index = 0 if len(headers) == 1 else None
                 message = f"album has pictures but none is COVER_FRONT picture{' (embedded)' if has_embedded else ''}"
                 return CheckResult(
-                    ProblemCategory.PICTURES,
                     message,
                     Fixer(
                         lambda option: self._fix_set_cover(album, option, headers, pics, picture_sources),
@@ -62,7 +61,7 @@ class CheckCoverAvailable(Check):
             # else
             if self.cover_required:
                 # TODO [use external tool to] retrieve cover art?
-                return CheckResult(ProblemCategory.PICTURES, "album does not have a COVER_FRONT picture or any other pictures to use")
+                return CheckResult("album does not have a COVER_FRONT picture or any other pictures to use")
             # else no pictures available + not required
         # else front cover image(s) available
         return None

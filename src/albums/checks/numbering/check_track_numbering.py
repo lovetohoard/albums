@@ -7,7 +7,7 @@ from rich.markup import escape
 
 from ...app import Context
 from ...tagger.folder import AlbumTagger, Cap
-from ...types import Album, CheckResult, Fixer, ProblemCategory, Track
+from ...types import Album, CheckResult, Fixer, Track
 from ..base_check import Check
 from ..helpers import describe_track_number, get_tracks_by_disc, ordered_tracks, parse_filename
 from . import total_tags
@@ -105,7 +105,7 @@ class CheckTrackNumbering(Check):
 
         tracks_by_disc = get_tracks_by_disc(album.tracks)
         if not tracks_by_disc:
-            return CheckResult(ProblemCategory.TAGS, "couldn't arrange tracks by disc - disc-numbering check must pass first")
+            return CheckResult("couldn't arrange tracks by disc - disc-numbering check must pass first")
         # now, all tracknumber/tracktotal/discnumber/disctotal tags are guaranteed single-valued and numeric if present
 
         # apply track total policy - will offer automatic fix (remove all track totals) if policy is not "always"
@@ -143,7 +143,6 @@ class CheckTrackNumbering(Check):
             on_disc_message = f" on disc {disc_number}" if disc_number else ""
             if len(track_total_counts) > 1:
                 return CheckResult(
-                    ProblemCategory.TAGS,
                     f"some tracks have different track total values{on_disc_message} - {list(track_total_counts.keys())}",
                     TrackTotalFixer(self.ctx, self.tagger.get(album.path), album, int(disc_number) if disc_number else None),
                 )
@@ -154,18 +153,18 @@ class CheckTrackNumbering(Check):
             missing_track_numbers = expected_track_numbers - actual_track_numbers
             unexpected_track_numbers = actual_track_numbers - expected_track_numbers
             if actual_track_numbers > expected_track_numbers:
-                return CheckResult(ProblemCategory.TAGS, f"unexpected track numbers{on_disc_message} {unexpected_track_numbers}")
+                return CheckResult(f"unexpected track numbers{on_disc_message} {unexpected_track_numbers}")
             elif len(missing_track_numbers) > 0:
                 if duplicate_tracks:
-                    return CheckResult(ProblemCategory.TAGS, f"duplicate track numbers{on_disc_message} {duplicate_tracks}")
+                    return CheckResult(f"duplicate track numbers{on_disc_message} {duplicate_tracks}")
                 if len(actual_track_numbers) == len(tracks):
                     # if all tracks have a unique track number tag and there are no unexpected track numbers but there are missing track numbers,
                     # then it looks like the album is incomplete.
-                    return CheckResult(ProblemCategory.TAGS, f"tracks missing from album{on_disc_message} {missing_track_numbers}")
+                    return CheckResult(f"tracks missing from album{on_disc_message} {missing_track_numbers}")
 
                 # TODO: we can probably offer this fixer in some other cases, also
                 fixer = self._renumber_fixer(album, disc_number, tracks)
-                return CheckResult(ProblemCategory.TAGS, f"missing track numbers{on_disc_message} {missing_track_numbers}", fixer)
+                return CheckResult(f"missing track numbers{on_disc_message} {missing_track_numbers}", fixer)
 
         return None
 

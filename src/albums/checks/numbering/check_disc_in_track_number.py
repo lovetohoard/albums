@@ -5,7 +5,7 @@ from typing import Sequence
 from rich.markup import escape
 
 from ...tagger.folder import AlbumTagger, Cap
-from ...types import Album, CheckResult, Fixer, ProblemCategory, Track
+from ...types import Album, CheckResult, Fixer, Track
 from ..base_check import Check
 from .check_track_numbering import describe_track_number, ordered_tracks
 
@@ -31,7 +31,6 @@ class CheckDiscInTrackNumber(Check):
             ]
             table = (["track", "filename", "proposed disc#", "proposed track#"], tracks)
             return CheckResult(
-                ProblemCategory.TAGS,
                 "track numbers formatted as number-dash-number, probably discnumber and tracknumber",
                 Fixer(lambda option: self._fix(album, option), [OPTION_USE_PROPOSED], option_free_text, option_automatic_index, table),
             )

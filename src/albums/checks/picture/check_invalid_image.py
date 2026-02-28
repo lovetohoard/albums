@@ -6,7 +6,7 @@ from rich.console import RenderableType
 from rich.markup import escape
 
 from ...tagger.folder import Cap
-from ...types import Album, CheckResult, Fixer, ProblemCategory
+from ...types import Album, CheckResult, Fixer
 from ..base_check import Check
 
 logger = logging.getLogger(__name__)
@@ -35,7 +35,6 @@ class CheckInvalidImage(Check):
                     any_bad_image_files |= not embedded
         if issues:
             return CheckResult(
-                ProblemCategory.PICTURES,
                 f"image load errors: {', '.join(issues)}",
                 Fixer(
                     lambda _: self._fix_remove_bad_images(album),

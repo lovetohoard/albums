@@ -6,7 +6,7 @@ from typing import Any, Sequence
 from pathvalidate import sanitize_filename
 from rich.console import RenderableType
 
-from ...types import Album, CheckResult, Fixer, ProblemCategory, Track
+from ...types import Album, CheckResult, Fixer, Track
 from ..base_check import Check
 
 
@@ -24,18 +24,15 @@ class CheckTrackFilename(Check):
         generated_filenames = [self._generate_filename(track) for track in album.tracks]
         if len(set(str.lower(filename) for filename in generated_filenames)) != len(generated_filenames):
             # because of earlier checks the tracks should typically have unique track number and title by now so this is an error
-            return CheckResult(ProblemCategory.FILENAMES, "unable to generate unique filenames using tags on these tracks")
+            return CheckResult("unable to generate unique filenames using tags on these tracks")
         if any(filename.startswith(".") for filename in generated_filenames):
-            return CheckResult(
-                ProblemCategory.FILENAMES, "cannot generate filenames that start with . character (maybe a track has no track number or title)"
-            )
+            return CheckResult("cannot generate filenames that start with . character (maybe a track has no track number or title)")
         if any(track.filename != generated_filenames[ix] for ix, track in enumerate(album.tracks)):
             options = [">> Use generated filenames"]
             option_automatic_index = 0
             headers = ["Current Filename", "Disc#", "Track#", "Title Tag", "Proposed Filename"]
             table = (headers, [self._table_row(track) for track in album.tracks])
             return CheckResult(
-                ProblemCategory.FILENAMES,
                 "track filenames do not match configured pattern",
                 Fixer(lambda _: self._fix_use_generated(album), options, False, option_automatic_index, table),
             )

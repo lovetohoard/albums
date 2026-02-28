@@ -7,7 +7,7 @@ from rich.markup import escape
 from ...database import operations
 from ...interactive.image_table import render_image_table
 from ...tagger.types import Picture, PictureType
-from ...types import Album, CheckResult, Fixer, ProblemCategory
+from ...types import Album, CheckResult, Fixer
 from ..base_check import Check
 from ..helpers import delete_files_except
 
@@ -77,7 +77,6 @@ class CheckCoverUnique(Check):
                     message = "there are cover image files with the album, but none bigger than embedded cover images"
 
                 return CheckResult(
-                    ProblemCategory.PICTURES,
                     message,
                     Fixer(
                         lambda option: self._fix_select_cover_source_or_delete(album, option, options, cover_image_filenames),
@@ -93,7 +92,6 @@ class CheckCoverUnique(Check):
                 option_automatic_index = 0  # YOLO
 
                 return CheckResult(
-                    ProblemCategory.PICTURES,
                     "multiple front cover image files, and one of them is marked cover source (delete others)",
                     Fixer(
                         lambda _: delete_files_except(self.ctx, cover_source_filename, album, cover_image_filenames),
@@ -109,12 +107,11 @@ class CheckCoverUnique(Check):
                 if tracks_have_covers:
                     # Maybe the tracks have unique cover art on purpose?
                     return CheckResult(
-                        ProblemCategory.PICTURES,
                         "all tracks have cover pictures, but not all cover pictures are the same",
                         Fixer(lambda _: False, [], False, None, table),  # Don't know how to fix, but let's show the pics and the option to ignore
                     )
                 # else
-                return CheckResult(ProblemCategory.PICTURES, "tracks do not all have cover pictures and not all cover pictures are the same")
+                return CheckResult("tracks do not all have cover pictures and not all cover pictures are the same")
 
             # else the reason there's more than one cover is just that there's a single front cover source different from the single embedded cover
         # else only one cover

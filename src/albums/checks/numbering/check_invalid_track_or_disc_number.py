@@ -4,7 +4,7 @@ from typing import Collection, Mapping, Sequence
 from rich.markup import escape
 
 from ...tagger.folder import AlbumTagger, Cap
-from ...types import Album, CheckResult, Fixer, ProblemCategory, Track
+from ...types import Album, CheckResult, Fixer, Track
 from ..base_check import Check
 from .check_track_numbering import describe_track_number, ordered_tracks
 
@@ -29,7 +29,6 @@ class CheckInvalidTrackOrDiscNumber(Check):
             option_free_text = False
             option_automatic_index = 0
             return CheckResult(
-                ProblemCategory.TAGS,
                 f"bad values in track/disc number tags: {', '.join(issues)}",
                 Fixer(
                     lambda option: self._fix(album, option),

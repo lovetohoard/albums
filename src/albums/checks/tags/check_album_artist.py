@@ -5,7 +5,7 @@ from typing import Any
 from rich.markup import escape
 
 from ...tagger.folder import AlbumTagger, Cap
-from ...types import Album, CheckResult, Fixer, ProblemCategory
+from ...types import Album, CheckResult, Fixer
 from ..base_check import Check
 from ..helpers import show_tag
 
@@ -65,38 +65,32 @@ class CheckAlbumArtist(Check):
                 # this doesn't fix the problem in one step, but after doing this, run the check again, and then next time select Various Artists
                 options.append(OPTION_COPY_ALBUM_ARTIST_TO_ARTIST)
             return CheckResult(
-                ProblemCategory.TAGS,
                 f"multiple album artist values ({nonblank_albumartists[:2]} ...)",
                 self._make_fixer(album, options, show_free_text_option=True),
             )
         if len(albumartists.keys()) == 2:  # some set, some blank
             if redundant:
                 return CheckResult(
-                    ProblemCategory.TAGS,
                     f"album artist is set inconsistently and probably not needed ({nonblank_albumartists[:2]} ...)",
                     self._make_fixer(album, candidates_various + remove, show_free_text_option=True),
                 )
             return CheckResult(
-                ProblemCategory.TAGS,
                 f"album artist is set on some tracks but not all ({nonblank_albumartists[:2]} ...)",
                 self._make_fixer(album, candidates_various, show_free_text_option=True),
             )
         elif redundant and self.remove_redundant and len(nonblank_albumartists) == 1 and list(artists.keys())[0] == nonblank_albumartists[0]:
             return CheckResult(
-                ProblemCategory.TAGS,
                 f"album artist is not needed: {nonblank_albumartists[0]}",
                 self._make_fixer(album, remove + nonblank_albumartists, show_free_text_option=False, option_automatic_index=0),
             )
         elif self.require_redundant and redundant and len(nonblank_albumartists) == 0:
             artist = list(artists.keys())[0]
             return CheckResult(
-                ProblemCategory.TAGS,
                 f"album artist would be redundant, but it can be set to {artist}",
                 self._make_fixer(album, [artist] + remove, show_free_text_option=False, option_automatic_index=0),
             )
         elif len(artists) > 1 and (sum(albumartists.values()) - albumartists.get("", 0)) != len(album.tracks):
             return CheckResult(
-                ProblemCategory.TAGS,
                 f"multiple artists but no album artist ({list(artists.keys())[:2]} ...)",
                 self._make_fixer(album, candidates_various, show_free_text_option=True),
             )

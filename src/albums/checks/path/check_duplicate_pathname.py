@@ -1,7 +1,7 @@
 import logging
 from collections import defaultdict
 
-from ...types import Album, CheckResult, ProblemCategory
+from ...types import Album, CheckResult
 from ..base_check import Check
 
 logger = logging.getLogger(__name__)
@@ -26,4 +26,4 @@ class CheckDuplicatePathname(Check):
 
         if issues:
             # TODO fix by automatically renaming affected files
-            return CheckResult(ProblemCategory.FILENAMES, f"duplicate filenames: {', '.join(list(issues))}")
+            return CheckResult(f"duplicate filenames: {', '.join(list(issues))}")

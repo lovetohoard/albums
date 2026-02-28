@@ -1,6 +1,6 @@
 import logging
 from dataclasses import dataclass, field
-from enum import Enum, StrEnum, auto
+from enum import StrEnum, auto
 from pathlib import Path
 from typing import Callable, Collection, Dict, Iterator, Mapping, Sequence, Tuple, Union
 
@@ -68,14 +68,6 @@ class ScanHistoryEntry:
     albums_total: int
 
 
-class ProblemCategory(Enum):
-    TAGS = auto()  # issues with tags (except for picture tags)
-    PICTURES = auto()  # issues with album art
-    FILENAMES = auto()  # track filenames
-    FOLDERS = auto()  # organization, folder names
-    OTHER = auto()  # general problems with the album
-
-
 @dataclass
 class Fixer:
     fix: Callable[[str], bool]
@@ -95,7 +87,6 @@ class Fixer:
 
 @dataclass(frozen=True)
 class CheckResult:
-    category: ProblemCategory
     message: str
     fixer: Fixer | None = None
 

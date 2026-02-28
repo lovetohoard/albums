@@ -4,7 +4,7 @@ from typing import Any
 from rich.markup import escape
 
 from ...tagger.folder import AlbumTagger, Cap
-from ...types import Album, CheckResult, Fixer, ProblemCategory
+from ...types import Album, CheckResult, Fixer
 from ..base_check import Check
 from ..helpers import describe_track_number, get_tracks_by_disc, ordered_tracks
 from . import total_tags
@@ -31,7 +31,7 @@ class CheckDiscNumbering(Check):
 
         tracks_by_disc = get_tracks_by_disc(album.tracks)
         if not tracks_by_disc:
-            return CheckResult(ProblemCategory.TAGS, "couldn't arrange tracks by disc - invalid-track-or-disc-number check must pass first")
+            return CheckResult("couldn't arrange tracks by disc - invalid-track-or-disc-number check must pass first")
         # now, all tracknumber/tracktotal/discnumber/disctotal tags should be single-valued and numeric
 
         # apply disc total policy - will offer automatic fix (remove all disc totals) if policy is not "always"
@@ -63,7 +63,6 @@ class CheckDiscNumbering(Check):
                 option_automatic_index = None
             option_free_text = True
             return CheckResult(
-                ProblemCategory.TAGS,
                 message,
                 Fixer(
                     lambda option: self._fix_disc_total(album, option),
@@ -80,7 +79,7 @@ class CheckDiscNumbering(Check):
                 return None  # no disc number or disc total on this album
             else:
                 # TODO offer fixer if disc numbers in filenames look right
-                return CheckResult(ProblemCategory.TAGS, "some tracks have disc number and some do not")
+                return CheckResult("some tracks have disc number and some do not")
         else:  # all tracks have a disc number
             # TODO if discs_in_separate_folders=False and disc is 1 or 1/1 then offer to remove discnumber/disctotal (not automatic)
             # discs should be numbered 1..disc total, but if there is no disc total, use 1..(# of discs) or 1..(highest disc number), whichever is more
@@ -95,17 +94,16 @@ class CheckDiscNumbering(Check):
                 # special case for exactly one disc in a folder but disc total indicates there are more
                 if not self.discs_in_separate_folders:
                     return CheckResult(
-                        ProblemCategory.TAGS,
                         f"album only has a single disc {list(all_disc_numbers)[0]} of {expect_disc_total} (if this is wanted, enable discs_in_separate_folders)",
                     )
             elif missing_disc_numbers:
                 # TODO offer fixer if disc numbers in filenames look right
-                return CheckResult(ProblemCategory.TAGS, f"missing disc numbers: {missing_disc_numbers}")
+                return CheckResult(f"missing disc numbers: {missing_disc_numbers}")
 
             unexpected_disc_numbers = all_disc_numbers - expect_disc_numbers
             if unexpected_disc_numbers:
                 # TODO offer fixer if disc numbers in filenames look right
-                return CheckResult(ProblemCategory.TAGS, f"unexpected disc numbers: {unexpected_disc_numbers}")
+                return CheckResult(f"unexpected disc numbers: {unexpected_disc_numbers}")
 
         return None
 

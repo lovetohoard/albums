@@ -4,7 +4,7 @@ from rich.markup import escape
 
 from ...app import Context
 from ...tagger.folder import AlbumTagger
-from ...types import Album, CheckResult, Fixer, ProblemCategory
+from ...types import Album, CheckResult, Fixer
 from ..helpers import describe_track_number, ordered_tracks
 
 
@@ -73,6 +73,6 @@ def check_policy(
         else:
             fixer = None
 
-        return CheckResult(ProblemCategory.TAGS, message, fixer)
+        return CheckResult(message, fixer)
 
     return None

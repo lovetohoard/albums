@@ -1,4 +1,4 @@
-from ...types import Album, CheckResult, ProblemCategory
+from ...types import Album, CheckResult
 from ..base_check import Check
 
 
@@ -20,4 +20,4 @@ class CheckAlbumUnderAlbum(Check):
             ),
         ).fetchone()
         if matches > 0:
-            return CheckResult(ProblemCategory.FOLDERS, f"there are {matches} albums in directories under album {album.path}")
+            return CheckResult(f"there are {matches} albums in directories under album {album.path}")

@@ -9,7 +9,7 @@ from albums.library.folder import read_binary_file
 
 from ...database.operations import update_picture_files
 from ...tagger.types import PictureType
-from ...types import Album, CheckResult, Fixer, ProblemCategory
+from ...types import Album, CheckResult, Fixer
 from ..base_check import Check
 
 
@@ -44,7 +44,6 @@ class CheckCoverFilename(Check):
                 return None  # none of the image filenames are recognized as cover images
             if len(cover_files) > 1:
                 return CheckResult(
-                    ProblemCategory.FILENAMES,
                     f"multiple cover image files, don't know which to rename: {', '.join(sorted(cover_files))}",
                 )
 
@@ -55,7 +54,6 @@ class CheckCoverFilename(Check):
                 options = [f">> Convert {cover_files[0]} to {new_filename}"]
                 option_automatic_index = 0
                 return CheckResult(
-                    ProblemCategory.FILENAMES,
                     f"cover image has the wrong filename and type (expected {self.suffix}): {cover_files[0]}",
                     Fixer(
                         lambda _: self._fix_convert_cover(album, cover_files[0]),
@@ -69,7 +67,6 @@ class CheckCoverFilename(Check):
             options = [f">> Rename {cover_files[0]} to {new_filename}"]
             option_automatic_index = 0
             return CheckResult(
-                ProblemCategory.FILENAMES,
                 f"cover image has the wrong filename: {cover_files[0]}",
                 Fixer(
                     lambda _: self._fix_rename_cover(album, cover_files[0], new_filename),

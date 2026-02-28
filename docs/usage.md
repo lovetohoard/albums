@@ -43,41 +43,47 @@ To set up `albums` configuration options interactively, run `albums config`. See
 
 ## Global Settings
 
-In addition to options for individual checks (described in
-[Check and Fix](./check_and_fix.md)), there are a few global settings:
-
-- `path_compatibility`: Determines what special characters and reserved words
-  are allowed in filenames, whenever a check is validating or generating
-  filenames. The compatibility options come from
-  [pathvalidate](https://pathvalidate.readthedocs.io/en/latest/pages/introduction/index.html#summary):
-    - `"Linux"`: fewest restrictions
-    - `"Windows"`
-    - `"macOS"`
-    - `"POSIX"`
-    - `"universal"` _(default)_: most restrictions and most compatibile
-- `rescan`: Rescan the library before performing other operations. If the
-  operation is filtered then only selected albums will be rescanned. Options:
-    - `always`: always scan the library so you never need to run "albums scan"
-      but may be slow
-    - `never`: never automatically scan the library, you must run "albums scan"
-      if it has changed
-    - `auto` _(default)_: scan on first run and before "check" or "sync"
-      operations
-- `tagger`: If this option is set, whenever there is an interactive tag fix,
-  there will be a menu option to execute this external tagging program. The path
-  of the album will be the first parameter.
+In addition to check configurations (see [Check and Fix](./check_and_fix.md)),
+there are some global settings:
 
 <!-- pyml disable line-length -->
 
-| Name                  | Default                    | Description                                            |
-| --------------------- | -------------------------- | ------------------------------------------------------ |
-| `library`             | OS default                 | Location of the music library                          |
-| `path_compatibility`  | `"universal"`              | Configure what is allowed in filenames                 |
-| `rescan`              | `"auto"`                   | When to automatically rescan the library               |
-| `tagger`              | `"easytag"` (if installed) | External tagging program to launch when requested      |
-| `open_folder_command` | _[blank]_                  | If not blank, program to run to browse an album folder |
+| Name                  | Default                    | Description                                       |
+| --------------------- | -------------------------- | ------------------------------------------------- |
+| `library`             | OS default                 | Location of the music library                     |
+| `open_folder_command` | OS default                 | If not blank, program to browse files in an album |
+| `path_compatibility`  | `"universal"`              | Configure what is allowed in filenames            |
+| `rescan`              | `"auto"`                   | When to automatically rescan the library          |
+| `tagger`              | `"easytag"` (if installed) | External program to view and set tags in an album |
 
 <!-- pyml enable line-length -->
+
+**`open_folder_command`**: If this option is set, the _"Open folder..."_ menu
+option runs this command. The path of the album will be the first parameter.
+
+**`path_compatibility`**: Determines what special characters and reserved words
+are allowed in filenames, whenever a check is validating or generating
+filenames. The compatibility options come from
+[pathvalidate](https://pathvalidate.readthedocs.io/en/latest/pages/introduction/index.html#summary):
+
+- `"Linux"`: fewest restrictions
+- `"Windows"`
+- `"macOS"`
+- `"POSIX"`
+- `"universal"` _(default)_: most restrictions and most compatible
+
+**`rescan`**: Rescan the library before performing other operations. If the
+operation is filtered then only selected albums will be rescanned. Options:
+
+- `always`: always scan the library so you never need to run "albums scan" but
+  may be slow
+- `never`: never automatically scan the library, you must run "albums scan" if
+  it has changed
+- `auto` _(default)_: scan on first run and before "check" or "sync" operations
+
+**`tagger`**: If this option is set or if EasyTAG is installed, the fix menu
+will have a menu option to execute an external tagging program. The path of the
+album will be the first parameter.
 
 ## Tag Conversion
 

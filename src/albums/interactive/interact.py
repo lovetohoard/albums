@@ -12,7 +12,7 @@ from rich.table import Table
 
 from ..app import Context
 from ..database import operations
-from ..types import Album, CheckResult, ProblemCategory
+from ..types import Album, CheckResult
 
 logger = logging.getLogger(__name__)
 
@@ -36,15 +36,7 @@ def interact(ctx: Context, check_name: str, check_result: CheckResult, album: Al
     maybe_changed = False
     user_quit = False  # user explicitly quit this checkRenderableType
 
-    tagger_config = ctx.config.tagger
-    # TODO should we just always show tagger?
-    tagger = (
-        tagger_config
-        if check_result.category in {ProblemCategory.TAGS, ProblemCategory.FILENAMES, ProblemCategory.PICTURES} and tagger_config
-        else None
-    )
-
-    OPTION_RUN_TAGGER = f">> Edit tags with {tagger}"
+    OPTION_RUN_TAGGER = f">> Edit tags with {ctx.config.tagger}"
 
     options: list[str] = []
     if fixer:
@@ -54,7 +46,7 @@ def interact(ctx: Context, check_name: str, check_result: CheckResult, album: Al
     options.append(OPTION_IGNORE_CHECK)
     do_nothing_index = len(options)
     options.append(OPTION_DO_NOTHING)
-    if tagger:
+    if ctx.config.tagger:
         options.append(OPTION_RUN_TAGGER)
     options.append(OPTION_OPEN_FOLDER)
 
@@ -79,8 +71,8 @@ def interact(ctx: Context, check_name: str, check_result: CheckResult, album: Al
             # these options do not use the fixer (if one was provided)
             choice = options[option_index] if option_index is not None else None
             if choice == OPTION_RUN_TAGGER:
-                ctx.console.print(f"Launching {tagger} {str(album_path)}", markup=False)
-                subprocess.Popen([str(tagger), str(album_path)])
+                ctx.console.print(f"Launching {ctx.config.tagger} {str(album_path)}", markup=False)
+                subprocess.Popen([ctx.config.tagger, str(album_path)])
                 while not Confirm.ask("Done making changes in external program?", console=ctx.console):
                     pass
                 maybe_changed |= True

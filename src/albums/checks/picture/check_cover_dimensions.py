@@ -12,7 +12,7 @@ from ...library.folder import read_binary_file
 from ...picture.format import IMAGE_MODE_BPP
 from ...picture.info import PictureInfo
 from ...tagger.types import Picture, PictureType
-from ...types import Album, CheckResult, Fixer, PictureFile, ProblemCategory
+from ...types import Album, CheckResult, Fixer, PictureFile
 from ..base_check import Check
 
 logger = logging.getLogger(__name__)
@@ -55,10 +55,10 @@ class CheckCoverDimensions(Check):
         ]
 
         if len(cover_files) > 1:
-            return CheckResult(ProblemCategory.PICTURES, "there is more than one front cover image file (check cover-unique suggested)")
+            return CheckResult("there is more than one front cover image file (check cover-unique suggested)")
         file_cover = cover_files[0][0] if cover_files else None
         if len(embedded_covers) > 1:
-            return CheckResult(ProblemCategory.PICTURES, "more than one unique embedded cover image file (check cover-unique suggested)")
+            return CheckResult("more than one unique embedded cover image file (check cover-unique suggested)")
 
         if embedded_covers:
             (embedded_cover, (embed_ix, _)) = list(embedded_covers.items())[0]
@@ -72,7 +72,7 @@ class CheckCoverDimensions(Check):
             and not file_cover.cover_source
             and file_cover.picture.file_info.file_hash != embedded_cover.file_info.file_hash
         ):
-            return CheckResult(ProblemCategory.PICTURES, "cover image file not unique, not cover_source (check cover-unique suggested)")
+            return CheckResult("cover image file not unique, not cover_source (check cover-unique suggested)")
 
         if file_cover:  # either cover_source or identical to embedded images
             (cover_file, from_file) = cover_files[0]
@@ -112,7 +112,6 @@ class CheckCoverDimensions(Check):
                     lambda: self._render_table(album, cover, picture_source, get_new_cover),
                 )
                 return CheckResult(
-                    ProblemCategory.PICTURES,
                     message,
                     Fixer(
                         lambda _: self._fix_save_new_cover(album, source_file, get_new_cover()[2]),
@@ -126,7 +125,7 @@ class CheckCoverDimensions(Check):
                 issues.add(message)
 
         if issues:
-            return CheckResult(ProblemCategory.PICTURES, ", ".join(list(issues)))
+            return CheckResult(", ".join(list(issues)))
 
     def _fix_save_new_cover(self, album: Album, source_filename: str | None, image_data: bytes):
         if not self.ctx.db or album.album_id is None:

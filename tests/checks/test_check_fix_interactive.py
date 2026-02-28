@@ -9,7 +9,7 @@ from albums.app import Context
 from albums.database import connection, operations
 from albums.interactive.interact import OPTION_IGNORE_CHECK, interact
 from albums.tagger.types import StreamInfo
-from albums.types import Album, CheckResult, Fixer, ProblemCategory, Track
+from albums.types import Album, CheckResult, Fixer, Track
 
 
 class MockFixer(Fixer):
@@ -30,7 +30,7 @@ class TestCheckFixInteractive:
         fixer = MockFixer(ctx, album)
         mock_choice = mocker.patch("albums.interactive.interact.choice", return_value=fixer.options[0])
 
-        (changed, quit) = interact(ctx, "", CheckResult(ProblemCategory.TAGS, "hello", fixer), album)
+        (changed, quit) = interact(ctx, "", CheckResult("hello", fixer), album)
         assert changed
         assert not quit
         assert mock_choice.call_count == 1
@@ -45,7 +45,7 @@ class TestCheckFixInteractive:
             mock_choice = mocker.patch("albums.interactive.interact.choice", return_value=OPTION_IGNORE_CHECK)
             mock_ask = mocker.patch.object(rich.prompt.Confirm, "ask", return_value=True)
 
-            (changed, quit) = interact(ctx, "album-tag", CheckResult(ProblemCategory.TAGS, "hello", fixer), album)
+            (changed, quit) = interact(ctx, "album-tag", CheckResult("hello", fixer), album)
             assert not changed
             assert quit
             assert mock_choice.call_count == 1
@@ -66,7 +66,7 @@ class TestCheckFixInteractive:
             mocker.patch("albums.interactive.interact.choice", return_value=OPTION_IGNORE_CHECK)
             mock_ask = mocker.patch.object(rich.prompt.Confirm, "ask", return_value=True)
 
-            (changed, quit) = interact(ctx, "album-tag", CheckResult(ProblemCategory.TAGS, "hello", fixer), album)
+            (changed, quit) = interact(ctx, "album-tag", CheckResult("hello", fixer), album)
             assert mock_ask.call_count == 1
             assert mock_ask.call_args.args[0] == ('Do you want to ignore the check "album-tag" for this album in the future?')
 

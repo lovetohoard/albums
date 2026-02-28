@@ -2,7 +2,7 @@ import logging
 
 from pathvalidate import ValidationError, validate_filename
 
-from ...types import Album, CheckResult, ProblemCategory
+from ...types import Album, CheckResult
 from ..base_check import Check
 
 logger = logging.getLogger(__name__)
@@ -23,7 +23,7 @@ class CheckIllegalPathname(Check):
 
         if issues:
             # TODO fix by automatically renaming affected files
-            return CheckResult(ProblemCategory.FILENAMES, f"illegal filenames: {', '.join(list(issues))}")
+            return CheckResult(f"illegal filenames: {', '.join(list(issues))}")
 
     def _check(self, filename: str) -> set[str]:
         try:
