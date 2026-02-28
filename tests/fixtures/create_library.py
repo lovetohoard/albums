@@ -9,7 +9,7 @@ from albums.tagger.folder import AlbumTagger, BasicTag
 from albums.tagger.picture import mime_to_pillow_format
 from albums.types import Album, Track
 
-from .empty_files import EMPTY_FLAC_FILE_BYTES, EMPTY_MP3_FILE_BYTES, EMPTY_OGG_VORBIS_FILE_BYTES, EMPTY_WMA_FILE_BYTES
+from .empty_files import EMPTY_FLAC_FILE_BYTES, EMPTY_M4A_FILE_BYTES, EMPTY_MP3_FILE_BYTES, EMPTY_OGG_VORBIS_FILE_BYTES, EMPTY_WMA_FILE_BYTES
 
 test_data_path = Path(__file__).resolve().parent / "libraries"
 
@@ -19,6 +19,8 @@ def create_track_file(path: Path, spec: Track):
     with open(filename, "wb") as file:
         if filename.suffix == ".flac":
             file.write(EMPTY_FLAC_FILE_BYTES)
+        elif filename.suffix == ".m4a":
+            file.write(EMPTY_M4A_FILE_BYTES)
         elif filename.suffix == ".mp3":
             file.write(EMPTY_MP3_FILE_BYTES)
         elif filename.suffix == ".wma":

@@ -4,6 +4,7 @@ from typing import Any
 
 from rich.markup import escape
 
+from ...tagger.folder import AlbumTagger, Cap
 from ...types import Album, CheckResult, Fixer, ProblemCategory
 from ..base_check import Check
 from ..helpers import show_tag
@@ -28,8 +29,8 @@ class CheckAlbumArtist(Check):
             self.require_redundant = False
 
     def check(self, album: Album):
-        if not self.tagger.get(album.path).supports(*(track.filename for track in album.tracks)):
-            return None  # this check is currently not valid for files that don't use "album" tag
+        if not all(AlbumTagger.supports(track.filename, Cap.BASIC_TAGS) for track in album.tracks):
+            return None
 
         albumartists: defaultdict[str, int] = defaultdict(int)
         artists: defaultdict[str, int] = defaultdict(int)

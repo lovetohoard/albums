@@ -31,10 +31,10 @@ several minutes to index a large collection. See [Usage](./usage.md).
 
 ## Supported Formats
 
-**FLAC**, **MP3/ID3** and **Ogg Vorbis** are supported. **M4A** and **WMA**
-files are read but `albums` doesn't comprehend their tags yet so most checks are
-skipped. JPEG, PNG and GIF files in the album folder are loaded as candidates
-for cover art.
+**FLAC**, **Ogg Vorbis**, **MP3/ID3** and **M4A** containers are supported.
+**WMA** files are read but `albums` doesn't comprehend their tags yet so most
+checks are skipped. JPEG, PNG and GIF files in the album folder are loaded as
+candidates for cover art.
 
 ## System Requirements
 

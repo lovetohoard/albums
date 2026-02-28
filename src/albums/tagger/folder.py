@@ -1,20 +1,42 @@
 from contextlib import contextmanager
+from enum import Enum, auto
 from pathlib import Path
 from typing import Any, Callable, Collection, Generator, List, Tuple
 
 from mutagen._tags import PaddingInfo
 
 from .flac import FlacTagger
-from .mp3 import MP3Tagger
+from .m4a import M4aTagger
+from .mp3 import Mp3Tagger
 from .oggvorbis import OggVorbisTagger
 from .picture import PictureScanner
 from .types import BasicTag, TaggerFile
 from .universal import UniversalTagger
 
-SUPPORTED_SUFFIXES = (".flac", ".mp3", ".ogg")
+
+class Cap(Enum):
+    BASIC_TAGS = auto()
+    FORMATTED_TRACK_NUMBER = auto()
+    PICTURES = auto()
+    PICTURE_TYPE = auto()
+
+
+SUFFIX_SUPPORT = {
+    ".flac": {Cap.BASIC_TAGS, Cap.FORMATTED_TRACK_NUMBER, Cap.PICTURES, Cap.PICTURE_TYPE},
+    ".m4a": {Cap.BASIC_TAGS, Cap.PICTURES},
+    ".mp3": {Cap.BASIC_TAGS, Cap.FORMATTED_TRACK_NUMBER, Cap.PICTURES, Cap.PICTURE_TYPE},
+    ".ogg": {Cap.BASIC_TAGS, Cap.FORMATTED_TRACK_NUMBER, Cap.PICTURES, Cap.PICTURE_TYPE},
+}
 
 
 class AlbumTagger:
+    @staticmethod
+    def supports(filename: str, *needs: Cap) -> bool:
+        if not needs:
+            return False
+        caps = SUFFIX_SUPPORT.get(Path(filename).suffix, set())
+        return all(need in caps for need in needs)
+
     _folder: Path
     _padding: Callable[[PaddingInfo], int]
     _picture_scanner: PictureScanner
@@ -40,8 +62,10 @@ class AlbumTagger:
         try:
             if suffix == ".flac":
                 tagger_file = FlacTagger(path, picture_scanner=self._picture_scanner, padding=self._padding)
+            elif suffix == ".m4a":
+                tagger_file = M4aTagger(path, picture_scanner=self._picture_scanner, padding=self._padding)
             elif suffix == ".mp3":
-                tagger_file = MP3Tagger(path, picture_scanner=self._picture_scanner, padding=self._padding)
+                tagger_file = Mp3Tagger(path, picture_scanner=self._picture_scanner, padding=self._padding)
             elif suffix == ".ogg":
                 tagger_file = OggVorbisTagger(path, picture_scanner=self._picture_scanner, padding=self._padding)
             else:
@@ -63,6 +87,3 @@ class AlbumTagger:
         with self.open(path.name) as f:
             for name, value in tag_values:
                 f.set_tag(BasicTag(name), value)
-
-    def supports(self, *filenames: str) -> bool:
-        return all(Path(filename).suffix in SUPPORTED_SUFFIXES for filename in filenames)

@@ -6,7 +6,7 @@ from typing import Any
 from rich.markup import escape
 
 from ...app import Context
-from ...tagger.folder import AlbumTagger
+from ...tagger.folder import AlbumTagger, Cap
 from ...types import Album, CheckResult, Fixer, ProblemCategory, Track
 from ..base_check import Check
 from ..helpers import describe_track_number, get_tracks_by_disc, ordered_tracks, parse_filename
@@ -100,7 +100,7 @@ class CheckTrackNumbering(Check):
         if folder_str in self.ignore_folders:
             return None
 
-        if not self.tagger.get(album.path).supports(*(track.filename for track in album.tracks)):
+        if not all(AlbumTagger.supports(track.filename, Cap.BASIC_TAGS) for track in album.tracks):
             return None  # this check works for tracks with "tracknumber" tag
 
         tracks_by_disc = get_tracks_by_disc(album.tracks)

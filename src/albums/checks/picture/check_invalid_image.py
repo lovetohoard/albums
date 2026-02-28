@@ -5,6 +5,7 @@ from typing import Sequence
 from rich.console import RenderableType
 from rich.markup import escape
 
+from ...tagger.folder import Cap
 from ...types import Album, CheckResult, Fixer, ProblemCategory
 from ..base_check import Check
 
@@ -60,7 +61,7 @@ class CheckInvalidImage(Check):
             for pic in track.pictures:
                 load_issue = dict(pic.load_issue)
                 if "error" in load_issue:
-                    if tagger.supports(track.filename):
+                    if tagger.supports(track.filename, Cap.PICTURES):
                         with tagger.open(track.filename) as tags:
                             for file in [pic for pic, _data in tags.get_pictures() if (any(k == "error" for k, _ in pic.load_issue))]:
                                 self.ctx.console.print(f"Removing {file.type.name} embedded image from {escape(track.filename)}")

@@ -218,6 +218,9 @@ number/total tags. Some media players and many file managers do not show tracks
 in the correct order unless the track numbers are zero-padded, because for
 example "2" comes after "10" when sorted alphabetically.
 
+This check does nothing on **M4A** files because track numbers (and track total,
+disc number, disc total) are only stored as plain unformatted numbers.
+
 !!!success "Dependency"
 
     Requires the `invalid-track-or-disc-number` check to pass first.
@@ -367,12 +370,15 @@ from which a title can be guessed, fill in all empty titles.
 
 These checks operate on embedded pictures and image files in the album folder.
 
-In media formats including FLAC files, embedded images are classified with the
-"picture type" codes originally defined for ID3v2 `APIC` frames.
+In some media formats including FLAC files, embedded images are classified with
+the "picture type" codes originally defined for ID3v2 `APIC` frames.
 
 When checks refer to the "cover" or "front cover" this means images classified
-as `COVER_FRONT` (0x03). Some image files are also considered front covers if
-they are **png**, **jpeg**/**jpg** or **gif** and have "folder", "cover",
+as `COVER_FRONT` (0x03). If an embedded image does not have a picture type (such
+as `covr` atom in M4A files) the image is assumed to be a front cover.
+
+Image files are also considered front covers if they are **png**,
+**jpeg**/**jpg** or **gif** and they have the word "folder", "cover",
 "thumbnail" or "album" in the filename.
 
 ### invalid-image
@@ -422,13 +428,13 @@ image contents, keep the one with the shortest filename and delete the rest.
 FLAC files
 [store metadata about embedded pictures](https://www.rfc-editor.org/rfc/rfc9639.html#name-picture)
 (MIME type, dimensions). Ogg Vorbis uses a comment with the same structure. ID3
-tags include the MIME type of the image in the APIC frame. This check loads the
-image data and compares the reported MIME type and dimensions (if present) to
-the real image data.
+tags include the MIME type of the image in the APIC frame, etc. This check loads
+the image data and compares the reported MIME type and dimensions (if present)
+to the real image data.
 
-**Automatic fix**: For each FLAC or MP3 file with incorrect metadata, re-embed
-all the images with the same image data and correct metadata. Fix not yet
-available for other formats.
+**Automatic fix**: For each file with incorrect metadata, re-embed all the
+images with the same image data and correct metadata. Fix not yet available for
+other formats.
 
 !!!success "Dependency"
 

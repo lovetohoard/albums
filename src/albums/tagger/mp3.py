@@ -29,7 +29,7 @@ BASIC_ID3_TEXT_FRAMES: Tuple[Tuple[BasicTag, str], ...] = (
 # "date": "tdrc",  # recordingdate?
 
 
-class MP3Tagger(AbstractMutagenTagger):
+class Mp3Tagger(AbstractMutagenTagger):
     _file: MP3
     _picture_scanner: PictureScanner
 
@@ -82,7 +82,7 @@ class MP3Tagger(AbstractMutagenTagger):
         pictures = list((pic, data) for pic, data in self.get_pictures() if pic != remove_picture)
         id3.delall("APIC")  # pyright: ignore[reportUnknownMemberType]
         for pic, data in pictures:
-            self.add_picture(pic, data)
+            self._add_picture(pic, data)
 
     @override
     def _scan_tags(self) -> Tuple[Tuple[BasicTag, Tuple[str, ...]], ...]:

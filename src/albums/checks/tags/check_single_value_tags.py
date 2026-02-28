@@ -4,6 +4,7 @@ from typing import Any, Sequence
 import yaml
 from rich.markup import escape
 
+from ...tagger.folder import AlbumTagger, Cap
 from ...types import Album, CheckResult, Fixer, ProblemCategory
 from ..base_check import Check
 from ..helpers import describe_track_number, ordered_tracks
@@ -27,7 +28,7 @@ class CheckSingleValueTags(Check):
         self.single_value_tags = list(str(tag) for tag in tags)
 
     def check(self, album: Album):
-        if not self.tagger.get(album.path).supports(*(track.filename for track in album.tracks)):
+        if not all(AlbumTagger.supports(track.filename, Cap.BASIC_TAGS) for track in album.tracks):
             return None  # this check only makes sense for files with common tags
 
         multiple_value_tags: list[dict[str, dict[str, Sequence[str]]]] = []

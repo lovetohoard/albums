@@ -2,6 +2,7 @@ import logging
 
 from rich.markup import escape
 
+from ...tagger.folder import AlbumTagger, Cap
 from ...types import Album, CheckResult, Fixer, ProblemCategory, Track
 from ..base_check import Check
 from ..helpers import parse_filename, show_tag
@@ -16,8 +17,8 @@ class CheckTrackTitle(Check):
     default_config = {"enabled": True}
 
     def check(self, album: Album):
-        if not self.tagger.get(album.path).supports(*(track.filename for track in album.tracks)):
-            return None  # this check is currently not valid for files that don't have "title" tag
+        if not all(AlbumTagger.supports(track.filename, Cap.BASIC_TAGS) for track in album.tracks):
+            return None
 
         no_title = sum(0 if track.tags.get("title") else 1 for track in album.tracks)
         if no_title:

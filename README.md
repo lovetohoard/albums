@@ -41,9 +41,9 @@ address. And its DAP/external storage sync feature may prove useful.
 
 ## Supported Media
 
-**FLAC**, **Ogg Vorbis** and **MP3/ID3** are supported. **M4A** and **WMA**
-files are read but `albums` doesn't comprehend their tags yet so most checks
-are skipped. JPEG, PNG and GIF files in the album folder are loaded as
+**FLAC**, **Ogg Vorbis**, **MP3/ID3** and **M4A** containers are supported.
+**WMA** files are read but `albums` doesn't comprehend their tags yet so most
+checks are skipped. JPEG, PNG and GIF files in the album folder are loaded as
 candidates for cover art.
 
 More formats and tag comprehension will likely be added if requested.

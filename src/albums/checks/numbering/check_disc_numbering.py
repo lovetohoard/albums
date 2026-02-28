@@ -3,6 +3,7 @@ from typing import Any
 
 from rich.markup import escape
 
+from ...tagger.folder import AlbumTagger, Cap
 from ...types import Album, CheckResult, Fixer, ProblemCategory
 from ..base_check import Check
 from ..helpers import describe_track_number, get_tracks_by_disc, ordered_tracks
@@ -25,8 +26,8 @@ class CheckDiscNumbering(Check):
         self.disctotal_policy = total_tags.Policy.from_str(str(check_config.get("disctotal_policy", self.default_config["disctotal_policy"])))
 
     def check(self, album: Album) -> CheckResult | None:
-        if not self.tagger.get(album.path).supports(*(track.filename for track in album.tracks)):
-            return None  # this check works for tracks with "tracknumber" tag
+        if not all(AlbumTagger.supports(track.filename, Cap.FORMATTED_TRACK_NUMBER) for track in album.tracks):
+            return None  # not valid if track number is not supported or is stored as an integer
 
         tracks_by_disc = get_tracks_by_disc(album.tracks)
         if not tracks_by_disc:

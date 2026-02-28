@@ -4,6 +4,7 @@ from typing import Sequence
 
 from rich.markup import escape
 
+from ...tagger.folder import AlbumTagger, Cap
 from ...types import Album, CheckResult, Fixer, ProblemCategory, Track
 from ..base_check import Check
 from .check_track_numbering import describe_track_number, ordered_tracks
@@ -19,8 +20,8 @@ class CheckDiscInTrackNumber(Check):
     default_config = {"enabled": True}
 
     def check(self, album: Album):
-        if not self.tagger.get(album.path).supports(*(track.filename for track in album.tracks)):
-            return None  # this check is not valid for files where albums doesn't know about the noted tags
+        if not all(AlbumTagger.supports(track.filename, Cap.FORMATTED_TRACK_NUMBER) for track in album.tracks):
+            return None  # not valid if track number is not supported or is stored as an integer
 
         if all_tracks_discnumber_in_tracknumber(album.tracks):
             option_free_text = False

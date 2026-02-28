@@ -46,7 +46,7 @@ class FlacTagger(AbstractMutagenTagger):
         pictures: list[tuple[Picture, bytes]] = [(copy(pic), image_data) for pic, image_data in self.get_pictures() if pic != remove_picture]
         self._file.clear_pictures()
         for pic, data in pictures:
-            self.add_picture(pic, data)
+            self._add_picture(pic, data)
 
     @override
     def _scan_tags(self):

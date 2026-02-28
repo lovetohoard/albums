@@ -5,6 +5,7 @@ from typing import Any
 
 from rich.markup import escape
 
+from ...tagger.folder import AlbumTagger, Cap
 from ...types import Album, CheckResult, Fixer, ProblemCategory
 from ..base_check import Check
 from ..helpers import show_tag
@@ -30,8 +31,8 @@ class CheckArtistTag(Check):
         self.ignore_parent_folders = set(str(folder) for folder in ignore_parent_folders)
 
     def check(self, album: Album):
-        if not self.tagger.get(album.path).supports(*(track.filename for track in album.tracks)):
-            return None  # this check is currently not valid for files that don't use "artist" tag
+        if not all(AlbumTagger.supports(track.filename, Cap.BASIC_TAGS) for track in album.tracks):
+            return None
 
         artist_values: defaultdict[str, list[str]] = defaultdict(list)
         for track in album.tracks:

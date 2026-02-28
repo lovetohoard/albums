@@ -5,6 +5,7 @@ from typing import Any, Mapping, Sequence
 from rich.console import RenderableType
 from rich.markup import escape
 
+from ...tagger.folder import AlbumTagger, Cap
 from ...types import Album, CheckResult, Fixer, ProblemCategory, Track
 from ..base_check import Check
 from ..helpers import get_tracks_by_disc
@@ -56,8 +57,8 @@ class CheckZeroPadNumbers(Check):
             logger.warning(f"{CheckZeroPadNumbers.name} configuration problem: all policies are set to IGNORE, nothing to do")
 
     def check(self, album: Album):
-        if not self.tagger.get(album.path).supports(*(track.filename for track in album.tracks)):
-            return None  # this check is currently not valid for files that don't use "tracknumber"/"discnumber" tags
+        if not all(AlbumTagger.supports(track.filename, Cap.FORMATTED_TRACK_NUMBER) for track in album.tracks):
+            return None  # not valid if track number is not supported or is stored as an integer
 
         tracks_by_disc = get_tracks_by_disc(album.tracks)
         if tracks_by_disc is None:

@@ -7,6 +7,7 @@ from typing import Any, Dict, List, Mapping, Sequence, Tuple
 from rich.markup import escape
 
 from ...interactive.image_table import render_image_table
+from ...tagger.folder import AlbumTagger, Cap
 from ...tagger.types import Picture, PictureType
 from ...types import Album, CheckResult, Fixer, ProblemCategory
 from ..base_check import Check
@@ -24,9 +25,8 @@ class CheckCoverAvailable(Check):
         self.cover_required = bool(check_config.get("cover_required", CheckCoverAvailable.default_config["cover_required"]))
 
     def check(self, album: Album) -> CheckResult | None:
-        if self.cover_required and not self.tagger.get(album.path).supports(*(track.filename for track in album.tracks)):
-            # if cover is required, only run check on albums where embedded pictures are supported
-            return None
+        if self.cover_required and not all(AlbumTagger.supports(track.filename, Cap.PICTURES) for track in album.tracks):
+            return None  # if cover is required, only run check on albums where embedded pictures are supported
 
         album_art = [(track.filename, True, track.pictures) for track in album.tracks]
         album_art.extend([(filename, False, [file.picture]) for filename, file in album.picture_files.items()])

@@ -2,6 +2,7 @@ import logging
 
 from rich.markup import escape
 
+from ...tagger.folder import AlbumTagger, Cap
 from ...tagger.types import Picture
 from ...types import Album, CheckResult, Fixer, ProblemCategory
 from ..base_check import Check
@@ -15,6 +16,9 @@ class CheckEmbeddedPictureMetadata(Check):
     must_pass_checks = {"invalid-image"}
 
     def check(self, album: Album) -> CheckResult | None:
+        if not all(AlbumTagger.supports(track.filename, Cap.PICTURES) for track in album.tracks):
+            return None
+
         # TODO: this check or a separate one should also report if image files have the wrong extension
         mismatches: list[int] = []
         example: str | None = None
@@ -39,20 +43,14 @@ class CheckEmbeddedPictureMetadata(Check):
                 mismatches.append(track_index)
 
         if mismatches:
-            if self.tagger.get(album.path).supports(*(album.tracks[ix].filename for ix in mismatches)):
-                options = [f">> Re-embed images in {len(mismatches)} tracks"]
-                option_automatic_index = 0
-                tracks = [[escape(track.filename), "yes" if ix in mismatches else ""] for ix, track in enumerate(album.tracks)]
-                table = (["filename", "image metadata issues"], tracks)
-                fixer = Fixer(lambda _: self._fix(album, mismatches), options, False, option_automatic_index, table)
-            else:
-                # TODO implement for Ogg Vorbis too, see also invalid-image
-                fixer = None
-
+            options = [f">> Re-embed images in {len(mismatches)} tracks"]
+            option_automatic_index = 0
+            tracks = [[escape(track.filename), "yes" if ix in mismatches else ""] for ix, track in enumerate(album.tracks)]
+            table = (["filename", "image metadata issues"], tracks)
             return CheckResult(
                 ProblemCategory.PICTURES,
                 f"embedded image metadata mismatch on {len(mismatches)} tracks, example {example}",
-                fixer,
+                Fixer(lambda _: self._fix(album, mismatches), options, False, option_automatic_index, table),
             )
 
     def _fix(self, album: Album, mismatch_tracks: list[int]):

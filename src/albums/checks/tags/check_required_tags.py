@@ -1,5 +1,6 @@
 from typing import Any
 
+from ...tagger.folder import AlbumTagger, Cap
 from ...types import Album, CheckResult, ProblemCategory
 from ..base_check import Check
 
@@ -18,7 +19,7 @@ class CheckRequiredTags(Check):
         self.required_tags = list(str(tag) for tag in required_tags)
 
     def check(self, album: Album):
-        if not self.tagger.get(album.path).supports(*(track.filename for track in album.tracks)):
+        if not all(AlbumTagger.supports(track.filename, Cap.BASIC_TAGS) for track in album.tracks):
             return None  # this check only makes sense for files with common tags
 
         missing_required_tags: dict[str, int] = {}
