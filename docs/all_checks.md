@@ -463,11 +463,16 @@ Rules:
 
     Requires the `invalid-image` check to pass first.
 
+**Automatic fix**: For each unique embedded image that is too large or not a
+preferred image type, extract the image to a file and un-embed it. If one of the
+images un-embedded is cover art, the extracted file can be used by subsequent
+checks to re-embed proper cover art.
+
 <!-- pyml disable line-length -->
 
 | Option              | Default     | Description                                                         |
 | ------------------- | ----------- | ------------------------------------------------------------------- |
-| `embedded_size_max` | **8388608** | embedded image data maximum size (not including container encoding) |
+| `embedded_size_max` | **4194304** | embedded image data maximum size (not including container encoding) |
 
 <!-- pyml enable line-length -->
 

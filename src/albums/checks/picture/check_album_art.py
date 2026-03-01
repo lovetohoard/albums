@@ -19,7 +19,7 @@ class CheckAlbumArt(Check):
     name = "album-art"
     default_config = {
         "enabled": True,
-        "embedded_size_max": (4 * 1024 * 1024) - 1,  # up to 16 MB is OK in ID3v2
+        "embedded_size_max": 4 * 1024 * 1024,  # up to 16 MB is OK in ID3v2
         # TODO rules for non-embedded album art
     }
     must_pass_checks = {"invalid-image"}
