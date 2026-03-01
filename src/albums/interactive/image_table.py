@@ -51,18 +51,20 @@ def render_image_table(
             pixelses.append(pixels)
             caption = f"[{cover.file_info.width} x {cover.file_info.height}] {humanize.naturalsize(len(image_data), binary=True)}"
             if len(pictures) > 1:
-                COMPARISON_BOX_SIZE = 75
-                image.thumbnail((COMPARISON_BOX_SIZE, COMPARISON_BOX_SIZE), Image.Resampling.LANCZOS)
                 image = image.convert("RGB")
+                aspect = image.width / image.height
                 if reference_image is not None:
-                    if image.width != reference_width or image.height != reference_height:
-                        caption += " [bold italic]aspect ratio doesn't match[/bold italic]"
-                        # TODO: if it's close, stretch and compare
-                    else:
+                    reference_aspect = reference_width / reference_height
+                    if abs(aspect - reference_aspect) < 0.1:  # close enough
+                        image = image.resize((reference_width, reference_height), resample=Image.Resampling.LANCZOS)
                         this_image = numpy.asarray(image)
                         rmse = sqrt(mean_squared_error(reference_image, this_image))
                         caption += f" {_describe_rmse(rmse)}"
+                    else:
+                        caption += " [bold italic]aspect ratio doesn't match[/bold italic]"
                 else:
+                    COMPARISON_BOX_SIZE = 75
+                    image.thumbnail((COMPARISON_BOX_SIZE, COMPARISON_BOX_SIZE), Image.Resampling.LANCZOS)
                     reference_image = numpy.asarray(image)
                     (reference_width, reference_height) = image.size
                     caption += " [bold]reference[/bold]"
