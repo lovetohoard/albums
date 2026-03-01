@@ -1,4 +1,5 @@
 import logging
+import mimetypes
 from copy import copy
 from enum import Enum, auto
 from pathlib import Path
@@ -134,7 +135,8 @@ def _picture_from_path(file: Path, picture_scanner: PictureScanner) -> PictureFi
         # Note: recording images that are valid but lack metadata would cause issues with detecting duplicates and assigning cover art
         return None
 
-    scan_result = picture_scanner.scan(read_binary_file(file))
+    expect_mime_type, _ = mimetypes.guess_type(file.name)
+    scan_result = picture_scanner.scan(read_binary_file(file), expect_mime_type)
     picture = Picture(scan_result.picture_info, PictureType.from_filename(file.name), "", scan_result.load_issue)
     return PictureFile(picture, int(stat.st_mtime), False)
 

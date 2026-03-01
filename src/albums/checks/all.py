@@ -15,8 +15,8 @@ from .picture.check_cover_dimensions import CheckCoverDimensions
 from .picture.check_cover_embedded import CheckCoverEmbedded
 from .picture.check_cover_unique import CheckCoverUnique
 from .picture.check_duplicate_image import CheckDuplicateImage
-from .picture.check_embedded_picture_metadata import CheckEmbeddedPictureMetadata
 from .picture.check_invalid_image import CheckInvalidImage
+from .picture.check_picture_metadata import CheckPictureMetadata
 from .tags.check_album_artist import CheckAlbumArtist
 from .tags.check_album_tag import CheckAlbumTag
 from .tags.check_artist_tag import CheckArtistTag
@@ -45,7 +45,7 @@ ALL_CHECKS: tuple[type[Check], ...] = (
     # picture checks
     CheckInvalidImage,
     CheckDuplicateImage,
-    CheckEmbeddedPictureMetadata,
+    CheckPictureMetadata,
     CheckAlbumArt,
     CheckCoverAvailable,
     CheckCoverUnique,

@@ -401,7 +401,7 @@ be stored. This check reports on all images that could not be loaded.
     `albums` does not rely on the file extension or the reported MIME type to
     load images. If the image data is valid, `albums` should be able to load it.
     When the MIME type is wrong, it will be reported (and can be fixed) by the
-    `embedded-picture-metadata` check.
+    `picture-metadata` check.
 
 The fix will list and offer to delete all image files that cannot be loaded, and
 remove all embedded images that cannot be loaded.
@@ -432,7 +432,7 @@ image contents, keep the one with the shortest filename and delete the rest.
 
 <!-- pyml enable line-length -->
 
-### embedded-picture-metadata
+### picture-metadata
 
 FLAC files
 [store metadata about embedded pictures](https://www.rfc-editor.org/rfc/rfc9639.html#name-picture)
