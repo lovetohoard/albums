@@ -103,14 +103,16 @@ def scan(ctx: Context, path_selector: Callable[[], Iterable[tuple[str, int | Non
 
             return (scanned, any_changes)
 
-        if show_progress:
+        if show_progress and ctx.console.is_interactive:
             with Progress(console=ctx.console) as progress:
                 scan_task = progress.add_task("Scanning", total=expected_path_count)
                 (scanned, any_changes) = scan_all(ctx.db, ctx.config.library, lambda: progress.update(scan_task, advance=1))
                 progress.update(scan_task, completed=expected_path_count)
-        else:
+        elif ctx.console.is_interactive:
             with ctx.console.status("Scanning album", spinner="bouncingBar"):
                 (scanned, any_changes) = scan_all(ctx.db, ctx.config.library, lambda: None)
+        else:
+            (scanned, any_changes) = scan_all(ctx.db, ctx.config.library, lambda: None)
 
         # remaining entries in unchecked_albums are apparently no longer in the library
         for path, album_id in unprocessed_albums.items():

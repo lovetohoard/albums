@@ -38,10 +38,10 @@ class TestCli:
         assert "Usage: albums [OPTIONS] COMMAND [ARGS]" in result.output
 
     def test_scan(self):
-        result = self.run(["scan"], init=True)
+        result = self.run(["-v", "scan"], init=True)
         assert result.exit_code == 0
         assert result.output.startswith("creating database")
-        assert "Scanning" in result.output
+        assert "scanned 3 folders" in result.output
 
         result = self.run(["scan"])
         assert result.exit_code == 0
