@@ -84,6 +84,7 @@ def interact(ctx: Context, check_name: str, check_result: CheckResult, album: Al
                 user_quit = True
             elif choice == OPTION_IGNORE_CHECK:
                 done = prompt_ignore_checks(ctx, album, check_name)
+                maybe_changed |= done
                 user_quit = done
             elif choice == OPTION_OPEN_FOLDER:
                 ctx.console.print(f"Opening folder {str(album_path)}", markup=False)
@@ -119,7 +120,7 @@ def prompt_ignore_checks(ctx: Context, album: Album, check_name: str):
     ignore_checks = list(album.ignore_checks)
     if check_name in ignore_checks:
         logger.error(f'did not expect "{check_name}" to already be ignored for {album.path}')
-    elif shortcuts.confirm(f'Do you want to ignore the check "{check_name}" for this album in the future?'):
+    elif shortcuts.confirm(f'Do you want to ignore the check "{check_name}" for this album?'):
         ignore_checks.append(check_name)
         operations.update_ignore_checks(ctx.db, album.album_id, ignore_checks)
         return True

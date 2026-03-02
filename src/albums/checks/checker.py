@@ -1,3 +1,4 @@
+import logging
 from dataclasses import dataclass
 from typing import Mapping, Sequence
 
@@ -12,6 +13,8 @@ from ..types import Album, CheckResult
 from .all import ALL_CHECKS
 from .base_check import Check
 from .helpers import album_display_name
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -77,6 +80,8 @@ class Checker:
                             preview_failed_checks.append(disposition.suppressed_failure_message)
                         if disposition.displayed:
                             issues_displayed += 1
+                else:
+                    logger.debug(f"skipping ignored check {check.name} for album {album.path}")
         return issues_displayed
 
     def get_required_disabled_checks(self) -> Mapping[str, Sequence[str]]:
@@ -113,8 +118,7 @@ class Checker:
                     reread = True  # probably could be False -> faster
                     (_, any_changes) = scanner.scan(self.ctx, lambda: [(album.path, album.album_id)], reread)
                     maybe_fixable = any_changes
-                    if maybe_fixable and self.ctx.db and album.album_id:
-                        # reload album so we can check it again
+                    if self.ctx.db and album.album_id:
                         album = operations.load_album(self.ctx.db, album.album_id, True)
                 else:
                     maybe_fixable = False

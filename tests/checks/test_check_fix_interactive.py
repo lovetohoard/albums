@@ -45,11 +45,11 @@ class TestCheckFixInteractive:
             mock_confirm = mocker.patch("albums.interactive.interact.shortcuts.confirm", return_value=True)
 
             (changed, quit) = interact(ctx, "album-tag", CheckResult("hello", fixer), album)
-            assert not changed
+            assert changed
             assert quit
             assert mock_choice.call_count == 1
             assert mock_confirm.call_count == 1
-            assert mock_confirm.call_args.args[0] == ('Do you want to ignore the check "album-tag" for this album in the future?')
+            assert mock_confirm.call_args.args[0] == ('Do you want to ignore the check "album-tag" for this album?')
 
             rows = ctx.db.execute("SELECT COUNT(*) FROM album_ignore_check WHERE album_id = ?", (album_id,)).fetchall()
             assert len(rows) == 1
@@ -67,7 +67,7 @@ class TestCheckFixInteractive:
 
             (changed, quit) = interact(ctx, "album-tag", CheckResult("hello", fixer), album)
             assert mock_confirm.call_count == 1
-            assert mock_confirm.call_args.args[0] == ('Do you want to ignore the check "album-tag" for this album in the future?')
+            assert mock_confirm.call_args.args[0] == ('Do you want to ignore the check "album-tag" for this album?')
 
             rows = ctx.db.execute("SELECT COUNT(*) FROM album_ignore_check WHERE album_id = ?", (album_id,)).fetchall()
             assert len(rows) == 1
