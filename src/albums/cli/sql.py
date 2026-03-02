@@ -7,13 +7,13 @@ from rich.panel import Panel
 from rich.table import Table
 
 from ..app import Context
-from . import cli_context
+from .cli_context import pass_context
 
 
 @click.command(help="run a SQL command against albums db")
 @click.argument("sql-command", required=True)
 @click.option("--json", "-j", is_flag=True, help="output result as JSON object")
-@cli_context.pass_context
+@pass_context
 def sql(ctx: Context, sql_command: str, json: bool):
     if not ctx.db:
         raise ValueError("sql requires database connection")

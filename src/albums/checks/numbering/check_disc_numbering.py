@@ -73,12 +73,12 @@ class CheckDiscNumbering(Check):
                 ),
             )
 
+        # TODO offer fixer if disc numbers in filenames look right
         if 0 in tracks_by_disc:
             # not all tracks have a disc number
             if len(tracks_by_disc) == 1:
                 return None  # no disc number or disc total on this album
             else:
-                # TODO offer fixer if disc numbers in filenames look right
                 return CheckResult("some tracks have disc number and some do not")
         else:  # all tracks have a disc number
             # TODO if discs_in_separate_folders=False and disc is 1 or 1/1 then offer to remove discnumber/disctotal (not automatic)
@@ -97,12 +97,10 @@ class CheckDiscNumbering(Check):
                         f"album only has a single disc {list(all_disc_numbers)[0]} of {expect_disc_total} (if this is wanted, enable discs_in_separate_folders)",
                     )
             elif missing_disc_numbers:
-                # TODO offer fixer if disc numbers in filenames look right
                 return CheckResult(f"missing disc numbers: {missing_disc_numbers}")
 
             unexpected_disc_numbers = all_disc_numbers - expect_disc_numbers
             if unexpected_disc_numbers:
-                # TODO offer fixer if disc numbers in filenames look right
                 return CheckResult(f"unexpected disc numbers: {unexpected_disc_numbers}")
 
         return None

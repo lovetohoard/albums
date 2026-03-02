@@ -3,18 +3,17 @@ from rich.prompt import Confirm
 
 from ..app import Context
 from ..checks.all import ALL_CHECK_NAMES
+from ..checks.helpers import album_display_name
 from ..database import operations
-from . import cli_context
+from .cli_context import pass_context, require_persistent_context
 
 
 @click.command("ignore", help="ignore certain checks for specified albums")
 @click.option("--force", "-f", is_flag=True, help="always skip confirmation")
 @click.argument("check_names", nargs=-1)
-@cli_context.pass_context
+@pass_context
 def checks_ignore(ctx: Context, force: bool, check_names: list[str]):
-    if not ctx.db:
-        raise ValueError("ignore requires database connection")
-
+    db = require_persistent_context(ctx)
     for album in ctx.select_albums(False):
         changed = False
         error = False
@@ -23,17 +22,17 @@ def checks_ignore(ctx: Context, force: bool, check_names: list[str]):
                 ctx.console.print(f'"{target_check}" is not a valid check name. See [bold]albums check --help')
                 error = True
             if target_check in album.ignore_checks:
-                ctx.console.print(f"album {album.path} is already configured to ignore {target_check}", markup=False)
+                ctx.console.print(f"album {album_display_name(ctx, album)} is already configured to ignore {target_check}")
             else:
                 album.ignore_checks = list(album.ignore_checks) + [target_check]
                 changed = True
-                if ctx.is_filtered():  # don't show individual albums if operating on all albums (confirm below)
-                    ctx.console.print(f"album {album.path} - ignore {target_check}", markup=False)
+                if ctx.is_filtered:  # don't show individual albums if operating on all albums (confirm below)
+                    ctx.console.print(f"album {album_display_name(ctx, album)} - ignore {target_check}")
 
         if changed and not error:
             if album.album_id is None:
                 raise ValueError(f"cannot ignore checks for album with no album_id: {album.path}")
-            if force or ctx.is_filtered() or Confirm.ask(f"ignore checks {check_names} for all albums?", console=ctx.console):
-                operations.update_ignore_checks(ctx.db, album.album_id, album.ignore_checks)
+            if force or ctx.is_filtered or Confirm.ask(f"ignore checks {check_names} for all albums?", console=ctx.console):
+                operations.update_ignore_checks(db, album.album_id, album.ignore_checks)
         elif error:
             ctx.console.print("changes not saved because some options were invalid")

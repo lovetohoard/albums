@@ -23,12 +23,14 @@ OPTION_IGNORE_CHECK = ">> Ignore this check for this album"
 
 
 def interact(ctx: Context, check_name: str, check_result: CheckResult, album: Album) -> Tuple[bool, bool]:
-    # if there is a fixer, offer the options it provides
+    # if there is a fixer, offer the options it specifies
+    #
     # always offer these options:
     #  - do nothing
-    #  - ignore this check for this album
-    #  - run tagger (if configured + issue is tag related)
     #  - open new window to browse album folder
+    # if a tagger is configured: option to run tagger
+    # if the context is persistent: option to ignore this check for this album
+    #
     # if there is an automatic fix option, it is the default, otherwise do nothing is the default
 
     fixer = check_result.fixer
@@ -43,7 +45,8 @@ def interact(ctx: Context, check_name: str, check_result: CheckResult, album: Al
         options.extend([opt for opt in fixer.options if opt not in [OPTION_FREE_TEXT, OPTION_RUN_TAGGER, OPTION_DO_NOTHING]])
     if fixer and fixer.option_free_text:
         options.append(OPTION_FREE_TEXT)
-    options.append(OPTION_IGNORE_CHECK)
+    if ctx.persistent:
+        options.append(OPTION_IGNORE_CHECK)
     do_nothing_index = len(options)
     options.append(OPTION_DO_NOTHING)
     if ctx.config.tagger:

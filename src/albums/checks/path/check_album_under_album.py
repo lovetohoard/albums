@@ -1,3 +1,5 @@
+from albums.checks.helpers import album_display_name
+
 from ...types import Album, CheckResult
 from ..base_check import Check
 
@@ -20,4 +22,4 @@ class CheckAlbumUnderAlbum(Check):
             ),
         ).fetchone()
         if matches > 0:
-            return CheckResult(f"there are {matches} albums in directories under album {album.path}")
+            return CheckResult(f"there are {matches} albums in directories under album {album_display_name(self.ctx, album)}")

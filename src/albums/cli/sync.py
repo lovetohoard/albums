@@ -6,7 +6,7 @@ import rich_click as click
 from ..app import Context
 from ..library import synchronizer
 from ..types import RescanOption
-from . import cli_context
+from .cli_context import pass_context, require_persistent_context
 from .scan import scan
 
 logger = logging.getLogger(__name__)
@@ -16,8 +16,9 @@ logger = logging.getLogger(__name__)
 @click.argument("destination")
 @click.option("--delete", is_flag=True, help="delete unrecognized paths in destination")
 @click.option("--force", is_flag=True, help="skip confirmation when deleting files")
-@cli_context.pass_context
+@pass_context
 def sync(ctx: Context, destination: str, delete: bool, force: bool):
+    require_persistent_context(ctx)
     dest = Path(destination)
     if dest.exists() and dest.is_dir():
         if ctx.config.rescan == RescanOption.AUTO and ctx.click_ctx:

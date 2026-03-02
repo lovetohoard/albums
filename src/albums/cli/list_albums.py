@@ -3,16 +3,17 @@ from json import dumps
 
 import humanize
 import rich_click as click
-from rich.markup import escape
 from rich.table import Table
 
+from albums.checks.helpers import album_display_name
+
 from ..app import Context
-from . import cli_context
+from .cli_context import pass_context
 
 
 @click.command("list", help="print matching albums")
 @click.option("--json", "-j", is_flag=True, help="output all stored details in JSON")
-@cli_context.pass_context
+@pass_context
 def list_albums(ctx: Context, json: bool):
     total_size = 0
     total_length = 0
@@ -30,7 +31,7 @@ def list_albums(ctx: Context, json: bool):
                 ctx.console.print(dumps(album.to_dict()), end="", highlight=False, markup=False, soft_wrap=True)  # otherwise compact
         else:
             table.add_row(
-                escape(album.path + " ").strip(),
+                album_display_name(ctx, album),
                 str(len(album.tracks)),
                 "{:02}:{:02}".format(*divmod(int(tracks_length) // 60, 60)),
                 humanize.naturalsize(tracks_size, binary=True),

@@ -116,7 +116,7 @@ class TestCheckCoverUnique:
         assert "1000 x 1000" in str(rows[1][0])
         assert "400 x 400" in str(rows[1][1])
 
-        update_picture_files_mock = mocker.patch("albums.checks.picture.check_cover_unique.operations.update_picture_files")
+        update_picture_files_mock = mocker.patch("albums.checks.picture.check_cover_unique.update_picture_files")
         fix_result = result.fixer.fix(result.fixer.options[result.fixer.option_automatic_index])
         assert fix_result
         assert update_picture_files_mock.call_count == 1
@@ -145,7 +145,7 @@ class TestCheckCoverUnique:
         assert result.fixer.options == [">> Mark as front cover source: cover_big.png", ">> Mark as front cover source: cover_small.png"]
         assert result.fixer.option_automatic_index == 0
 
-        update_picture_files_mock = mocker.patch("albums.checks.picture.check_cover_unique.operations.update_picture_files")
+        update_picture_files_mock = mocker.patch("albums.checks.picture.check_cover_unique.update_picture_files")
         fix_result = result.fixer.fix(result.fixer.options[result.fixer.option_automatic_index])
         assert fix_result
         assert update_picture_files_mock.call_count == 1

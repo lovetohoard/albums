@@ -1,7 +1,7 @@
 import logging
 import sqlite3
 from collections.abc import Generator
-from typing import Any, Callable, Collection
+from typing import Any, Callable, Self
 
 import click
 from rich.console import Console
@@ -14,18 +14,15 @@ SCANNER_VERSION = 1
 
 
 class Context(dict[Any, Any]):  # this is a dict because it's required to be by click
+    parent: Self | None = None
     console = Console()  # single shared Console
     click_ctx: click.Context | None
     db: sqlite3.Connection | None
     select_albums: Callable[[bool], Generator[Album, None, None]]
+    is_filtered: bool
     config: Configuration
-    filter_collections: Collection[str]
-    filter_paths: Collection[str]
-    filter_regex: bool
     verbose: int = 0
-
-    def is_filtered(self):
-        return len(self.filter_collections) > 0 or len(self.filter_paths) > 0
+    persistent = True
 
     def __init__(self, *args, **kwargs):  # pyright: ignore[reportMissingParameterType, reportUnknownParameterType]
         super(Context, self).__init__(*args, **kwargs)

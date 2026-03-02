@@ -4,7 +4,7 @@ from typing import Collection, Sequence
 
 from rich.markup import escape
 
-from ...database import operations
+from ...database.operations import update_picture_files
 from ...interactive.image_table import render_image_table
 from ...tagger.types import Picture, PictureType
 from ...types import Album, CheckResult, Fixer
@@ -141,6 +141,6 @@ class CheckCoverUnique(Check):
             for picfile in album.picture_files:
                 album.picture_files[picfile].cover_source = picfile == filename
             self.ctx.console.print(f"setting cover source file to {escape(filename)}")
-            operations.update_picture_files(self.ctx.db, album.album_id, album.picture_files)
+            update_picture_files(self.ctx.db, album.album_id, album.picture_files)
             return True
         raise ValueError(f"invalid option {option}")

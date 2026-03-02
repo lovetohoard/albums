@@ -1,4 +1,5 @@
 import glob
+import itertools
 import logging
 import sqlite3
 import time
@@ -9,6 +10,7 @@ from rich.markup import escape
 from rich.progress import Progress
 
 from ..app import SCANNER_VERSION, Context
+from ..checks.helpers import album_display_name
 from ..database import operations
 from ..types import ScanHistoryEntry
 from .folder import AlbumScanResult, scan_folder
@@ -56,6 +58,7 @@ def scan(ctx: Context, path_selector: Callable[[], Iterable[tuple[str, int | Non
                 else:
                     paths = glob.glob("**/", root_dir=ctx.config.library, recursive=True)
                     expected_path_count = len(paths)
+                paths = itertools.chain(["."], paths)
                 show_progress = True
 
         def scan_all(db: sqlite3.Connection, library_root: Path, update_progress: Callable[[], None]):
@@ -73,14 +76,14 @@ def scan(ctx: Context, path_selector: Callable[[], Iterable[tuple[str, int | Non
                 scan_results[result.name] += 1
 
                 if album and album_id is not None and result == AlbumScanResult.UNCHANGED:
-                    logger.debug(f"no changes detected for album {album.path}", extra={"highlighter": None})
+                    logger.debug(f"no changes detected for album {album_display_name(ctx, album)}", extra={"highlighter": None})
                     operations.update_scanner(db, album_id, SCANNER_VERSION)
                 elif album and result == AlbumScanResult.NEW:
-                    logger.info(f"add album {album.path}", extra={"highlighter": None})
+                    logger.info(f"add album {album_display_name(ctx, album)}", extra={"highlighter": None})
                     operations.add(db, album)
                     any_changes = True
                 elif album and album_id is not None and result == AlbumScanResult.UPDATED:
-                    logger.info(f"update track info for album {album.path}", extra={"highlighter": None})
+                    logger.info(f"update track info for album {album_display_name(ctx, album)}", extra={"highlighter": None})
                     # TODO only update what changed
                     operations.update_tracks(db, album_id, album.tracks)
                     operations.update_picture_files(db, album_id, album.picture_files)
@@ -88,7 +91,7 @@ def scan(ctx: Context, path_selector: Callable[[], Iterable[tuple[str, int | Non
                     any_changes = True
                 elif not album and result == AlbumScanResult.NO_TRACKS:
                     if stored_album and album_id:
-                        logger.info(f"remove album {album_id} {stored_album.path}", extra={"highlighter": None})
+                        logger.info(f"remove album {album_id} {album_display_name(ctx, stored_album)}", extra={"highlighter": None})
                         operations.remove(db, album_id)
                         any_changes = True
                 else:

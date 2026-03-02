@@ -11,6 +11,7 @@ from ..tagger.provider import AlbumTaggerProvider
 from ..types import Album, CheckResult
 from .all import ALL_CHECKS
 from .base_check import Check
+from .helpers import album_display_name
 
 
 @dataclass(frozen=True)
@@ -63,7 +64,7 @@ class Checker:
                             self.ctx.console.print(message, highlight=False)
                         preview_failed_checks = []
                         self.ctx.console.print(
-                            f'[bold]dependency not met for check {check.name}[/bold] on "{escape(album.path + " ").strip()}": {" and ".join(missing_dependent_checks)} must pass first',
+                            f'[bold]dependency not met for check {check.name}[/bold] on "{album_display_name(self.ctx, album)}": {" and ".join(missing_dependent_checks)} must pass first',
                             highlight=False,
                         )
                         issues_displayed += 1
@@ -128,24 +129,25 @@ class Checker:
         user_quit = False
         suppressed_failure_message = None
         if self._preview and fixer and fixer.option_automatic_index is not None:
-            self.ctx.console.print(f'[bold]preview automatic fix {check.name}:[/bold] "{escape(album.path)}"', highlight=False)
+            self.ctx.console.print(f'[bold]preview automatic fix {check.name}:[/bold] "{album_display_name(self.ctx, album)}"', highlight=False)
             self.ctx.console.print(f"    {escape(check_result.message)}", highlight=False)
             self.ctx.console.print(f"    {fixer.prompt}: {fixer.options[fixer.option_automatic_index]}", highlight=False)
             displayed_any = True
         elif self._automatic and fixer and fixer.option_automatic_index is not None:
             self.ctx.console.print(
-                f'[bold]automatically fixing {check.name}:[/bold] "{escape(album.path)}" - {escape(check_result.message)}', highlight=False
+                f'[bold]automatically fixing {check.name}:[/bold] "{album_display_name(self.ctx, album)}" - {escape(check_result.message)}',
+                highlight=False,
             )
             self.ctx.console.print(f"    {fixer.prompt}: {fixer.options[fixer.option_automatic_index]}", highlight=False)
             maybe_changed = fixer.fix(fixer.options[fixer.option_automatic_index])
             displayed_any = True
         elif self._interactive or (fixer and self._fix):
             self.ctx.console.print()
-            self.ctx.console.print(f'>> "{album.path}"', highlight=False, markup=False)
+            self.ctx.console.print(f'>> "{album_display_name(self.ctx, album)}"', highlight=False)
             (maybe_changed, user_quit) = interact(self.ctx, check.name, check_result, album)
             displayed_any = True
         else:
-            message = f'[bold]{check.name}[/bold] {escape(check_result.message)} : "{escape(album.path + " ").strip()}"'
+            message = f'[bold]{check.name}[/bold] {escape(check_result.message)} : "{album_display_name(self.ctx, album)}"'
             if self._preview:
                 suppressed_failure_message = message
             else:

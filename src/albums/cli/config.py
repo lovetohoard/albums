@@ -10,17 +10,16 @@ from albums.interactive.configurator import interactive_config, set_library
 from ..app import Context
 from ..database import configuration
 from ..types import RescanOption
-from . import cli_context
+from .cli_context import pass_context, require_persistent_context
 
 
 @click.command(help="reconfigure albums", epilog="use `albums config` with no options for interactive configuration")
 @click.option("--show", "-s", is_flag=True, help="show the current configuration")
 @click.argument("name", required=False)
 @click.argument("value", required=False)
-@cli_context.pass_context
+@pass_context
 def config(ctx: Context, show: bool, name: str, value: str):
-    if not ctx.db:
-        raise ValueError("config requires database connection")
+    db = require_persistent_context(ctx)
     if name and not value:
         ctx.console.print("error: must specify both name and value, or neither")
         raise SystemExit(1)
@@ -32,10 +31,10 @@ def config(ctx: Context, show: bool, name: str, value: str):
         ctx.console.print(table)
 
     if name and value:
-        _set(ctx, ctx.db, name, value)
+        _set(ctx, db, name, value)
         ctx.console.print(f"{name} = {value}")
     elif not show:
-        interactive_config(ctx, ctx.db)
+        interactive_config(ctx, db)
 
 
 def _set(ctx: Context, db: sqlite3.Connection, setting_name: str, value: str):

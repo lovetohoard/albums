@@ -21,19 +21,20 @@ unintended results. If it goes very badly, simply restore your backup.
 
 ## Check Command
 
-To list (and optionally fix) issues in the library, use the `albums check`
-command. This will run all enabled checks, unless some check names are provided,
-in which case it will run those only. No changes will be applied unless one of
-the fix options is specified. You can filter what albums are examined. See
-`albums --help` and `albums check --help`.
+To list (and optionally fix) issues, use the `albums check` command. This will
+run all enabled checks, unless some check names are provided, in which case it
+will run those only. No changes will be applied unless one of the fix options is
+specified. You can filter what albums are examined. See `albums --help` and
+`albums check --help`.
 
-Checks run quickly becasue they are looking at data in the database, not the
-actual albums on the file system. Results are based on the most recent scan of
-the library.
+Run checks on any directory (outside the library) with the `--dir` option, which
+can fix files but will not store data (such as ignoring certain checks or
+marking front cover image files) Otherwise, checks will run against the most
+recent scan of the library.
 
 !!!tip
 
-    By default, `albums` automatically runs a scan first when running `check`.
+    By default `albums` automatically scans when using `check` on the library.
     You can disable this with the `rescan` setting (see [Usage](./usage.md)),
     but if you do, make sure to run `albums scan` manually whenever any changes
     are made to the library outside of `albums`.
@@ -48,6 +49,7 @@ look for and/or fix issues.
 | Task                                                   | Example Command                                   |
 | ------------------------------------------------------ | ------------------------------------------------- |
 | Run all enabled checks on the library (no fixing)      | `albums check`                                    |
+| Run all enabled checks on any folder                   | `albums --dir /path/to/an/album check`            |
 | Run enabled checks in matching folders                 | `albums -regex --path "Foo" check`                |
 | Run a specific check (and checks it requires)          | `albums check duplicate-image`                    |
 | When there is a quick fix, stop and ask what to do     | `albums check --fix`                              |

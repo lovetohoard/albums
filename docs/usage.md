@@ -6,14 +6,23 @@ icon: lucide/user
 
 ## Configuration
 
-`albums` needs to know where your albums are. The default is the
-operating-system defined user's music directory. When initializing, the
-`--library` option allows you to set the location of the library.
+To work with a large music library and use custom configuration settings
+`albums` needs a database which it will create automatically after asking. When
+initializing, you will be asked if you want to use the operating-system defined
+user's music directory as your library. Or the `--library` option can specify
+another location.
+
+!!!tip
+
+    To get started **without** specifying a library, use the `--dir` option
+    with the `check` command (or `list` or `sql`) to work on one album instead
+    of a library. When `-d`/`--dir` is specified, no information will be stored
+    between runs, and `albums` will not ask for a library location or prompt to
+    create a database. Try: `albums --dir /path/to/one/album check --fix`
 
 ## Basic commands
 
-> To see **all** commands and options, run `albums --help` and
-> `albums <command> --help`.
+To see **all** options, run `albums --help` and `albums <command> --help`.
 
 `albums scan` will scan the library. This happens automatically the first time
 the tool is used, if there is a library in the configured location to scan.
@@ -25,16 +34,16 @@ the tool is used, if there is a library in the configured location to scan.
     take a few seconds. If you interrupt the scan with ^C, it will continue
     where it left off next time.
 
+Get a list of issues with `albums check`. Learn about using `albums` to fix
+problems in [Check and Fix](./check_and_fix.md).
+
 Most commands can be filtered. For example, to list albums matching a path
 (relative path within the library), run
 `albums --regex --path "Freezepop" list`.
 
-Get a list of issues with `albums check`. Learn about using `albums` to fix
-problems in [Check and Fix](./check_and_fix.md).
-
-Albums can be in sets called "collections". To create a collection named "DAP"
-containing albums to sync to a Digital Audio Player, use for example
-`albums -rp "Freezepop" add DAP`. Review the collection with
+Within a library, albums can be in sets called "collections". To create a
+collection named "DAP" containing albums to sync to a Digital Audio Player, use
+for example `albums -rp "Freezepop" add DAP`. Review the collection with
 `albums --collection DAP list`. To copy/sync it to an SD card, see
 [Synchronize](./sync.md).
 

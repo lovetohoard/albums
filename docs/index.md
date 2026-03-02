@@ -4,9 +4,9 @@ icon: lucide/target
 
 # Overview
 
-`albums` is an interactive tool to manage a library of music: configurably
-validate and fix tags and metadata, rename files, format and embed album art,
-and sync parts of the library to digital audio players or portable storage
+`albums` is an interactive tool to manage music: configurably validate and fix
+tags and metadata, rename files, format and embed album art, and sync parts of
+the library to digital audio players or portable storage
 
 This documentation is for `albums` version **%%version_placeholder%%**.
 
@@ -22,12 +22,19 @@ This documentation is for `albums` version **%%version_placeholder%%**.
 Install with `pipx install albums` in an environment with Python 3.12 or newer.
 
 Each album (soundtrack, mixtape...) is expected to be in a folder, or `albums`
-won't be helpful. The rest of the folder structure doesn't matter.
+won't be helpful.
 
-Run `albums scan` to get started. It will ask you to confirm whether your music
-library is in the default user home directory location (e.g. `~/Music`). If it
-isn't, run `albums --library "/path/to/library" scan` instead. It may take
-several minutes to index a large collection. See [Usage](./usage.md).
+To immediately start scanning for issues in a single album or a few albums, with
+default settings, run: `albums --dir /path/to/an/album check`. Add `--fix` at
+the end to see repair options or `--help` for more choices. Using the `--dir`
+(or `-d`) option, no data is stored between runs.
+
+Albums can store information about a library of music in its database. Run
+`albums scan` (without the `--dir` option) to get started. It will ask you to
+confirm whether your music library is in the default user home directory
+location (e.g. `~/Music`). It may take several minutes to index a large
+collection. Configuration settings are also stored in the database and can be
+customized by running `albums config`. See [Usage](./usage.md).
 
 ## Supported Formats
 

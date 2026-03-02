@@ -11,6 +11,10 @@ from ..types import Album, Track
 FRONT_COVER_FILENAME = "cover"
 
 
+def album_display_name(ctx: Context, album: Album) -> str:
+    return ctx.config.library.name if album.path == "." else escape(album.path + " ").strip()
+
+
 def get_tracks_by_disc(tracks: Sequence[Track]) -> Mapping[int, List[Track]] | None:
     """
     Return a dict mapping a list of tracks to discnumber values if possible. Tracks with no discnumber are mapped to 0.

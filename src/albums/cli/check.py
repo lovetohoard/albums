@@ -4,7 +4,7 @@ from ..app import Context
 from ..checks.all import ALL_CHECK_NAMES
 from ..checks.checker import Checker
 from ..types import RescanOption, default_checks_config
-from . import cli_context
+from .cli_context import pass_context
 from .scan import scan
 
 
@@ -18,7 +18,7 @@ from .scan import scan
 @click.option("--fix", "-f", is_flag=True, help="prompt when there is a selectable fix available")
 @click.option("--interactive", "-i", is_flag=True, help="ask what to do even if the only options are manual (implies -f)")
 @click.argument("checks", nargs=-1)
-@cli_context.pass_context
+@pass_context
 def check(ctx: Context, default: bool, automatic: bool, preview: bool, fix: bool, interactive: bool, checks: list[str]):
     if interactive and automatic:
         ctx.console.print("cannot use --interactive with --automatic")
