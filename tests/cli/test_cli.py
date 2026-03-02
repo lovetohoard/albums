@@ -9,8 +9,8 @@ from albums.picture.info import PictureInfo
 from albums.tagger.types import Picture, PictureType
 from albums.types import Album, PictureFile, Track
 
-from . import helpers
-from .fixtures.create_library import create_library, test_data_path
+from .. import helpers
+from ..fixtures.create_library import create_library, test_data_path
 
 albums = [
     Album(

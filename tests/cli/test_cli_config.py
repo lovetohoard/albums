@@ -2,8 +2,8 @@ import re
 
 import pytest
 
-from . import helpers
-from .fixtures.create_library import create_library
+from .. import helpers
+from ..fixtures.create_library import create_library
 
 
 class TestCliConfig:
