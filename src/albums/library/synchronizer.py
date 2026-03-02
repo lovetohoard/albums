@@ -5,9 +5,9 @@ from collections.abc import Iterator
 from pathlib import Path
 
 import humanize
+from prompt_toolkit.shortcuts import confirm
 from rich.markup import escape
 from rich.progress import Progress, TransferSpeedColumn
-from rich.prompt import Confirm
 
 from ..app import Context
 from ..types import Album
@@ -54,7 +54,7 @@ def do_sync(ctx: Context, albums: Iterator[Album], dest: Path, delete: bool, for
 
     if delete and len(existing_dest_paths) > 0:
         ctx.console.print(f"[orange]will delete {len(existing_dest_paths)} paths from {escape(str(dest))}")
-        if force or Confirm.ask("are you sure you want to delete?", default=False, console=ctx.console):
+        if force or confirm("are you sure you want to delete?"):
             ctx.console.print("[bold red]deleting files from destination")
             for delete_path in sorted(existing_dest_paths, reverse=True):
                 if delete_path.is_dir():

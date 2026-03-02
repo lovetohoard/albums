@@ -5,9 +5,8 @@ import subprocess
 from pathlib import Path
 from typing import Tuple
 
-from prompt_toolkit.shortcuts import choice
+from prompt_toolkit import shortcuts
 from rich.markup import escape
-from rich.prompt import Confirm
 from rich.table import Table
 
 from ..app import Context
@@ -76,7 +75,7 @@ def interact(ctx: Context, check_name: str, check_result: CheckResult, album: Al
             if choice == OPTION_RUN_TAGGER:
                 ctx.console.print(f"Launching {ctx.config.tagger} {str(album_path)}", markup=False)
                 subprocess.Popen([ctx.config.tagger, str(album_path)])
-                while not Confirm.ask("Done making changes in external program?", console=ctx.console):
+                while not shortcuts.confirm("Done making changes in external program?"):
                     pass
                 maybe_changed |= True
                 done = True
@@ -90,12 +89,12 @@ def interact(ctx: Context, check_name: str, check_result: CheckResult, album: Al
                 ctx.console.print(f"Opening folder {str(album_path)}", markup=False)
                 os_open_folder(ctx, album_path)
                 ctx.console.print()
-                while not Confirm.ask("Done making changes in external program?", console=ctx.console):
+                while not shortcuts.confirm("Done making changes in external program?"):
                     pass
                 maybe_changed |= True
                 done = True
             elif choice is None:  # if user pressed esc, confirm
-                done = Confirm.ask("Do you want to move on to the next check?", default=True, console=ctx.console)
+                done = shortcuts.confirm("Do you want to move on to the next check?")
                 user_quit = done
 
         elif fixer:
@@ -120,7 +119,7 @@ def prompt_ignore_checks(ctx: Context, album: Album, check_name: str):
     ignore_checks = list(album.ignore_checks)
     if check_name in ignore_checks:
         logger.error(f'did not expect "{check_name}" to already be ignored for {album.path}')
-    elif Confirm.ask(f'Do you want to ignore the check "{check_name}" for this album in the future?', console=ctx.console, default=False):
+    elif shortcuts.confirm(f'Do you want to ignore the check "{check_name}" for this album in the future?'):
         ignore_checks.append(check_name)
         operations.update_ignore_checks(ctx.db, album.album_id, ignore_checks)
         return True
@@ -140,5 +139,5 @@ def os_open_folder(ctx: Context, path: Path):
 
 def _choose_from_menu(prompt: str, options: list[str], default_option_index: int | None) -> int | None:
     default_option = options[default_option_index] if default_option_index is not None else None
-    selection = choice(message=prompt, options=[(o, o) for o in options], default=default_option)
+    selection = shortcuts.choice(message=prompt, options=[(o, o) for o in options], default=default_option)
     return options.index(selection)

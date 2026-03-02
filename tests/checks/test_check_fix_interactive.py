@@ -2,7 +2,6 @@ import contextlib
 import os
 from typing import Sequence, Tuple
 
-import rich
 from rich.console import RenderableType
 
 from albums.app import Context
@@ -28,7 +27,7 @@ class TestCheckFixInteractive:
         album = Album(os.sep, [Track("1.flac")])
         ctx = Context()
         fixer = MockFixer(ctx, album)
-        mock_choice = mocker.patch("albums.interactive.interact.choice", return_value=fixer.options[0])
+        mock_choice = mocker.patch("albums.interactive.interact.shortcuts.choice", return_value=fixer.options[0])
 
         (changed, quit) = interact(ctx, "", CheckResult("hello", fixer), album)
         assert changed
@@ -42,15 +41,15 @@ class TestCheckFixInteractive:
             album_id = operations.add(ctx.db, album)
 
             fixer = MockFixer(ctx, album)
-            mock_choice = mocker.patch("albums.interactive.interact.choice", return_value=OPTION_IGNORE_CHECK)
-            mock_ask = mocker.patch.object(rich.prompt.Confirm, "ask", return_value=True)
+            mock_choice = mocker.patch("albums.interactive.interact.shortcuts.choice", return_value=OPTION_IGNORE_CHECK)
+            mock_confirm = mocker.patch("albums.interactive.interact.shortcuts.confirm", return_value=True)
 
             (changed, quit) = interact(ctx, "album-tag", CheckResult("hello", fixer), album)
             assert not changed
             assert quit
             assert mock_choice.call_count == 1
-            assert mock_ask.call_count == 1
-            assert mock_ask.call_args.args[0] == ('Do you want to ignore the check "album-tag" for this album in the future?')
+            assert mock_confirm.call_count == 1
+            assert mock_confirm.call_args.args[0] == ('Do you want to ignore the check "album-tag" for this album in the future?')
 
             rows = ctx.db.execute("SELECT COUNT(*) FROM album_ignore_check WHERE album_id = ?", (album_id,)).fetchall()
             assert len(rows) == 1
@@ -63,12 +62,12 @@ class TestCheckFixInteractive:
             album_id = operations.add(ctx.db, album)
 
             fixer = MockFixer(ctx, album, [], False, None)
-            mocker.patch("albums.interactive.interact.choice", return_value=OPTION_IGNORE_CHECK)
-            mock_ask = mocker.patch.object(rich.prompt.Confirm, "ask", return_value=True)
+            mocker.patch("albums.interactive.interact.shortcuts.choice", return_value=OPTION_IGNORE_CHECK)
+            mock_confirm = mocker.patch("albums.interactive.interact.shortcuts.confirm", return_value=True)
 
             (changed, quit) = interact(ctx, "album-tag", CheckResult("hello", fixer), album)
-            assert mock_ask.call_count == 1
-            assert mock_ask.call_args.args[0] == ('Do you want to ignore the check "album-tag" for this album in the future?')
+            assert mock_confirm.call_count == 1
+            assert mock_confirm.call_args.args[0] == ('Do you want to ignore the check "album-tag" for this album in the future?')
 
             rows = ctx.db.execute("SELECT COUNT(*) FROM album_ignore_check WHERE album_id = ?", (album_id,)).fetchall()
             assert len(rows) == 1

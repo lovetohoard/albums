@@ -1,5 +1,5 @@
 import rich_click as click
-from rich.prompt import Confirm
+from prompt_toolkit.shortcuts import confirm
 
 from ..app import Context
 from ..checks.all import ALL_CHECK_NAMES
@@ -32,7 +32,7 @@ def checks_ignore(ctx: Context, force: bool, check_names: list[str]):
         if changed and not error:
             if album.album_id is None:
                 raise ValueError(f"cannot ignore checks for album with no album_id: {album.path}")
-            if force or ctx.is_filtered or Confirm.ask(f"ignore checks {check_names} for all albums?", console=ctx.console):
+            if force or ctx.is_filtered or confirm(f"ignore checks {check_names} for all albums?"):
                 operations.update_ignore_checks(db, album.album_id, album.ignore_checks)
         elif error:
             ctx.console.print("changes not saved because some options were invalid")

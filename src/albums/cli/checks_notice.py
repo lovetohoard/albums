@@ -1,5 +1,5 @@
 import rich_click as click
-from rich.prompt import Confirm
+from prompt_toolkit.shortcuts import confirm
 
 from ..app import Context
 from ..checks.all import ALL_CHECK_NAMES
@@ -29,7 +29,7 @@ def checks_notice(ctx: Context, force: bool, check_names: list[str]):
                 ctx.console.print(f"album {album_display_name(ctx, album)} was already not ignoring {target_check}")
 
         if changed and not error:
-            if force or ctx.is_filtered or Confirm.ask(f"stop ignoring checks {check_names} for all albums?", console=ctx.console):
+            if force or ctx.is_filtered or confirm(f"stop ignoring checks {check_names} for all albums?"):
                 if album.album_id is None:
                     raise ValueError(f"unexpected album.album_id=None for {album_display_name(ctx, album)}")
                 operations.update_ignore_checks(db, album.album_id, album.ignore_checks)

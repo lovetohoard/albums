@@ -7,8 +7,8 @@ from pathlib import Path
 
 import click
 from platformdirs import PlatformDirs
+from prompt_toolkit.shortcuts import confirm
 from rich.logging import RichHandler
-from rich.prompt import Confirm
 
 from ..app import Context
 from ..database import configuration, connection, selector
@@ -61,7 +61,7 @@ def setup(
     elif not dir:
         new_library_path: Path | None = None
         if PLATFORM_DIRS.user_music_path.is_dir():
-            if Confirm.ask(f"No path specifed with --library, use {str(PLATFORM_DIRS.user_music_path)} ?", console=app_context.console):
+            if confirm(f"No path specifed with --library, use {str(PLATFORM_DIRS.user_music_path)} ?"):
                 new_library_path = PLATFORM_DIRS.user_music_path
         _ensure_library_dir(new_library_path)
         db = _create_db_and_set_context_config(ctx, app_context, album_db_path, new_library_path)
@@ -136,9 +136,7 @@ def _open_db_and_set_context_config(ctx: click.Context, app_context: Context, al
 
 
 def _create_db_and_set_context_config(ctx: click.Context, app_context: Context, album_db_path: Path, new_library_path: Path | None):
-    if app_context.console.is_interactive and not Confirm.ask(
-        f"No database file found at {str(album_db_path)}. Create this file?", console=app_context.console
-    ):
+    if app_context.console.is_interactive and not confirm(f"No database file found at {str(album_db_path)}. Create this file?"):
         raise SystemExit(1)
 
     os.makedirs(album_db_path.parent, exist_ok=True)
