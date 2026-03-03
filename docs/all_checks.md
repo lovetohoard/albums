@@ -134,7 +134,9 @@ Otherwise, delete the tag.
 
 ### disc-numbering
 
-Reports on issues with disc number and disc total (`TPOS` in ID3).
+Reports on issues with disc number and disc total (`TPOS` in ID3). Optionally,
+removes redundant disc number tag for sets of one. See configuration to control
+whether multiple disc sets should be required to have all tracks in one folder.
 
 Rules:
 
@@ -159,18 +161,25 @@ automatic fix if the policy is "always".)
 
 <!-- pyml disable line-length -->
 
-| Option = default                       | Description                                                  |
-| -------------------------------------- | ------------------------------------------------------------ |
-| `discs_in_separate_folders` = **true** | albums with multiple discs may be stored in separate folders |
-| `disctotal_policy` = `"consistent"`    | Set the tag presence policy for disc total                   |
+| Option = default                          | Description                                                             |
+| ----------------------------------------- | ----------------------------------------------------------------------- |
+| `discs_in_separate_folders` = **true**    | if true, albums with multiple discs may be stored in separate folders   |
+| `remove_redundant_discnumber` = **false** | if true, disc number tag "1" can be removed if there are no other discs |
+| `disctotal_policy` = `"consistent"`       | Set the tag presence policy for disc total                              |
 
 <!-- pyml enable line-length -->
+
+!!!note
+
+    `discs_in_separate_folders` and `remove_redundant_discnumber` cannot both
+    be true. If discs are in separate folders, disc 1 might be part of a set.
 
 > When `discs_in_separate_folders` is enabled (default), this check will
 > **ignore** when an album has only one disc of a multiple disc set. But that
 > also means it cannot tell whether an album is missing a disc number or whether
 > disc total is correct. If you can put multiple-disc albums together in one
-> folder, do that and set discs_in_separate_folders` to **false**.
+> folder, do that and set `discs_in_separate_folders` to **false**. Then, if
+> wanted, you can also set `remove_redundant_discnumber` to **true**.
 
 ### track-numbering
 

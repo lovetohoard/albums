@@ -19,12 +19,15 @@ OPTION_SET_DISC_TOTAL = ">> Set disc total"
 
 class CheckDiscNumbering(Check):
     name = "disc-numbering"
-    default_config = {"enabled": True, "discs_in_separate_folders": True, "disctotal_policy": "consistent"}
+    default_config = {"enabled": True, "discs_in_separate_folders": True, "disctotal_policy": "consistent", "remove_redundant_discnumber": False}
     must_pass_checks = {"invalid-track-or-disc-number"}
 
     def init(self, check_config: dict[str, Any]):
         self.discs_in_separate_folders = check_config.get("discs_in_separate_folders", self.default_config["discs_in_separate_folders"])
         self.disctotal_policy = total_tags.Policy.from_str(str(check_config.get("disctotal_policy", self.default_config["disctotal_policy"])))
+        self.remove_redundant_discnumber = bool(check_config.get("remove_redundant_discnumber", self.default_config["remove_redundant_discnumber"]))
+        if self.remove_redundant_discnumber and self.discs_in_separate_folders:
+            raise ValueError("disc-numbering check cannot have discs_in_separate_folders=True and remove_redundant_discnumber=True at the same time")
 
     def check(self, album: Album) -> CheckResult | None:
         if not all(AlbumTagger.supports(track.filename, Cap.FORMATTED_TRACK_NUMBER) for track in album.tracks):
@@ -83,6 +86,7 @@ class CheckDiscNumbering(Check):
                 return CheckResult("some tracks have disc number and some do not")
         else:  # all tracks have a disc number
             # TODO if discs_in_separate_folders=False and disc is 1 or 1/1 then offer to remove discnumber/disctotal (not automatic)
+
             # discs should be numbered 1..disc total, but if there is no disc total, use 1..(# of discs) or 1..(highest disc number), whichever is more
             expect_disc_total = max(all_disc_totals)
             if expect_disc_total == 0:
@@ -103,6 +107,21 @@ class CheckDiscNumbering(Check):
             unexpected_disc_numbers = all_disc_numbers - expect_disc_numbers
             if unexpected_disc_numbers:
                 return CheckResult(f"unexpected disc numbers: {unexpected_disc_numbers}")
+
+            if self.remove_redundant_discnumber and len(all_disc_numbers) == 1 and expect_disc_total == 1 and all_disc_numbers.pop() == 1:
+                disctotal_notice = " and disc total 1" if max(all_disc_totals) else ""
+                options = [f">> Remove disc number 1{disctotal_notice} from all tracks"]
+                option_automatic_index = 0
+                return CheckResult(
+                    f"Apparently redundant disc number 1{disctotal_notice}",
+                    Fixer(
+                        lambda _: self._fix_remove_disc_number_disc_total_1(album),
+                        options,
+                        False,
+                        option_automatic_index,
+                        (["track", "filename"], [[describe_track_number(track), escape(track.filename)] for track in ordered_tracks(album)]),
+                    ),
+                )
 
         return None
 
@@ -125,4 +144,24 @@ class CheckDiscNumbering(Check):
                 self.ctx.console.print(f"setting disctotal on {track.filename}")
                 self.tagger.get(album.path).set_basic_tags(path, [(BasicTag.DISCTOTAL, value)])
                 changed = True
+        return changed
+
+    def _fix_remove_disc_number_disc_total_1(self, album: Album) -> bool:
+        changed = False
+        tagger = self.tagger.get(album.path)
+        for track in (track for track in album.tracks if (BasicTag.DISCNUMBER in track.tags or BasicTag.DISCTOTAL in track.tags)):
+            remove_tags: list[BasicTag] = []
+            if BasicTag.DISCNUMBER in track.tags:
+                if int(track.tags[BasicTag.DISCNUMBER][0]) != 1:
+                    raise ValueError(f"asked to remove disc number but it was not 1: {track.tags[BasicTag.DISCNUMBER]}")
+                remove_tags.append(BasicTag.DISCNUMBER)
+            if BasicTag.DISCTOTAL in track.tags:
+                if int(track.tags[BasicTag.DISCTOTAL][0]) != 1:
+                    raise ValueError(f"asked to remove disc total but it was not 1: {track.tags[BasicTag.DISCTOTAL]}")
+                remove_tags.append(BasicTag.DISCTOTAL)
+            self.ctx.console.print(f"removing {' and '.join(remove_tag.value for remove_tag in remove_tags)} from {escape(track.filename)}")
+            with tagger.open(track.filename) as tags:
+                for remove_tag in remove_tags:
+                    tags.set_tag(remove_tag, None)
+            changed = True
         return changed

@@ -4,7 +4,7 @@ from unittest.mock import call
 
 from albums.app import Context
 from albums.checks.numbering.check_disc_numbering import CheckDiscNumbering
-from albums.tagger.folder import AlbumTagger
+from albums.tagger.folder import AlbumTagger, TaggerFile
 from albums.types import Album, BasicTag, Track
 
 
@@ -160,3 +160,62 @@ class TestCheckDiscNumbering:
         result = CheckDiscNumbering(ctx).check(album)
         assert "album only has a single disc 1 of 2" in result.message
         assert result.fixer is None
+
+    def test_check_discnumbering_remove_redundant(self, mocker):
+        album = Album(
+            "foo",
+            [
+                Track("1-01.flac", {BasicTag.DISCNUMBER: ["1"]}),
+                Track("1-02.flac", {BasicTag.DISCNUMBER: ["1"]}),
+            ],
+        )
+        ctx = Context()
+        ctx.config.checks[CheckDiscNumbering.name]["discs_in_separate_folders"] = False
+        ctx.config.checks[CheckDiscNumbering.name]["remove_redundant_discnumber"] = True
+        result = CheckDiscNumbering(ctx).check(album)
+        assert "redundant disc number" in result.message
+        assert result.fixer
+        assert result.fixer.options == [">> Remove disc number 1 from all tracks"]
+        assert result.fixer.option_automatic_index == 0
+
+        tagger = TaggerFile()
+        mock_tagger_open = mocker.patch.object(AlbumTagger, "open")
+        mock_tagger_open.return_value.__enter__.return_value = tagger
+        mock_set_tag = mocker.patch.object(tagger, "set_tag")
+
+        assert result.fixer.fix(result.fixer.options[result.fixer.option_automatic_index])
+
+        assert mock_set_tag.call_count == 2
+        assert mock_set_tag.call_args_list == [call(BasicTag.DISCNUMBER, None), call(BasicTag.DISCNUMBER, None)]
+
+    def test_check_discnumbering_remove_redundant_total(self, mocker):
+        album = Album(
+            "foo",
+            [
+                Track("1-01.flac", {BasicTag.DISCNUMBER: ["1"], BasicTag.DISCTOTAL: ["1"]}),
+                Track("1-02.flac", {BasicTag.DISCNUMBER: ["1"], BasicTag.DISCTOTAL: ["1"]}),
+            ],
+        )
+        ctx = Context()
+        ctx.config.checks[CheckDiscNumbering.name]["discs_in_separate_folders"] = False
+        ctx.config.checks[CheckDiscNumbering.name]["remove_redundant_discnumber"] = True
+        result = CheckDiscNumbering(ctx).check(album)
+        assert "redundant disc number 1 and disc total 1" in result.message
+        assert result.fixer
+        assert result.fixer.options == [">> Remove disc number 1 and disc total 1 from all tracks"]
+        assert result.fixer.option_automatic_index == 0
+
+        tagger = TaggerFile()
+        mock_tagger_open = mocker.patch.object(AlbumTagger, "open")
+        mock_tagger_open.return_value.__enter__.return_value = tagger
+        mock_set_tag = mocker.patch.object(tagger, "set_tag")
+
+        assert result.fixer.fix(result.fixer.options[result.fixer.option_automatic_index])
+
+        assert mock_set_tag.call_count == 4
+        assert mock_set_tag.call_args_list == [
+            call(BasicTag.DISCNUMBER, None),
+            call(BasicTag.DISCTOTAL, None),
+            call(BasicTag.DISCNUMBER, None),
+            call(BasicTag.DISCTOTAL, None),
+        ]
