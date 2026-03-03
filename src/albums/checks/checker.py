@@ -33,13 +33,18 @@ class Checker:
     _preview: bool
     _fix: bool
     _interactive: bool
+    _show_ignore_option: bool
 
-    def __init__(self, ctx: Context, automatic: bool, preview: bool, fix: bool, interactive: bool):
+    def __init__(self, ctx: Context, automatic: bool, preview: bool, fix: bool, interactive: bool, show_ignore_option: bool):
+        if preview and (automatic or fix or interactive):
+            ctx.console.print("--preview cannot be used with other fix options")
+            raise SystemExit(1)
         self.ctx = ctx
         self._automatic = automatic
         self._preview = preview
         self._fix = fix
         self._interactive = interactive
+        self._show_ignore_option = show_ignore_option
 
     def run_enabled(self) -> int:
         need_checks = self.get_required_disabled_checks()
@@ -148,7 +153,7 @@ class Checker:
         elif self._interactive or (fixer and self._fix):
             self.ctx.console.print()
             self.ctx.console.print(f'>> "{album_display_name(self.ctx, album)}"', highlight=False)
-            (maybe_changed, user_quit) = interact(self.ctx, check.name, check_result, album)
+            (maybe_changed, user_quit) = interact(self.ctx, check.name, check_result, album, self._show_ignore_option)
             displayed_any = True
         else:
             message = f'[bold]{check.name}[/bold] {escape(check_result.message)} : "{album_display_name(self.ctx, album)}"'

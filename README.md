@@ -1,8 +1,8 @@
 # albums
 
 Manage a library of music: configurably validate and fix tags and metadata,
-rename files, format and embed album art, and sync parts of the library to
-digital audio players or portable storage
+rename files, reformat and embed album art, import albums, and sync parts of the
+library to digital audio players or portable storage
 
 - [Read the documentation here](https://4levity.github.io/albums/)
 
@@ -14,12 +14,13 @@ not required. It's a command-line application that runs in a terminal, but it is
 designed to be user friendly, with interactive menus, rich text formatting,
 tables and even blocky graphics.
 
-It scans the media library and creates a database to make subsequent operations
-fast. It supports adding albums to "collections," for example to make a list of
-albums to sync to a digital audio player. It can also perform the sync. It has
+It scans a folder or a media library and can create a database to make
+subsequent operations fast. It has
 [many automated checks and fixes](https://4levity.github.io/albums/all_checks/)
 for metadata related issues such as track numbering (sequence, totals, disc
-numbers), album-artist tags, embedding cover art, etc.
+numbers), album-artist tags, embedding cover art, etc. It supports adding albums
+to "collections," for example to make a list of albums to sync to a digital
+audio player. It can also perform the sync.
 
 ## Why use `albums` instead of other music library tools?
 
@@ -34,10 +35,10 @@ is simple and quick.
 
 `albums` has some functionality related to these tools, but a different focus.
 Its main use is to find and fix metadata issues and apply tag/filename policies
-one album at a time across a large collection that's mostly organized (or at
-least in folders by albums). It does this with many individually-configurable
-"checks" which are mostly independent, letting the user decide which issues to
-address. And its DAP/external storage sync feature may prove useful.
+one album at a time, potentially across a large collection. It does this with
+many individually-configurable "checks" which are mostly independent, letting
+the user decide which issues to address. And its DAP/external storage sync
+feature may prove useful.
 
 ## Supported Media
 

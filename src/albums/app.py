@@ -6,7 +6,8 @@ from typing import Any, Callable, Self
 import click
 from rich.console import Console
 
-from .types import Album, Configuration
+from .configuration import Configuration
+from .types import Album
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +23,7 @@ class Context(dict[Any, Any]):  # this is a dict because it's required to be by 
     is_filtered: bool
     config: Configuration
     verbose: int = 0
-    persistent = True
+    is_persistent = True
 
     def __init__(self, *args, **kwargs):  # pyright: ignore[reportMissingParameterType, reportUnknownParameterType]
         super(Context, self).__init__(*args, **kwargs)
