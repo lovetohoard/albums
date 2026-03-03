@@ -3,6 +3,8 @@ import sqlite3
 import sys
 from pathlib import Path
 
+import humanize
+
 from .schema import SQL_INIT_SCHEMA, migrate
 
 logger = logging.getLogger(__name__)
@@ -23,6 +25,7 @@ def open(filename: str | Path):
     db = sqlite3.connect(filename, autocommit=True)
     try:
         db.executescript(SQL_INIT_CONNECTION)
+        _maintain(db)
         db.autocommit = False
 
         if new_database:
@@ -44,6 +47,19 @@ def open(filename: str | Path):
 def close(db: sqlite3.Connection):
     db.close()
     logger.debug("closed database")
+
+
+def _maintain(db: sqlite3.Connection):
+    [page_size, page_count, freelist_count] = db.execute(
+        "SELECT page_size, page_count, freelist_count FROM pragma_page_size, pragma_page_count, pragma_freelist_count;"
+    ).fetchall()[0]
+    size = page_size * page_count
+    wasted = page_size * freelist_count
+    logger.debug(f"database size approx {humanize.naturalsize(size, binary=True)} (wasted space approx {humanize.naturalsize(wasted, binary=True)})")
+    # if wasted space is > 10 MB or 20% of the total size, vacuum
+    if wasted > max(10 * 1024 * 1024, 0.2 * size):
+        logger.debug("vacuuming database")
+        db.execute("VACUUM;")
 
 
 if __name__ == "__main__":
