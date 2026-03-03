@@ -31,6 +31,12 @@ def require_persistent_context(ctx: Context) -> sqlite3.Connection:
     return ctx.db
 
 
+def require_library(ctx: Context) -> None:
+    if not ctx.config.library.is_dir():
+        logger.error(f"directory does not exist: {str(ctx.config.library)}")
+        raise SystemExit(1)
+
+
 def setup(
     ctx: click.Context,
     app_context: Context,
@@ -68,10 +74,6 @@ def setup(
     else:
         db = None
 
-    if db and not app_context.config.library.is_dir():
-        logger.error(f"library directory does not exist: {str(app_context.config.library)}")
-        raise SystemExit(1)
-
     if app_context.config.tagger:
         if not shutil.which(app_context.config.tagger):
             logger.warning(f'configuration specifies a tagger program "{app_context.config.tagger}" but it does not seem to be on the path')
@@ -101,9 +103,7 @@ def enter_folder_context(ctx: Context, folder: str, paths: list[str], regex: boo
     ctx.parent = parent
     ctx.config = copy(parent.config)
     ctx.config.library = Path(folder)
-    if not ctx.config.library.is_dir():
-        ctx.console.print(f"Must be a directory: {ctx.config.library}")
-        raise SystemExit(1)
+    require_library(ctx)
     logger.info(f"using in-memory context, library is {folder}")
 
     db = connection.open(connection.MEMORY)

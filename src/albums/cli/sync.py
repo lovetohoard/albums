@@ -6,7 +6,7 @@ import rich_click as click
 from ..app import Context
 from ..configuration import RescanOption
 from ..library import synchronizer
-from .cli_context import pass_context, require_persistent_context
+from .cli_context import pass_context, require_library, require_persistent_context
 from .scan import scan
 
 logger = logging.getLogger(__name__)
@@ -18,6 +18,7 @@ logger = logging.getLogger(__name__)
 @click.option("--force", is_flag=True, help="skip confirmation when deleting files")
 @pass_context
 def sync(ctx: Context, destination: str, delete: bool, force: bool):
+    require_library(ctx)
     require_persistent_context(ctx)
     dest = Path(destination)
     if dest.exists() and dest.is_dir():

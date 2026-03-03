@@ -6,7 +6,7 @@ import rich_click as click
 from ..app import Context
 from ..configuration import RescanOption
 from ..library import scanner
-from .cli_context import pass_context
+from .cli_context import pass_context, require_library
 
 logger = logging.getLogger(__name__)
 
@@ -15,6 +15,7 @@ logger = logging.getLogger(__name__)
 @click.option("--reread", "-r", is_flag=True, help="reread tracks even if size/timestamp are unchanged")
 @pass_context
 def scan(ctx: Context, reread: bool):
+    require_library(ctx)
     if ctx.config.rescan == RescanOption.ALWAYS:
         ctx.console.print("scan already done, not scanning again")
         return
