@@ -39,16 +39,6 @@ class TestCheckDuplicateImage:
         )
         assert not CheckDuplicateImage(Context()).check(album)
 
-    def test_multiple_images_in_track(self):
-        pictures = [
-            Picture(PictureInfo("image/png", 400, 400, 24, 1, b"1111"), PictureType.COVER_BACK, "", ()),
-            Picture(PictureInfo("image/png", 400, 400, 24, 1, b"2222"), PictureType.COVER_BACK, "", ()),
-        ]
-        album = Album("", [Track("1.flac", {}, 0, 0, StreamInfo(1.5, 0, 0, "FLAC"), pictures)])
-        result = CheckDuplicateImage(Context()).check(album)
-        assert result is not None
-        assert "there are 2 different images for COVER_BACK in one or more files" in result.message
-
     def test_duplicate_image_in_track(self):
         pictures = [
             Picture(PictureInfo("image/png", 400, 400, 24, 1, b""), PictureType.COVER_BACK, "", ()),

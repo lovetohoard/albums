@@ -26,7 +26,6 @@ class CheckDuplicateImage(Check):
         pictures_by_type: defaultdict[PictureType, set[Picture]] = defaultdict(set)
         picture_sources: defaultdict[Picture, list[tuple[str, bool, int]]] = defaultdict(list)
         for filename, embedded, pictures in album_art:
-            file_pics_by_type: defaultdict[PictureType, list[Picture]] = defaultdict(list)
             file_pics_by_content: defaultdict[Picture, list[Picture]] = defaultdict(list)
             for embed_ix, picture in enumerate(pictures):
                 if picture.type != PictureType.COVER_FRONT and self.cover_only:
@@ -34,7 +33,6 @@ class CheckDuplicateImage(Check):
                 picture_sources[picture].append((filename, embedded, embed_ix))
                 pictures_by_type[picture.type].add(picture)
                 if embedded:
-                    file_pics_by_type[picture.type].append(picture)
                     file_pics_by_content[picture].append(picture)
 
             # if we have duplicate or conflicting embedded images within one track, stop and fix - might have to do this for each track
@@ -43,10 +41,6 @@ class CheckDuplicateImage(Check):
                     # TODO: configurably allow duplicate image data if the picture_type is not the same
                     pic_types = ", ".join(sorted(set(pic.type.name for pic in file_pics_by_content[unique_picture])))
                     return CheckResult(f"duplicate embedded image data in one or more files: {pic_types}")
-            for picture_type in file_pics_by_type:
-                if len(file_pics_by_type[picture_type]) > 1:
-                    message = f"there are {len(file_pics_by_type[picture_type])} different images for {picture_type.name} in one or more files"
-                    return CheckResult(message)
 
         # TODO dedup for all pictures, if not self.cover_only
         front_covers = pictures_by_type.get(PictureType.COVER_FRONT, [])
