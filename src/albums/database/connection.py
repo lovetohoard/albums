@@ -19,25 +19,24 @@ SQL_CLEANUP = "DELETE FROM collection WHERE collection_id NOT IN (SELECT collect
 
 
 def open(filename: str | Path):
-    in_memory = filename == MEMORY
-    new_database = in_memory or not Path(filename).exists()
-
+    existing_db = Path(filename).exists()
     db = sqlite3.connect(filename, autocommit=True)
     try:
         db.executescript(SQL_INIT_CONNECTION)
-        _maintain(db)
-        db.autocommit = False
-
-        if new_database:
-            if not in_memory:
+        if filename == MEMORY:
+            db.executescript(SQL_INIT_SCHEMA)
+            db.autocommit = False
+            migrate(db, True)
+        else:
+            if existing_db:
+                _maintain(db)
+            else:
                 print(f"creating database {filename}")
-            with db:
                 db.executescript(SQL_INIT_SCHEMA)
-
-        migrate(db, in_memory)
-        with db:
-            db.executescript(SQL_CLEANUP)
-
+            db.autocommit = False
+            migrate(db, False)
+            with db:
+                db.executescript(SQL_CLEANUP)
         return db
     except Exception as ex:
         db.close()

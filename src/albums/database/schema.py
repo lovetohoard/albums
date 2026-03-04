@@ -125,7 +125,7 @@ ALTER TABLE track_picture ADD COLUMN depth_bpp INTEGER NOT NULL DEFAULT 0;
 CURRENT_SCHEMA_VERSION = max(MIGRATIONS.keys())
 
 
-def migrate(db: sqlite3.Connection, in_memory: bool):
+def migrate(db: sqlite3.Connection, quiet: bool):
     (db_version,) = db.execute("SELECT version FROM _schema;").fetchone()
     if db_version > CURRENT_SCHEMA_VERSION:
         raise RuntimeError(f"the database is newer than this version of albums ({db_version} > {CURRENT_SCHEMA_VERSION})")
@@ -133,10 +133,10 @@ def migrate(db: sqlite3.Connection, in_memory: bool):
         return
 
     migrations = range(db_version + 1, CURRENT_SCHEMA_VERSION + 1)
-    if not in_memory:
+    if not quiet:
         logger.debug(f"database schema version {db_version}, migrations to perform: {migrations}")
     for migration in migrations:
-        if not in_memory:
+        if not quiet:
             logger.info(f"migrating database: v{migration}")
         with db:
             db.executescript(MIGRATIONS[migration])
