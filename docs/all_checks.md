@@ -10,10 +10,11 @@ All checks and their configuration options.
 
 Enabled checks will run in order on each album:
 
-1. `duplicate-pathname` check
-1. `illegal-pathname` check
+1. `duplicate-pathname` check _("Path and Filename")_
+1. `illegal-pathname` check _("Path and Filename")_
+1. `extra-whitespace` check _("Other Tags")_
 1. All "Numbering" checks
-1. All "Other Tags" checks
+1. Remaining "Other Tags" checks
 1. All "Pictures" checks
 1. Remaining "Path and Filename" checks
 
