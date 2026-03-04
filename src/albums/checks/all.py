@@ -21,6 +21,7 @@ from .picture.check_picture_metadata import CheckPictureMetadata
 from .tags.check_album_artist import CheckAlbumArtist
 from .tags.check_album_tag import CheckAlbumTag
 from .tags.check_artist_tag import CheckArtistTag
+from .tags.check_extra_whitespace import CheckExtraWhitespace
 from .tags.check_single_value_tags import CheckSingleValueTags
 from .tags.check_track_title import CheckTrackTitle
 
@@ -29,6 +30,8 @@ ALL_CHECKS: tuple[type[Check], ...] = (
     # path checks 1
     CheckDuplicatePathname,
     CheckIllegalPathname,
+    # tag checks 1
+    CheckExtraWhitespace,
     # numbering checks
     CheckDiscInTrackNumber,
     CheckInvalidTrackOrDiscNumber,

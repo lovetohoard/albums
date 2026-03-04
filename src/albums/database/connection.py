@@ -5,7 +5,8 @@ from pathlib import Path
 
 import humanize
 
-from .schema import SQL_INIT_SCHEMA, migrate
+# don't put any relative imports here, will make this file not runnable
+from albums.database.schema import SQL_INIT_SCHEMA, migrate
 
 logger = logging.getLogger(__name__)
 

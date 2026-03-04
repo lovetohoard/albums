@@ -260,6 +260,14 @@ Choose a policy for each tag. The policy options are:
 
 Tag checks that are not related to numbering or pictures.
 
+### extra-whitespace
+
+None of the basic tags like album, artist, title, track number, etc. should have
+extra spaces or other whitespace characters at the beginning or end.
+
+**Automatic fix**: Remove whitespace from the beginning and end of all values
+for all supported basic text tags.
+
 ### album-tag
 
 Tracks should have `album` tags. The fix attempts to guess album name from tags
@@ -410,8 +418,6 @@ remove all embedded images that cannot be loaded.
 Each of the tracks in an album may have the same images embedded. But other
 duplicate image data is not useful. Rules:
 
-- Each track should only have one embedded picture per picture-type (don't have
-  two COVER_FRONT images in the same track)
 - Each of the pictures embedded in a track should be a different image (don't
   have the same image embedded twice)
 - Image files should not be exact duplicates of other image files
@@ -540,6 +546,27 @@ next automatic fix would delete the other image files identified as cover art:
 **Automatic fix**: If there are multiple image files (not embedded) recognized
 as front cover source by their filenames, and one of them has already been
 marked as "front cover source", delete the other front cover art image files.
+
+### conflicting-embedded
+
+Within each track, there should not be more than one picture for a given picture
+type (or optionally only for front cover pictures -- see options). For example,
+even if tracks have unique "front cover" images, a _single_ track should not
+have more than one embedded image marked as "front cover".
+
+No automated fix yet.
+
+!!!success "Dependency"
+
+    Requires the `duplicate-image` check to pass first.
+
+<!-- pyml disable line-length -->
+
+| Option = default         | Description                                                           |
+| ------------------------ | --------------------------------------------------------------------- |
+| `cover_only` = **false** | if enabled, ignore multiple pictures for types other than COVER_FRONT |
+
+<!-- pyml enable line-length -->
 
 ### cover-dimensions
 
