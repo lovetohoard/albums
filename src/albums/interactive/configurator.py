@@ -54,15 +54,17 @@ def _configure_settings(ctx: Context, db: sqlite3.Connection):
             options=[
                 ("library", f"library ({str(ctx.config.library)})"),
                 ("path_compatibility", f"path_compatibility ({ctx.config.path_compatibility})"),
+                ("path_replace_slash", f"path_replace_slash ({ctx.config.path_replace_slash})"),
+                ("path_replace_invalid", f"path_replace_invalid ({ctx.config.path_replace_invalid})"),
                 ("rescan", f"rescan ({ctx.config.rescan})"),
                 ("tagger", f"tagger ({ctx.config.tagger if ctx.config.tagger else 'not set'})"),
                 (
                     "open_folder_command",
                     f"open_folder_command ({ctx.config.open_folder_command if ctx.config.open_folder_command else 'not set'})",
                 ),
-                ("default_import_path", f"default_import_path {ctx.config.default_import_path.template}"),
-                ("default_import_path_various", f"default_import_path_various {ctx.config.default_import_path_various.template}"),
-                ("more_import_paths", f"more_import_paths {','.join(t.template for t in ctx.config.more_import_paths)}"),
+                ("default_import_path", f"default_import_path ({ctx.config.default_import_path.template})"),
+                ("default_import_path_various", f"default_import_path_various ({ctx.config.default_import_path_various.template})"),
+                ("more_import_paths", f"more_import_paths ({','.join(t.template for t in ctx.config.more_import_paths)})"),
                 ("back", "<< go back"),
             ],
         )
@@ -76,6 +78,8 @@ def _configure_setting(
     setting: Literal[
         "library",
         "path_compatibility",
+        "path_replace_slash",
+        "path_replace_invalid",
         "rescan",
         "tagger",
         "open_folder_command",
@@ -93,6 +97,12 @@ def _configure_setting(
             options = [(opt, opt.value) for opt in PathCompatibilityOption]
             option = choice(message="select file system compatibility level", options=options, default=ctx.config.path_compatibility.value)
             ctx.config.path_compatibility = PathCompatibilityOption(option)
+            db_config.save(db, ctx.config)
+        case "path_replace_slash":
+            ctx.config.path_replace_slash = prompt("Replace slash '/' character in path element with: ", default=ctx.config.path_replace_slash)
+            db_config.save(db, ctx.config)
+        case "path_replace_invalid":
+            ctx.config.path_replace_invalid = prompt("Replace invalid character in path or filename with: ", default=ctx.config.path_replace_invalid)
             db_config.save(db, ctx.config)
         case "rescan":
             options = [(opt, opt.value) for opt in RescanOption]

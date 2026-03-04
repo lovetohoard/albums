@@ -66,6 +66,8 @@ there are some global settings:
 | `library`                     | OS default                                   | Location of the music library                     |
 | `open_folder_command`         | OS default                                   | If not blank, program to browse files in an album |
 | `path_compatibility`          | `"universal"`                                | Configure what is allowed in filenames            |
+| `path_replace_slash`          | `"-"` _(a dash)_                             | Replace a "/" character in path element with this |
+| `path_replace_invalid`        | `""` _(nothing)_                             | Replace any other illegal character with this     |
 | `rescan`                      | `"auto"`                                     | When to automatically rescan the library          |
 | `tagger`                      | `"easytag"` (if installed)                   | External program to view and set tags in an album |
 | `default_import_path`         | `"$artist/$album"`                           | Import: default path for new albums in library    |

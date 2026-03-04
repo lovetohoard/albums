@@ -6,7 +6,6 @@ icon: lucide/flask-conical
 
 ## General features
 
-- Import newly scanned and fixed albums to library
 - Select/filter albums based on track tags, recent access, other
 - Configure what to do when encountering various ID3 versions
 - Support additional file formats

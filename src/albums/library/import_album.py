@@ -68,19 +68,20 @@ def make_library_paths(ctx: Context, album: Album):
     various = False
     using_artist = "artist" in used_identifiers or "A1" in used_identifiers or "a1" in used_identifiers
 
-    def safe_folder(folder: str) -> str:
-        return sanitize_filename(folder, platform=ctx.config.path_compatibility)
+    def safe_path_element(folder: str) -> str:
+        folder = folder.replace("/", ctx.config.path_replace_slash)
+        return sanitize_filename(folder, replacement_text=ctx.config.path_replace_invalid, platform=ctx.config.path_compatibility)
 
     if BasicTag.ALBUMARTIST in tag_values_by_freq:
         albumartists = tag_values_by_freq[BasicTag.ALBUMARTIST]
-        artist_v = safe_folder(albumartists[0][0])
+        artist_v = safe_path_element(albumartists[0][0])
         if len(albumartists) > 1 and using_artist:
             logger.warning(f"generating library path: more than one album artist value, using {artist_v}")
         if len(tag_values_by_freq.get(BasicTag.ARTIST, [])) > 1:
             various = True
     elif BasicTag.ARTIST in tag_values_by_freq:
         artists = tag_values_by_freq[BasicTag.ARTIST]
-        artist_v = safe_folder(artists[0][0])
+        artist_v = safe_path_element(artists[0][0])
         if len(artists) > 1:
             various = True
             if using_artist:
@@ -93,14 +94,14 @@ def make_library_paths(ctx: Context, album: Album):
     if "album" in used_identifiers:
         if BasicTag.ALBUM in tag_values_by_freq:
             albums = tag_values_by_freq[BasicTag.ALBUM]
-            album_v = safe_folder(albums[0][0])
+            album_v = safe_path_element(albums[0][0])
             if len(albums) > 1:
                 logger.warning(f"generating library path: more than one album artist value, using {album_v}")
         if not album_v:
             album_v = "Unknown Album"
             logger.warning(f"generating library path: no album artist or artist tags, using {artist_v}")
 
-    a1_v = str.lower(safe_folder(artist_v[4] if artist_v.lower().startswith("the ") and len(artist_v) > 4 else artist_v[0]))
+    a1_v = str.lower(safe_path_element(artist_v[4] if artist_v.lower().startswith("the ") and len(artist_v) > 4 else artist_v[0]))
     if a1_v.isnumeric():
         a1_v = "#"
 
@@ -108,7 +109,9 @@ def make_library_paths(ctx: Context, album: Album):
     logger.debug(f"substitutions for creating import paths: {substitutions}")
 
     def make_path(template: Template) -> str:
-        return sanitize_filepath(template.safe_substitute(substitutions), platform=ctx.config.path_compatibility)
+        return sanitize_filepath(
+            template.safe_substitute(substitutions), replacement_text=ctx.config.path_replace_invalid, platform=ctx.config.path_compatibility
+        )
 
     default = make_path(ctx.config.default_import_path)
     default_various = make_path(ctx.config.default_import_path_various)

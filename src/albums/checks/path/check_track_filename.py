@@ -13,13 +13,11 @@ from ..base_check import Check
 
 class CheckTrackFilename(Check):
     name = "track-filename"
-    default_config = {"enabled": True, "track_number_suffix": " ", "replace_invalid": "", "replace_slash": "-"}
+    default_config = {"enabled": True, "track_number_suffix": " "}
     must_pass_checks = {"album-artist", "artist-tag", "track-numbering", "track-title", "zero-pad-numbers"}
 
     def init(self, check_config: dict[str, Any]):
         self.track_number_suffix = str(check_config.get("track_number_suffix", CheckTrackFilename.default_config["track_number_suffix"]))
-        self.replace_invalid = str(check_config.get("replace_invalid", CheckTrackFilename.default_config["replace_invalid"]))
-        self.replace_slash = str(check_config.get("replace_slash", CheckTrackFilename.default_config["replace_slash"]))
 
     def check(self, album: Album):
         generated_filenames = [self._generate_filename(track) for track in album.tracks]
@@ -70,9 +68,9 @@ class CheckTrackFilename(Check):
         else:
             filename += title
 
-        filename = filename.replace("/", self.replace_slash)
+        filename = filename.replace("/", self.ctx.config.path_replace_slash)
         filename = sanitize_filename(
-            filename + Path(track.filename).suffix, replacement_text=self.replace_invalid, platform=self.ctx.config.path_compatibility
+            filename + Path(track.filename).suffix, replacement_text=self.ctx.config.path_replace_invalid, platform=self.ctx.config.path_compatibility
         )
         return filename
 

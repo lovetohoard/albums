@@ -48,7 +48,7 @@ depends on the `path_compatibility` global configuration setting (see
 Track filenames should match tags. They should include the track number and
 title. The filename should start with the disc number if part of a set, and
 include the artist name if the album is a compilation. Filenames should be valid
-(see `path_compatibility` setting in [Usage](./usage.md)).
+(see `path_compatibility` and related path settings in [Usage](./usage.md)).
 
 This check will compare filenames against filenames generated like this:
 
@@ -71,11 +71,9 @@ See options below if you prefer e.g. `01. Foo.mp3` or `01 - Foo.mp3` instead.
 
 <!-- pyml disable line-length -->
 
-| Option = default                            | Description                                   |
-| ------------------------------------------- | --------------------------------------------- |
-| `track_number_suffix` = `" "` _(one space)_ | Put this right after the disc/track number    |
-| `replace_slash` = `"-"` _(a dash)_          | Replace a "/" character with this             |
-| `replace_invalid` = `""` _(nothing)_        | Replace any other illegal character with this |
+| Option = default                            | Description                                |
+| ------------------------------------------- | ------------------------------------------ |
+| `track_number_suffix` = `" "` _(one space)_ | Put this right after the disc/track number |
 
 <!-- pyml enable line-length -->
 

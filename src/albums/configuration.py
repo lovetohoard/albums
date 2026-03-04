@@ -45,6 +45,8 @@ class Configuration:
     library: Path = Path(".")
     open_folder_command: str = ""
     path_compatibility: PathCompatibilityOption = PathCompatibilityOption.UNIVERSAL
+    path_replace_slash = "-"
+    path_replace_invalid = ""
     rescan: RescanOption = RescanOption.AUTO
     tagger: str = ""
 
@@ -55,7 +57,9 @@ class Configuration:
             "settings.more_import_paths": [path_T.template for path_T in self.more_import_paths],
             "settings.library": str(self.library),
             "settings.open_folder_command": self.open_folder_command,
-            "settings.path_compatibility": str(self.path_compatibility),
+            "settings.path_compatibility": self.path_compatibility.value,
+            "settings.path_replace_invalid": str(self.path_replace_invalid),
+            "settings.path_replace_slash": str(self.path_replace_slash),
             "settings.rescan": str(self.rescan),
             "settings.tagger": self.tagger,
         }
@@ -100,6 +104,10 @@ class Configuration:
                     config.open_folder_command = str(value)
                 elif name == "path_compatibility":
                     config.path_compatibility = PathCompatibilityOption(value)
+                elif name == "path_replace_invalid":
+                    config.path_replace_invalid = str(value)
+                elif name == "path_replace_slash":
+                    config.path_replace_slash = str(value)
                 elif name == "rescan":
                     config.rescan = RescanOption(value)
                 elif name == "tagger":

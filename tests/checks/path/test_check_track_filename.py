@@ -148,8 +148,8 @@ class TestCheckTrackFilename:
         ]
         album = Album("foobar" + os.sep, tracks)
         ctx = Context()
-        ctx.config.checks["track-filename"]["replace_invalid"] = "_"
-        ctx.config.checks["track-filename"]["replace_slash"] = ", "
+        ctx.config.path_replace_invalid = "_"
+        ctx.config.path_replace_slash = ", "
         result = CheckTrackFilename(ctx).check(album)
         assert result
         assert "track filenames do not match configured pattern" in result.message
