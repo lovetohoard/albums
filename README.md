@@ -1,5 +1,12 @@
 # albums
 
+![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/4levity/albums/publish.yml?branch=main&event=push&label=publish)
+![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/4levity/albums/docs.yml?branch=main&event=push&label=docs)
+![PyPI - Version](https://img.shields.io/pypi/v/albums)
+![PyPI - Status](https://img.shields.io/pypi/status/albums)
+![GitHub License](https://img.shields.io/github/license/4levity/albums)
+[![Buy Me a Coffee](https://img.shields.io/badge/donate-bb6600?&logo=buy-me-a-coffee&logoColor=black)](https://buymeacoffee.com/4levity)
+
 Manage a library of music: validate and fix tags and metadata, rename files,
 adjust and embed album art, clean up and import albums, and sync parts of the
 library to digital audio players or portable storage
