@@ -1,12 +1,13 @@
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Optional
 
-from sqlalchemy import REAL, Boolean, Column, Dialect, ForeignKey, Index, Integer, LargeBinary, Table, Text, TypeDecorator, text
+from sqlalchemy import REAL, Boolean, Column, ForeignKey, Index, Integer, LargeBinary, Table, Text, text
 from sqlalchemy.orm import DeclarativeBase, Mapped, composite, mapped_column, relationship
 
 from ..picture.info import PictureInfo
 from ..tagger.types import PictureType, StreamInfo
+from .orm_helpers import IntEnumAsInt, LoadIssuesAsJson, LoadIssuesType
 
 
 class Base(DeclarativeBase):
@@ -88,7 +89,7 @@ class PictureFileEntity(Base):
     filename: Mapped[str] = mapped_column(Text, nullable=False)
     modify_timestamp: Mapped[int] = mapped_column(Integer, nullable=False)
     cover_source: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=text("0"))
-    load_issue: Mapped[Optional[str]] = mapped_column(Text)  # TODO parse and map to Tuple[Tuple[str, str | int], ...]
+    load_issue: Mapped[LoadIssuesType] = mapped_column(LoadIssuesAsJson)
 
     _format: Mapped[str] = mapped_column("format", Text, nullable=False)
     _width: Mapped[int] = mapped_column("width", Integer, nullable=False)
@@ -124,20 +125,6 @@ class TrackEntity(Base):
     tags: Mapped[list[TrackTagEntity]] = relationship("TrackTagEntity", back_populates="track")
 
 
-class IntEnum[EnumType](TypeDecorator[EnumType]):
-    impl = Integer
-
-    def __init__(self, enum_type: type, *args: Any, **kwargs: Any):
-        super().__init__(*args, **kwargs)
-        self._enum_type = enum_type
-
-    def process_bind_param(self, value: EnumType | None, dialect: Dialect):  # pyright: ignore[reportUnknownParameterType]
-        return None if value is None else value.value  # type: ignore
-
-    def process_result_value(self, value: int | None, dialect: Dialect):
-        return self._enum_type(value)
-
-
 class TrackPictureEntity(Base):
     __tablename__ = "track_picture"
     __table_args__ = (Index("idx_track_picture_track_id", "track_id"),)
@@ -145,10 +132,10 @@ class TrackPictureEntity(Base):
     track_picture_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=False, primary_key=True)
     track_id: Mapped[Optional[int]] = mapped_column(ForeignKey("track.track_id"))
 
-    picture_type: Mapped[PictureType] = mapped_column(IntEnum[PictureType](PictureType), nullable=False)
+    picture_type: Mapped[PictureType] = mapped_column(IntEnumAsInt[PictureType](PictureType), nullable=False)
     embed_ix: Mapped[int] = mapped_column(Integer, nullable=False)
     description: Mapped[str] = mapped_column(Text, nullable=False)
-    load_issue: Mapped[Optional[str]] = mapped_column(Text)
+    load_issue: Mapped[LoadIssuesType] = mapped_column(LoadIssuesAsJson)
 
     _format: Mapped[str] = mapped_column("format", Text, nullable=False)
     _width: Mapped[int] = mapped_column("width", Integer, nullable=False)

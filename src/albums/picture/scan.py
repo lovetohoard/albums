@@ -6,11 +6,13 @@ from PIL import Image, UnidentifiedImageError
 
 from .info import PictureInfo, get_picture_info
 
+type LoadIssuesType = Tuple[Tuple[str, str | int], ...]
+
 
 @dataclass(frozen=True)
 class PictureScanResult:
     picture_info: PictureInfo
-    load_issue: Tuple[Tuple[str, str | int], ...]
+    load_issue: LoadIssuesType
 
 
 class PictureScanner:
@@ -45,7 +47,7 @@ class PictureScanner:
                 )
 
         (picture_info, error) = self._cache[key]
-        issues: Tuple[Tuple[str, str | int], ...]
+        issues: LoadIssuesType
         if error:
             issues = (("error", error),)
         else:

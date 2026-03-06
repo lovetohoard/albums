@@ -1,6 +1,5 @@
-import json
 import logging
-from typing import Any, Collection, Sequence, Tuple
+from typing import Collection, Sequence
 
 from sqlalchemy import Engine, delete, desc, select
 from sqlalchemy.orm import Session
@@ -67,7 +66,7 @@ def _picture(entity: TrackPictureEntity | PictureFileEntity, picture_type: Pictu
         entity.file_info,
         picture_type,
         "",
-        _load_load_issue(entity.load_issue),
+        entity.load_issue,
     )
 
 
@@ -77,7 +76,7 @@ def _picture_file(entity: PictureFileEntity) -> PictureFile:
         entity.file_info,
         entity.modify_timestamp,
         entity.cover_source,
-        _load_load_issue(entity.load_issue),
+        entity.load_issue,
     )
 
 
@@ -121,7 +120,7 @@ def _picture_file_to_entity(file: PictureFile) -> PictureFileEntity:
         modify_timestamp=file.modify_timestamp,
         cover_source=file.cover_source,
         file_info=file.file_info,
-        load_issue=json.dumps(dict(file.load_issue)) if file.load_issue else None,
+        load_issue=file.load_issue,
     )
 
 
@@ -130,7 +129,7 @@ def _picture_to_entity(pic: Picture, embed_ix: int) -> TrackPictureEntity:
         picture_type=pic.type,
         file_info=pic.file_info,
         description=pic.description,
-        load_issue=json.dumps(dict(pic.load_issue)) if pic.load_issue else None,
+        load_issue=pic.load_issue,
         embed_ix=embed_ix,
     )
 
@@ -182,14 +181,6 @@ def update_picture_files(db: Engine, album_id: int, picture_files: Sequence[Pict
         album = session.scalars(select(AlbumEntity).where(AlbumEntity.album_id == album_id)).one()
         album.picture_files = [_picture_file_to_entity(file) for file in picture_files]
         session.commit()
-
-
-def _load_load_issue(value: Any) -> Tuple[Tuple[str, str | int], ...]:
-    if not value:
-        return ()
-    load_issue = json.loads(value)
-    kv: dict[str, str | int] = load_issue  # pyright: ignore[reportUnknownVariableType]
-    return tuple([(k, v) for [k, v] in kv.items()])
 
 
 def record_full_scan(db: Engine, entry: ScanHistoryEntry):

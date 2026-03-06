@@ -5,6 +5,7 @@ from typing import Callable, Collection, Dict, Mapping, Sequence, Tuple, Union
 from rich.console import RenderableType
 
 from .picture.info import PictureInfo
+from .picture.scan import LoadIssuesType
 from .tagger.types import BasicTag, Picture, PictureType, StreamInfo
 
 type CheckConfiguration = Dict[str, Union[str, int, float, bool, Sequence[str]]]
@@ -35,7 +36,7 @@ class PictureFile:
     file_info: PictureInfo
     modify_timestamp: int
     cover_source: bool
-    load_issue: Tuple[Tuple[str, str | int], ...] = ()
+    load_issue: LoadIssuesType = ()
 
     def to_dict(self):
         return self.__dict__ | {"file_info": self.file_info.to_dict()}

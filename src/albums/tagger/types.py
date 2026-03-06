@@ -30,6 +30,7 @@ from mutagen.wave import WAVE
 from mutagen.wavpack import WavPack
 
 from ..picture.info import PictureInfo
+from ..picture.scan import LoadIssuesType
 
 
 class BasicTag(StrEnum):
@@ -116,7 +117,7 @@ class Picture:
     file_info: PictureInfo
     type: PictureType
     description: str
-    load_issue: Tuple[Tuple[str, str | int], ...]
+    load_issue: LoadIssuesType
 
     def to_dict(self):
         result = self.__dict__ | {"file_info": self.file_info.to_dict()}
