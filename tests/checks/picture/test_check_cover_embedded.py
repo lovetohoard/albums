@@ -79,7 +79,7 @@ class TestCheckCoverEmbedded:
         assert mock_update_picture_files.call_args.args == (
             True,
             1,
-            {"cover.png": PictureFile(Picture(PictureInfo("image/png", 0, 0, 0, 0, b""), PictureType.COVER_FRONT, "", ()), 0, True)},
+            [PictureFile("cover.png", PictureInfo("image/png", 0, 0, 0, 0, b""), 0, True)],
         )
         m_open.assert_has_calls([call(Path(".") / album.path / "cover.png", "wb")])
 
@@ -103,7 +103,7 @@ class TestCheckCoverEmbedded:
             ],
             [],
             [],
-            {"cover.png": PictureFile(Picture(PictureInfo("image/png", 0, 0, 0, 0, b""), PictureType.COVER_FRONT, "", ()), 0, True)},
+            [PictureFile("cover.png", PictureInfo("image/png", 0, 0, 0, 0, b""), 0, True)],
         )
         album.album_id = 1
         ctx = Context()

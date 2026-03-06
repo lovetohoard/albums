@@ -7,8 +7,7 @@ from PIL import Image
 from albums.app import Context
 from albums.checks.path.check_cover_filename import CheckCoverFilename
 from albums.picture.info import PictureInfo
-from albums.tagger.types import PictureType
-from albums.types import Album, Picture, PictureFile, Track
+from albums.types import Album, PictureFile, Track
 
 from ...fixtures.create_library import make_image_data
 
@@ -21,7 +20,7 @@ class TestCheckCoverFilename:
                 [Track("1.flac")],
                 [],
                 [],
-                {"cover.jpg": PictureFile(Picture(PictureInfo("image/jpeg", 1, 1, 1, 1, b""), PictureType.COVER_FRONT, "", ()), 0, False)},
+                [PictureFile("cover.jpg", PictureInfo("image/jpeg", 1, 1, 1, 1, b""), 0, False)],
             )
         )
 
@@ -32,7 +31,7 @@ class TestCheckCoverFilename:
                 [Track("1.flac")],
                 [],
                 [],
-                {"cover.png": PictureFile(Picture(PictureInfo("image/png", 1, 1, 1, 1, b""), PictureType.COVER_FRONT, "", ()), 0, False)},
+                [PictureFile("cover.png", PictureInfo("image/png", 1, 1, 1, 1, b""), 0, False)],
             )
         )
 
@@ -43,7 +42,7 @@ class TestCheckCoverFilename:
                 [Track("1.flac")],
                 [],
                 [],
-                {"other.jpg": PictureFile(Picture(PictureInfo("image/jpeg", 1, 1, 1, 1, b""), PictureType.OTHER, "", ()), 0, False)},
+                [PictureFile("other.jpg", PictureInfo("image/jpeg", 1, 1, 1, 1, b""), 0, False)],
             )
         )
 
@@ -53,12 +52,10 @@ class TestCheckCoverFilename:
             [Track("1.flac")],
             [],
             [],
-            {
-                "cover.jpg": PictureFile(
-                    Picture(PictureInfo("image/jpeg", 1, 1, 1, 1, b""), PictureType.COVER_FRONT, "", ()), 0, False
-                ),  # check will pass because this file exists
-                "folder.png": PictureFile(Picture(PictureInfo("image/png", 1, 1, 1, 1, b""), PictureType.COVER_FRONT, "", ()), 0, False),
-            },
+            [
+                PictureFile("cover.jpg", PictureInfo("image/jpeg", 1, 1, 1, 1, b""), 0, False),  # check will pass because this file exists
+                PictureFile("folder.png", PictureInfo("image/png", 1, 1, 1, 1, b""), 0, False),
+            ],
         )
         assert not CheckCoverFilename(Context()).check(album)
 
@@ -68,10 +65,10 @@ class TestCheckCoverFilename:
             [Track("1.flac")],
             [],
             [],
-            {
-                "folder.jpg": PictureFile(Picture(PictureInfo("image/jpeg", 1, 1, 1, 1, b""), PictureType.COVER_FRONT, "", ()), 0, False),
-                "folder.png": PictureFile(Picture(PictureInfo("image/png", 1, 1, 1, 1, b""), PictureType.COVER_FRONT, "", ()), 0, False),
-            },
+            [
+                PictureFile("folder.jpg", PictureInfo("image/jpeg", 1, 1, 1, 1, b""), 0, False),
+                PictureFile("folder.png", PictureInfo("image/png", 1, 1, 1, 1, b""), 0, False),
+            ],
         )
         result = CheckCoverFilename(Context()).check(album)
         assert result
@@ -84,7 +81,7 @@ class TestCheckCoverFilename:
             [Track("1.flac")],
             [],
             [],
-            {"folder.jpg": PictureFile(Picture(PictureInfo("image/jpeg", 1, 1, 1, 1, b""), PictureType.COVER_FRONT, "", ()), 0, False)},
+            [PictureFile("folder.jpg", PictureInfo("image/jpeg", 1, 1, 1, 1, b""), 0, False)],
         )
         result = CheckCoverFilename(Context()).check(album)
         assert result
@@ -104,7 +101,7 @@ class TestCheckCoverFilename:
             [Track("1.flac")],
             [],
             [],
-            {"folder.jpg": PictureFile(Picture(PictureInfo("image/jpeg", 1, 1, 1, 1, b""), PictureType.COVER_FRONT, "", ()), 999, True)},
+            [PictureFile("folder.jpg", PictureInfo("image/jpeg", 1, 1, 1, 1, b""), 999, True)],
             1,
         )
         ctx = Context()
@@ -126,7 +123,7 @@ class TestCheckCoverFilename:
         assert mock_update_picture_files.call_args.args == (
             True,
             1,
-            {"cover.jpg": PictureFile(Picture(PictureInfo("image/jpeg", 1, 1, 1, 1, b""), PictureType.COVER_FRONT, "", ()), 999, True)},
+            [PictureFile("cover.jpg", PictureInfo("image/jpeg", 1, 1, 1, 1, b""), 999, True)],
         )
 
     def test_cover_filename_rename_case_insensitive(self, mocker):
@@ -135,7 +132,7 @@ class TestCheckCoverFilename:
             [Track("1.flac")],
             [],
             [],
-            {"Cover.JPG": PictureFile(Picture(PictureInfo("image/jpeg", 1, 1, 1, 1, b""), PictureType.COVER_FRONT, "", ()), 0, False)},
+            [PictureFile("Cover.JPG", PictureInfo("image/jpeg", 1, 1, 1, 1, b""), 0, False)],
         )
         result = CheckCoverFilename(Context()).check(album)
         assert result
@@ -158,7 +155,7 @@ class TestCheckCoverFilename:
             [Track("1.flac")],
             [],
             [],
-            {"cover.png": PictureFile(Picture(PictureInfo("image/jpeg", 1, 1, 1, 1, b""), PictureType.COVER_FRONT, "", ()), 0, False)},
+            [PictureFile("cover.png", PictureInfo("image/jpeg", 1, 1, 1, 1, b""), 0, False)],
         )
         ctx = Context()
         ctx.config.checks["cover-filename"]["filename"] = "cover.jpg"

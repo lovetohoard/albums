@@ -59,17 +59,20 @@ class CheckCoverDimensions(Check):
             covers = [pic for pic in track.pictures if pic.type == PictureType.COVER_FRONT]
             if covers:
                 embedded_covers[covers[0]] = track.filename
-        cover_files = [
-            (file, filename) for filename, file in album.picture_files.items() if PictureType.from_filename(filename) == PictureType.COVER_FRONT
-        ]
-        if all(self._cover_good_enough(cover) for cover in chain(embedded_covers.keys(), (file.picture for (file, _) in cover_files))):
+        cover_files = [file for file in album.picture_files if PictureType.from_filename(file.filename) == PictureType.COVER_FRONT]
+        if all(
+            self._cover_good_enough(cover)
+            for cover in chain(
+                embedded_covers.keys(), (Picture(file.file_info, PictureType.COVER_FRONT, "", file.load_issue) for file in cover_files)
+            )
+        ):
             return None
 
         if len(cover_files) > 1:
             return CheckResult(
                 "some cover dimensions are out of range, and there is more than one front cover image file (check cover-unique suggested)"
             )
-        file_cover = cover_files[0][0] if cover_files else None
+        file_cover = cover_files[0] if cover_files else None
         if len(embedded_covers) > 1:
             return CheckResult(
                 "some cover dimensions are out of range, and there is more than one unique embedded cover image file (check cover-unique suggested)"
@@ -80,19 +83,15 @@ class CheckCoverDimensions(Check):
         else:
             embedded_cover = None
 
-        if (
-            file_cover
-            and embedded_cover
-            and not file_cover.cover_source
-            and file_cover.picture.file_info.file_hash != embedded_cover.file_info.file_hash
-        ):
+        if file_cover and embedded_cover and not file_cover.cover_source and file_cover.file_info.file_hash != embedded_cover.file_info.file_hash:
             return CheckResult(
                 "some cover dimensions are out of range, cover image file is not unique and not cover_source (check cover-unique suggested)"
             )
 
         if file_cover:  # either cover_source or identical to embedded images
-            (cover_file, from_file) = cover_files[0]
-            cover = cover_file.picture
+            cover_file = cover_files[0]
+            from_file = cover_file.filename
+            cover = Picture(cover_file.file_info, PictureType.COVER_FRONT, "", cover_file.load_issue)
             embedded = False
         elif embedded_cover:
             (cover, from_file) = list(embedded_covers.items())[0]
@@ -160,15 +159,18 @@ class CheckCoverDimensions(Check):
         else:
             original_path = None
             new_path = self.ctx.config.library / album.path / f"cover{suffix}"
-        picture_files = dict(album.picture_files)
+
         if original_path and source_filename:
             self.ctx.console.print(f"Deleting {source_filename}")
             unlink(original_path)
-            del picture_files[source_filename]
+            picture_files = [file for file in album.picture_files if file.filename != source_filename]
+        else:
+            picture_files = list(album.picture_files)
 
         # mark new/replaced image as cover_source
-        picture_files[new_path.name] = PictureFile(Picture(picture.file_info, PictureType.COVER_FRONT, "", ()), 0, cover_source=True)
-        update_picture_files(self.ctx.db, album.album_id, picture_files)
+        picture_files.append(PictureFile(new_path.name, picture.file_info, 0, cover_source=True))
+        album.picture_files = picture_files
+        update_picture_files(self.ctx.db, album.album_id, album.picture_files)
 
         with open(new_path, "wb") as f:
             self.ctx.console.print(f"Writing {new_path.name}")

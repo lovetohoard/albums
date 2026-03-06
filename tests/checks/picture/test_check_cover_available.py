@@ -80,7 +80,7 @@ class TestCheckCoverAvailable:
             [Track("1.flac", {}, 0, 0, StreamInfo(1.5, 0, 0, "FLAC")), Track("2.flac", {}, 0, 0, StreamInfo(1.5, 0, 0, "FLAC"))],
             [],
             [],
-            {"other.png": PictureFile(Picture(PictureInfo("image/png", 400, 400, 24, 1, b""), PictureType.OTHER, "", ()), 0, False)},
+            [PictureFile("other.png", PictureInfo("image/png", 400, 400, 24, 1, b""), 0, False)],
         )
         result = CheckCoverAvailable(Context()).check(album)
         assert result is not None
@@ -118,7 +118,7 @@ class TestCheckCoverAvailable:
             ],
             [],
             [],
-            {"other.png": PictureFile(Picture(PictureInfo("image/png", 400, 400, 24, 1, b""), PictureType.OTHER, "", ()), 0, False)},
+            [PictureFile("other.png", PictureInfo("image/png", 400, 400, 24, 1, b""), 0, False)],
         )
         result = CheckCoverAvailable(Context()).check(album)
         assert result is not None

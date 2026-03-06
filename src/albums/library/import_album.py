@@ -32,7 +32,7 @@ def import_album(ctx: Context, source_path: Path, destination_path_in_library: s
     if extra or recursive:
         filenames = glob.iglob("**", root_dir=src, recursive=recursive)
     else:
-        filenames = chain((track.filename for track in album.tracks), album.picture_files.keys())
+        filenames = chain((track.filename for track in album.tracks), (file.filename for file in album.picture_files))
 
     to_copy: list[tuple[Path, Path, int]] = []  # list of (source, destination, size)
     for filename in filenames:

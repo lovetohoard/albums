@@ -1,6 +1,7 @@
 import io
 import os
 from pathlib import Path
+from typing import Sequence
 from unittest.mock import call, mock_open, patch
 
 from PIL import Image
@@ -45,7 +46,7 @@ class TestCheckCoverDimensions:
 
     def test_cover_not_square_enough_embedded(self, mocker):
         cover = Picture(PictureInfo("image/jpeg", 800, 1000, 24, 1, b""), PictureType.COVER_FRONT, "", ())
-        album = Album("foo" + os.sep, [Track("1.flac", {}, 0, 0, StreamInfo(1.5, 0, 0, "FLAC"), [cover])], [], [], {}, 1)
+        album = Album("foo" + os.sep, [Track("1.flac", {}, 0, 0, StreamInfo(1.5, 0, 0, "FLAC"), [cover])], [], [], [], 1)
         ctx = Context()
         ctx.db = True
         result = CheckCoverDimensions(ctx).check(album)
@@ -71,11 +72,10 @@ class TestCheckCoverDimensions:
         assert mock_update_picture_files.call_count == 1
         assert mock_update_picture_files.call_args.args[0]
         assert mock_update_picture_files.call_args.args[1] == 1
-        picture_files: dict[str, PictureFile] = mock_update_picture_files.call_args.args[2]
-        assert "cover.png" in picture_files
-        assert picture_files["cover.png"].cover_source
-        assert picture_files["cover.png"].picture.type == PictureType.COVER_FRONT
-        assert picture_files["cover.png"].picture.file_info.mime_type == "image/png"
+        picture_files: Sequence[PictureFile] = mock_update_picture_files.call_args.args[2]
+        cover = next(file for file in picture_files if file.filename == "cover.png")
+        assert cover.cover_source
+        assert cover.file_info.mime_type == "image/png"
 
         mock_handle = m_open.return_value
         image_data_written = mock_handle.write.call_args[0][0]
@@ -85,7 +85,7 @@ class TestCheckCoverDimensions:
 
     def test_cover_not_square_enough_embedded_preserve_type(self, mocker):
         cover = Picture(PictureInfo("image/jpeg", 800, 1000, 24, 1, b""), PictureType.COVER_FRONT, "", ())
-        album = Album("foo" + os.sep, [Track("1.flac", {}, 0, 0, StreamInfo(1.5, 0, 0, "FLAC"), [cover])], [], [], {}, 1)
+        album = Album("foo" + os.sep, [Track("1.flac", {}, 0, 0, StreamInfo(1.5, 0, 0, "FLAC"), [cover])], [], [], [], 1)
         ctx = Context()
         ctx.db = True
         ctx.config.checks[CheckCoverDimensions.name]["create_mime_type"] = ""
@@ -111,11 +111,10 @@ class TestCheckCoverDimensions:
         assert mock_update_picture_files.call_count == 1
         assert mock_update_picture_files.call_args.args[0]
         assert mock_update_picture_files.call_args.args[1] == 1
-        picture_files: dict[str, PictureFile] = mock_update_picture_files.call_args.args[2]
-        assert "cover.jpg" in picture_files
-        assert picture_files["cover.jpg"].cover_source
-        assert picture_files["cover.jpg"].picture.type == PictureType.COVER_FRONT
-        assert picture_files["cover.jpg"].picture.file_info.mime_type == "image/jpeg"
+        picture_files: Sequence[PictureFile] = mock_update_picture_files.call_args.args[2]
+        cover = next(file for file in picture_files if file.filename == "cover.jpg")
+        assert cover.cover_source
+        assert cover.file_info.mime_type == "image/jpeg"
 
         mock_handle = m_open.return_value
         image_data_written = mock_handle.write.call_args[0][0]
@@ -127,7 +126,12 @@ class TestCheckCoverDimensions:
     def test_cover_not_square_enough_jpg_file(self, mocker):
         cover = Picture(PictureInfo("image/jpeg", 1000, 800, 24, 1, b""), PictureType.COVER_FRONT, "", ())
         album = Album(
-            "foo" + os.sep, [Track("1.flac", {}, 0, 0, StreamInfo(1.5, 0, 0, "FLAC"))], [], [], {"folder.jpg": PictureFile(cover, 999, True)}, 1
+            "foo" + os.sep,
+            [Track("1.flac", {}, 0, 0, StreamInfo(1.5, 0, 0, "FLAC"))],
+            [],
+            [],
+            [PictureFile("folder.jpg", cover.file_info, 999, True)],
+            1,
         )
         ctx = Context()
         ctx.db = True
@@ -154,11 +158,10 @@ class TestCheckCoverDimensions:
         assert mock_update_picture_files.call_count == 1
         assert mock_update_picture_files.call_args.args[0]
         assert mock_update_picture_files.call_args.args[1] == 1
-        picture_files: dict[str, PictureFile] = mock_update_picture_files.call_args.args[2]
-        assert "folder.png" in picture_files
-        assert picture_files["folder.png"].cover_source
-        assert picture_files["folder.png"].picture.type == PictureType.COVER_FRONT
-        assert picture_files["folder.png"].picture.file_info.mime_type == "image/png"
+        picture_files: Sequence[PictureFile] = mock_update_picture_files.call_args.args[2]
+        png = next(file for file in picture_files if file.filename == "folder.png")
+        assert png.cover_source
+        assert png.file_info.mime_type == "image/png"
 
         mock_handle = m_open.return_value
         image_data_written = mock_handle.write.call_args[0][0]
@@ -167,9 +170,9 @@ class TestCheckCoverDimensions:
         assert new_cover.width == new_cover.height == min(cover.file_info.width, cover.file_info.height)
 
     def test_cover_not_square_enough_png_file(self, mocker):
-        cover = Picture(PictureInfo("image/png", 1000, 800, 24, 1, b""), PictureType.COVER_FRONT, "", ())
+        cover_info = PictureInfo("image/png", 1000, 800, 24, 1, b"")
         album = Album(
-            "foo" + os.sep, [Track("1.flac", {}, 0, 0, StreamInfo(1.5, 0, 0, "FLAC"))], [], [], {"folder.png": PictureFile(cover, 999, True)}, 1
+            "foo" + os.sep, [Track("1.flac", {}, 0, 0, StreamInfo(1.5, 0, 0, "FLAC"))], [], [], [PictureFile("folder.png", cover_info, 999, True)], 1
         )
         ctx = Context()
         ctx.db = True
@@ -179,7 +182,7 @@ class TestCheckCoverDimensions:
         assert result.fixer
         assert len(result.fixer.options) == 1
         assert result.fixer.option_automatic_index == 0
-        image_data = make_image_data(cover.file_info.width, cover.file_info.height, "PNG")
+        image_data = make_image_data(cover_info.width, cover_info.height, "PNG")
         tagger = TaggerFile()
         mock_tagger_open = mocker.patch.object(AlbumTagger, "open")
         mock_tagger_open.return_value.__enter__.return_value = tagger
@@ -194,17 +197,16 @@ class TestCheckCoverDimensions:
         assert mock_update_picture_files.call_count == 1
         assert mock_update_picture_files.call_args.args[0]
         assert mock_update_picture_files.call_args.args[1] == 1
-        picture_files: dict[str, PictureFile] = mock_update_picture_files.call_args.args[2]
-        assert "folder.png" in picture_files
-        assert picture_files["folder.png"].cover_source
-        assert picture_files["folder.png"].picture.type == PictureType.COVER_FRONT
-        assert picture_files["folder.png"].picture.file_info.mime_type == "image/png"
+        picture_files: Sequence[PictureFile] = mock_update_picture_files.call_args.args[2]
+        png = next(file for file in picture_files if file.filename == "folder.png")
+        assert png.cover_source
+        assert png.file_info.mime_type == "image/png"
 
         mock_handle = m_open.return_value
         image_data_written = mock_handle.write.call_args[0][0]
         m_open.assert_has_calls([call(Path(".") / album.path / "folder.png", "wb")])
         new_cover = Image.open(io.BytesIO(image_data_written))
-        assert new_cover.width == new_cover.height == min(cover.file_info.width, cover.file_info.height)
+        assert new_cover.width == new_cover.height == min(cover_info.width, cover_info.height)
 
     def test_cover_not_square_enough_extreme(self, mocker):
         cover = Picture(PictureInfo("image/png", 1000, 500, 24, 1, b""), PictureType.COVER_FRONT, "", ())

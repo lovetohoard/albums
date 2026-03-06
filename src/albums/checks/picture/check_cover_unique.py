@@ -9,7 +9,7 @@ from ...database.operations import update_picture_files
 from ...interactive.image_table import render_image_table
 from ...picture.format import SUPPORTED_IMAGE_SUFFIXES
 from ...tagger.types import Picture, PictureType
-from ...types import Album, CheckResult, Fixer
+from ...types import Album, CheckResult, Fixer, PictureFile
 from ..base_check import Check
 from ..helpers import delete_files_except
 
@@ -27,7 +27,7 @@ class CheckCoverUnique(Check):
     def check(self, album: Album) -> CheckResult | None:
         tracks_with_cover = 0
         album_art = [(track.filename, True, track.pictures) for track in album.tracks]
-        album_art.extend([(filename, False, [file.picture]) for filename, file in album.picture_files.items()])
+        album_art.extend([(file.filename, False, [file.to_picture()]) for file in album.picture_files])
 
         pictures_by_type: defaultdict[PictureType, set[Picture]] = defaultdict(set)
         picture_sources: defaultdict[Picture, list[str]] = defaultdict(list)
@@ -52,7 +52,7 @@ class CheckCoverUnique(Check):
         cover_image_filenames = [
             [file for file in picture_sources[pic] if Path(file).suffix in SUPPORTED_IMAGE_SUFFIXES][0] for pic in cover_image_files
         ]
-        cover_source_filename = next((filename for filename, file in album.picture_files.items() if file.cover_source), None)
+        cover_source_filename = next((file.filename for file in album.picture_files if file.cover_source), None)
 
         if len(front_covers) > 1:
             cover_embedded = list(
@@ -144,8 +144,13 @@ class CheckCoverUnique(Check):
             return delete_files_except(self.ctx, None, album, all_filenames)
         elif option.startswith(OPTION_SELECT_COVER_IMAGE) and self.ctx.db and album.album_id:
             filename = all_filenames[options.index(option)]
-            for picfile in album.picture_files:
-                album.picture_files[picfile].cover_source = picfile == filename
+            picture_files = [
+                file
+                if (file.cover_source == (file.filename == filename))
+                else PictureFile(file.filename, file.file_info, file.modify_timestamp, not file.cover_source, file.load_issue)
+                for file in album.picture_files
+            ]
+            album.picture_files = picture_files
             self.ctx.console.print(f"setting cover source file to {escape(filename)}")
             update_picture_files(self.ctx.db, album.album_id, album.picture_files)
             return True

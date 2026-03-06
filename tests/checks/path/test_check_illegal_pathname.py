@@ -4,7 +4,6 @@ from albums.app import Context
 from albums.checks.path.check_illegal_pathname import CheckIllegalPathname
 from albums.configuration import PathCompatibilityOption
 from albums.picture.info import PictureInfo
-from albums.tagger.types import Picture, PictureType
 from albums.types import Album, PictureFile, Track
 
 
@@ -15,7 +14,7 @@ class TestCheckIllegalPathname:
             [Track("normal.flac")],
             [],
             [],
-            {"normal.jpg": PictureFile(Picture(PictureInfo("image/png", 1, 1, 24, 1, b""), PictureType.OTHER, "", ()), 0, False)},
+            [PictureFile("normal.jpg", PictureInfo("image/png", 1, 1, 24, 1, b""), 0, False)],
         )
         assert not CheckIllegalPathname(Context()).check(album)
 

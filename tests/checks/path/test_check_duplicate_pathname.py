@@ -3,7 +3,6 @@ import os
 from albums.app import Context
 from albums.checks.path.check_duplicate_pathname import CheckDuplicatePathname
 from albums.picture.info import PictureInfo
-from albums.tagger.types import Picture, PictureType
 from albums.types import Album, PictureFile, Track
 
 
@@ -14,10 +13,10 @@ class TestCheckDuplicatePathname:
             [Track("normal.1.flac"), Track("normal.2.flac")],
             [],
             [],
-            {
-                "normal.jpg": PictureFile(Picture(PictureInfo("image/jpeg", 1, 1, 1, 1, b""), PictureType.COVER_FRONT, "", ()), 0, False),
-                "normal.png": PictureFile(Picture(PictureInfo("image/png", 1, 1, 1, 1, b""), PictureType.COVER_FRONT, "", ()), 0, False),
-            },
+            [
+                PictureFile("normal.jpg", PictureInfo("image/jpeg", 1, 1, 1, 1, b""), 0, False),
+                PictureFile("normal.png", PictureInfo("image/png", 1, 1, 1, 1, b""), 0, False),
+            ],
         )
         assert not CheckDuplicatePathname(Context()).check(album)
 
@@ -27,10 +26,10 @@ class TestCheckDuplicatePathname:
             [Track("normal.1.flac"), Track("normal.2.flac")],
             [],
             [],
-            {
-                "FileName.jpg": PictureFile(Picture(PictureInfo("image/jpeg", 1, 1, 1, 1, b""), PictureType.COVER_FRONT, "", ()), 0, False),
-                "Filename.jpg": PictureFile(Picture(PictureInfo("image/jpeg", 1, 1, 1, 1, b""), PictureType.COVER_FRONT, "", ()), 0, False),
-            },
+            [
+                PictureFile("FileName.jpg", PictureInfo("image/jpeg", 1, 1, 1, 1, b""), 0, False),
+                PictureFile("Filename.jpg", PictureInfo("image/jpeg", 1, 1, 1, 1, b""), 0, False),
+            ],
         )
         result = CheckDuplicatePathname(Context()).check(album)
         assert result is not None
@@ -42,10 +41,10 @@ class TestCheckDuplicatePathname:
             [Track("track.flac"), Track("Track.flac")],
             [],
             [],
-            {
-                "normal.jpg": PictureFile(Picture(PictureInfo("image/jpeg", 1, 1, 1, 1, b""), PictureType.COVER_FRONT, "", ()), 0, False),
-                "normal.png": PictureFile(Picture(PictureInfo("image/png", 1, 1, 1, 1, b""), PictureType.COVER_FRONT, "", ()), 0, False),
-            },
+            [
+                PictureFile("normal.jpg", PictureInfo("image/jpeg", 1, 1, 1, 1, b""), 0, False),
+                PictureFile("normal.png", PictureInfo("image/png", 1, 1, 1, 1, b""), 0, False),
+            ],
         )
         result = CheckDuplicatePathname(Context()).check(album)
         assert result is not None

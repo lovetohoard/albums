@@ -17,7 +17,7 @@ class CheckIllegalPathname(Check):
         for track in album.tracks:
             issues = issues.union(self._check(track.filename))
         for picture_file in album.picture_files:
-            issues = issues.union(self._check(picture_file))
+            issues = issues.union(self._check(picture_file.filename))
 
         # TODO also check album.path
 

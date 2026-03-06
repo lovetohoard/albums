@@ -12,7 +12,9 @@ from albums.types import Album, PictureFile, Track
 class TestCheckCheckInvalidImage:
     def test_invalid_image_ok(self):
         pic = Picture(PictureInfo("image/png", 400, 400, 24, 1, b""), PictureType.COVER_FRONT, "", ())
-        album = Album("", [Track("1.flac", {}, 0, 0, StreamInfo(1.5, 0, 0, "FLAC"), [pic])], [], [], {"cover.jpg": PictureFile(pic, 999, False)})
+        album = Album(
+            "", [Track("1.flac", {}, 0, 0, StreamInfo(1.5, 0, 0, "FLAC"), [pic])], [], [], [PictureFile("cover.jpg", pic.file_info, 999, False)]
+        )
         assert not CheckInvalidImage(Context()).check(album)
 
     def test_error_image_in_track(self, mocker):
@@ -45,7 +47,13 @@ class TestCheckCheckInvalidImage:
 
     def test_error_image_in_file(self, mocker):
         pic = Picture(PictureInfo("image/png", 400, 400, 24, 1, b""), PictureType.COVER_FRONT, "", (("error", "test load failed"),))
-        album = Album("", [Track("1.flac", {}, 0, 0, StreamInfo(1.5, 0, 0, "FLAC"))], [], [], {"cover.jpg": PictureFile(pic, 999, False)})
+        album = Album(
+            "",
+            [Track("1.flac", {}, 0, 0, StreamInfo(1.5, 0, 0, "FLAC"))],
+            [],
+            [],
+            [PictureFile("cover.jpg", pic.file_info, 999, False, pic.load_issue)],
+        )
         result = CheckInvalidImage(Context()).check(album)
         assert result is not None
         assert "image load errors: test load failed" in result.message

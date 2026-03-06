@@ -31,7 +31,7 @@ class CheckCoverAvailable(Check):
             return None  # if cover is required, only run check on albums where embedded pictures are supported
 
         album_art = [(track.filename, track.pictures) for track in album.tracks]
-        album_art.extend([(filename, [file.picture]) for filename, file in album.picture_files.items()])
+        album_art.extend([(file.filename, [file.to_picture()]) for file in album.picture_files])
 
         pictures_by_type: defaultdict[PictureType, set[Picture]] = defaultdict(set)
         picture_sources: Dict[Picture, List[str]] = defaultdict(list)

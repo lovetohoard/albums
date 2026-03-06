@@ -1,6 +1,6 @@
 import json
 import logging
-from typing import Any, Collection, Mapping, Sequence, Tuple
+from typing import Any, Collection, Sequence, Tuple
 
 from sqlalchemy import Engine, delete, desc, select
 from sqlalchemy.orm import Session
@@ -37,7 +37,7 @@ def album_to_album(entity: AlbumEntity, load_track_tags: bool) -> Album:
         [_track(track, load_track_tags) for track in entity.tracks],
         [c.collection_name for c in entity.collections],
         [i.check_name for i in entity.ignore_checks],
-        dict((picture_file.filename, _picture_file(picture_file)) for picture_file in entity.picture_files),
+        [_picture_file(picture_file) for picture_file in entity.picture_files],
         entity.album_id,
         entity.scanner,
     )
@@ -73,9 +73,11 @@ def _picture(entity: TrackPictureEntity | PictureFileEntity, picture_type: Pictu
 
 def _picture_file(entity: PictureFileEntity) -> PictureFile:
     return PictureFile(
-        _picture(entity, PictureType.from_filename(entity.filename)),
+        entity.filename,
+        entity.file_info,
         entity.modify_timestamp,
         entity.cover_source,
+        _load_load_issue(entity.load_issue),
     )
 
 
@@ -89,8 +91,8 @@ def add(db: Engine, album: Album) -> int:
             entity.ignore_checks.append(IgnoreCheckEntity(check_name=check_name))
         for track in album.tracks:
             entity.tracks.append(_track_to_entity(track))
-        for filename, picture_file in album.picture_files.items():
-            entity.picture_files.append(_picture_file_to_entity(filename, picture_file))
+        for picture_file in album.picture_files:
+            entity.picture_files.append(_picture_file_to_entity(picture_file))
         session.add(entity)
         session.commit()
         if entity.album_id is None:
@@ -113,13 +115,13 @@ def _track_to_entity(track: Track) -> TrackEntity:
     return entity
 
 
-def _picture_file_to_entity(filename: str, file: PictureFile) -> PictureFileEntity:
+def _picture_file_to_entity(file: PictureFile) -> PictureFileEntity:
     return PictureFileEntity(
-        filename=filename,
+        filename=file.filename,
         modify_timestamp=file.modify_timestamp,
         cover_source=file.cover_source,
-        file_info=file.picture.file_info,
-        load_issue=json.dumps(dict(file.picture.load_issue)) if file.picture.load_issue else None,
+        file_info=file.file_info,
+        load_issue=json.dumps(dict(file.load_issue)) if file.load_issue else None,
     )
 
 
@@ -175,11 +177,10 @@ def update_tracks(db: Engine, album_id: int, tracks: Sequence[Track]):
         session.commit()
 
 
-def update_picture_files(db: Engine, album_id: int, picture_files: Mapping[str, PictureFile]):
+def update_picture_files(db: Engine, album_id: int, picture_files: Sequence[PictureFile]):
     with Session(db) as session:
         album = session.scalars(select(AlbumEntity).where(AlbumEntity.album_id == album_id)).one()
-        album.picture_files.clear()
-        album.picture_files = [_picture_file_to_entity(filename, file) for filename, file in picture_files.items()]
+        album.picture_files = [_picture_file_to_entity(file) for file in picture_files]
         session.commit()
 
 

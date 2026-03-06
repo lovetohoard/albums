@@ -9,8 +9,7 @@ from albums.app import SCANNER_VERSION, Context
 from albums.database import connection, selector
 from albums.library.scanner import AlbumEntity, scan
 from albums.picture.info import PictureInfo
-from albums.tagger.types import PictureType
-from albums.types import Album, BasicTag, Path, Picture, PictureFile, Track
+from albums.types import Album, BasicTag, Path, PictureFile, Track
 
 from .fixtures.create_library import create_album_in_library, create_library
 
@@ -33,7 +32,7 @@ class TestScanner:
             ],
             [],
             [],
-            {"cover.jpg": PictureFile(Picture(PictureInfo("image/png", 410, 410, 24, 0, b""), PictureType.COVER_FRONT, "", ()), 0, False)},
+            [PictureFile("cover.jpg", PictureInfo("image/png", 410, 410, 24, 0, b""), 0, False)],
         ),
         Album("foo" + os.sep, [Track("1.mp3", {BasicTag.TITLE: ["1"]}), Track("2.mp3", {BasicTag.TITLE: ["2"]})]),
         Album("baz" + os.sep, [Track("1.wma", {BasicTag.TITLE: ["one"]}), Track("2.wma", {BasicTag.TITLE: ["two"]})]),
@@ -76,11 +75,10 @@ class TestScanner:
 
             # image files in folder
             assert len(result[0].picture_files) == 1
-            cover_png = result[0].picture_files.get("cover.jpg")
-            assert cover_png
-            assert cover_png.picture.file_info.mime_type == "image/jpeg"
+            cover_png = result[0].picture_files[0]
+            assert cover_png.filename == "cover.jpg"
+            assert cover_png.file_info.mime_type == "image/jpeg"  # because file extension is not correct
             assert cover_png.modify_timestamp
-            assert cover_png.picture.type == PictureType.COVER_FRONT
         finally:
             db.dispose()
 

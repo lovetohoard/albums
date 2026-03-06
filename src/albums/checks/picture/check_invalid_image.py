@@ -20,7 +20,7 @@ class CheckInvalidImage(Check):
 
     def check(self, album: Album) -> CheckResult | None:
         album_art = [(track.filename, track.pictures) for track in album.tracks]
-        album_art.extend([(filename, [file.picture]) for filename, file in album.picture_files.items()])
+        album_art.extend([(file.filename, [file.to_picture()]) for file in album.picture_files])
         table_rows: Sequence[Sequence[RenderableType]] = []
         issues: set[str] = set()
         any_bad_image_files = False
@@ -49,11 +49,11 @@ class CheckInvalidImage(Check):
 
     def _fix_remove_bad_images(self, album: Album):
         changed = False
-        for filename, file in album.picture_files.items():
-            load_issue = dict(file.picture.load_issue)
+        for file in album.picture_files:
+            load_issue = dict(file.load_issue)
             if "error" in load_issue:
-                self.ctx.console.print(f"Deleting image file {escape(filename)}")
-                path = self.ctx.config.library / album.path / filename
+                self.ctx.console.print(f"Deleting image file {escape(file.filename)}")
+                path = self.ctx.config.library / album.path / file.filename
                 unlink(path)
                 changed = True
 

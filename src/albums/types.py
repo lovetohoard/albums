@@ -4,7 +4,8 @@ from typing import Callable, Collection, Dict, Mapping, Sequence, Tuple, Union
 
 from rich.console import RenderableType
 
-from .tagger.types import BasicTag, Picture, StreamInfo
+from .picture.info import PictureInfo
+from .tagger.types import BasicTag, Picture, PictureType, StreamInfo
 
 type CheckConfiguration = Dict[str, Union[str, int, float, bool, Sequence[str]]]
 
@@ -28,14 +29,19 @@ class Track:
         return self.__dict__ | {"stream": self.stream.to_dict() if self.stream else {}} | {"pictures": pictures}
 
 
-@dataclass
+@dataclass(frozen=True)
 class PictureFile:
-    picture: Picture
+    filename: str
+    file_info: PictureInfo
     modify_timestamp: int
     cover_source: bool
+    load_issue: Tuple[Tuple[str, str | int], ...] = ()
 
     def to_dict(self):
-        return self.__dict__ | {"picture": self.picture.to_dict()}
+        return self.__dict__ | {"file_info": self.file_info.to_dict()}
+
+    def to_picture(self) -> Picture:
+        return Picture(self.file_info, PictureType.from_filename(self.filename), "", self.load_issue)
 
 
 @dataclass
@@ -44,12 +50,12 @@ class Album:
     tracks: Sequence[Track] = field(default_factory=list[Track])
     collections: Collection[str] = field(default_factory=list[str])
     ignore_checks: Collection[str] = field(default_factory=list[str])
-    picture_files: Mapping[str, PictureFile] = field(default_factory=dict[str, PictureFile])
+    picture_files: Sequence[PictureFile] = field(default_factory=list[PictureFile])
     album_id: int | None = None
     scanner: int = 0
 
     def to_dict(self):
-        pictures = dict((filename, picture.to_dict()) for (filename, picture) in self.picture_files.items())
+        pictures = [picture.to_dict() for picture in self.picture_files]
         return self.__dict__ | {"tracks": [track.to_dict() for track in self.tracks]} | {"picture_files": pictures}
 
     def codec(self):

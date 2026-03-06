@@ -23,7 +23,7 @@ class CheckDuplicateImage(Check):
 
     def check(self, album: Album) -> CheckResult | None:
         album_art = [(track.filename, True, track.pictures) for track in album.tracks]
-        album_art.extend([(filename, False, [file.picture]) for filename, file in album.picture_files.items()])
+        album_art.extend([(file.filename, False, [file.to_picture()]) for file in album.picture_files])
 
         pictures_by_type: defaultdict[PictureType, set[Picture]] = defaultdict(set)
         picture_sources: defaultdict[Picture, list[str]] = defaultdict(list)

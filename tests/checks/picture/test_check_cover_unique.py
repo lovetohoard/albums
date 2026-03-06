@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+from typing import Sequence
 from unittest.mock import call
 
 from rich_pixels import Pixels
@@ -75,9 +76,7 @@ class TestCheckCoverUnique:
         assert result.fixer.options == []
 
     def test_has_unmarked_cover_source_file(self, mocker):
-        picture_files = {
-            "cover.png": PictureFile(Picture(PictureInfo("image/png", 1000, 1000, 24, 10000, b""), PictureType.COVER_FRONT, "", ()), 0, False)
-        }
+        picture_files = [PictureFile("cover.png", PictureInfo("image/png", 1000, 1000, 24, 10000, b""), 0, False)]
         album = Album(
             "foo" + os.sep,
             [
@@ -129,17 +128,15 @@ class TestCheckCoverUnique:
         assert fix_result
         assert update_picture_files_mock.call_count == 1
         assert update_picture_files_mock.call_args.args[1] == album.album_id
-        assert update_picture_files_mock.call_args.args[2]["cover.png"].cover_source
+        picture_files: Sequence[PictureFile] = update_picture_files_mock.call_args.args[2]
+        cover = next(file for file in picture_files if file.filename == "cover.png")
+        assert cover.cover_source
 
     def test_multiple_cover_image_files_no_embedded(self, mocker):
-        picture_files = {
-            "cover_big.png": PictureFile(
-                Picture(PictureInfo("image/png", 1000, 1000, 24, 10000, b"1111"), PictureType.COVER_FRONT, "", ()), 0, False
-            ),
-            "cover_small.png": PictureFile(
-                Picture(PictureInfo("image/png", 1000, 1000, 24, 1000, b"2222"), PictureType.COVER_FRONT, "", ()), 0, False
-            ),
-        }
+        picture_files = [
+            PictureFile("cover_big.png", PictureInfo("image/png", 1000, 1000, 24, 10000, b"1111"), 0, False),
+            PictureFile("cover_small.png", PictureInfo("image/png", 1000, 1000, 24, 1000, b"2222"), 0, False),
+        ]
         album = Album("", [Track("1.flac", {}, 0, 0, StreamInfo(1.5, 0, 0, "FLAC"))], [], [], picture_files, 999)
         ctx = Context()
         ctx.db = True
@@ -158,15 +155,15 @@ class TestCheckCoverUnique:
         assert fix_result
         assert update_picture_files_mock.call_count == 1
         assert update_picture_files_mock.call_args.args[1] == 999
-        assert update_picture_files_mock.call_args.args[2]["cover_big.png"].cover_source
+        picture_files: Sequence[PictureFile] = update_picture_files_mock.call_args.args[2]
+        cover = next(file for file in picture_files if file.filename == "cover_big.png")
+        assert cover.cover_source
 
     def test_multiple_cover_image_files_with_cover_source(self, mocker):
-        picture_files = {
-            "cover_big.png": PictureFile(Picture(PictureInfo("image/png", 1000, 1000, 24, 10000, b"1111"), PictureType.COVER_FRONT, "", ()), 0, True),
-            "cover_small.png": PictureFile(
-                Picture(PictureInfo("image/png", 1000, 1000, 24, 1000, b"2222"), PictureType.COVER_FRONT, "", ()), 0, False
-            ),
-        }
+        picture_files = [
+            PictureFile("cover_big.png", PictureInfo("image/png", 1000, 1000, 24, 10000, b"1111"), 0, True),
+            PictureFile("cover_small.png", PictureInfo("image/png", 1000, 1000, 24, 1000, b"2222"), 0, False),
+        ]
         album = Album("", [Track("1.flac", {}, 0, 0, StreamInfo(1.5, 0, 0, "FLAC"))], [], [], picture_files, 999)
         ctx = Context()
         ctx.db = True

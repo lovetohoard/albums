@@ -50,16 +50,15 @@ class CheckPictureMetadata(Check):
             file_issues.append(", ".join(issues))
 
         image_files_to_rename: list[tuple[str, str]] = []
-        picture_files = list(album.picture_files.items())
-        for filename, file in picture_files:
-            expect_suffix = mimetypes.guess_extension(file.picture.file_info.mime_type)
-            path = Path(filename)
+        for file in album.picture_files:
+            expect_suffix = mimetypes.guess_extension(file.file_info.mime_type)
+            path = Path(file.filename)
             if expect_suffix and str.lower(path.suffix) != str.lower(expect_suffix):
                 new_filename = path.with_suffix(expect_suffix).name
-                image_files_to_rename.append((filename, new_filename))
+                image_files_to_rename.append((file.filename, new_filename))
                 file_issues.append(f"should be {expect_suffix}")
                 if not example:
-                    example = f"{filename} should be {new_filename}"
+                    example = f"{file.filename} should be {new_filename}"
             else:
                 file_issues.append("")
 
@@ -74,7 +73,7 @@ class CheckPictureMetadata(Check):
                 fixes.append("renaming image files")
             options = [f">> Fix by {' and '.join(fixes)}"]
             option_automatic_index = 0
-            files = [escape(track.filename) for track in album.tracks] + [escape(filename) for filename, _ in picture_files]
+            files = [escape(track.filename) for track in album.tracks] + [escape(file.filename) for file in album.picture_files]
             table = (["filename", "image metadata issues"], [[file, file_issues[ix]] for ix, file in enumerate(files)])
             return CheckResult(
                 f"{' and '.join(problems)}, example {example}",

@@ -6,7 +6,6 @@ import shutil
 import pytest
 
 from albums.picture.info import PictureInfo
-from albums.tagger.types import Picture, PictureType
 from albums.types import Album, BasicTag, PictureFile, Track
 
 from .. import helpers
@@ -18,7 +17,7 @@ albums = [
         [Track("1.mp3", {BasicTag.TITLE: ["1"]})],
         [],
         [],
-        {"folder.png": PictureFile(Picture(PictureInfo("ignored", 400, 400, 24, 0, b""), PictureType.COVER_FRONT, "", ()), 999, False)},
+        [PictureFile("folder.png", PictureInfo("ignored", 400, 400, 24, 0, b""), 999, False)],
     ),
     Album("bar" + os.sep, [Track("1.flac", {BasicTag.TITLE: ["1"]}), Track("2.flac", {BasicTag.TITLE: ["2"]})]),
 ]

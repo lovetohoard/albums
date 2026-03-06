@@ -46,8 +46,8 @@ def create_album_in_library(library_path: Path, album: Album):
     os.makedirs(path)
     for track in album.tracks:
         create_track_file(path, track)
-    for filename, file in album.picture_files.items():
-        create_picture_file(path / filename, file.picture.file_info.width, file.picture.file_info.height)
+    for file in album.picture_files:
+        create_picture_file(path / file.filename, file.file_info.width, file.file_info.height)
 
 
 def create_library(library_name: str, albums: list[Album]):

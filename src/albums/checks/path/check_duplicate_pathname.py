@@ -17,7 +17,7 @@ class CheckDuplicatePathname(Check):
         for track in album.tracks:
             filenames[str.lower(track.filename)] += 1
         for picture_file in album.picture_files:
-            filenames[str.lower(picture_file)] += 1
+            filenames[str.lower(picture_file.filename)] += 1
 
         for duplicate_filename in (filename for (filename, count) in filenames.items() if count > 1):
             issues.add(f"non-unique filename - {filenames[duplicate_filename]} files are variations of {duplicate_filename}")
