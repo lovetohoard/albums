@@ -5,7 +5,6 @@ from typing import Any, Collection, Mapping, Sequence, Tuple
 from sqlalchemy import Engine, delete, desc, select
 from sqlalchemy.orm import Session
 
-from ..picture.info import PictureInfo
 from ..tagger.types import BASIC_TAGS, BasicTag, Picture, PictureType, StreamInfo
 from ..types import Album, PictureFile, ScanHistoryEntry, Track
 from .models import (
@@ -58,14 +57,14 @@ def _track(entity: TrackEntity, load_track_tags: bool) -> Track:
         dict((tag, tuple(values)) for tag, values in tags.items()),
         entity.file_size,
         entity.modify_timestamp,
-        StreamInfo(entity.stream_length, entity.stream_bitrate, entity.stream_channels, entity.stream_codec, entity.stream_sample_rate),
+        entity.stream,
         [_picture(picture, PictureType(picture.picture_type)) for picture in entity.pictures],
     )
 
 
 def _picture(entity: TrackPictureEntity | PictureFileEntity, picture_type: PictureType) -> Picture:
     return Picture(
-        PictureInfo(entity.format, entity.width, entity.height, entity.depth_bpp, entity.file_size, entity.file_hash),
+        entity.file_info,
         picture_type,
         "",
         _load_load_issue(entity.load_issue),
@@ -100,16 +99,11 @@ def add(db: Engine, album: Album) -> int:
 
 
 def _track_to_entity(track: Track) -> TrackEntity:
-    stream = track.stream if track.stream else StreamInfo()
     entity = TrackEntity(
         filename=track.filename,
         file_size=track.file_size,
         modify_timestamp=track.modify_timestamp,
-        stream_bitrate=stream.bitrate,
-        stream_channels=stream.channels,
-        stream_codec=stream.codec,
-        stream_length=stream.length,
-        stream_sample_rate=stream.sample_rate,
+        stream=track.stream if track.stream else StreamInfo(),
     )
     for embed_ix, picture in enumerate(track.pictures):
         entity.pictures.append(_picture_to_entity(picture, embed_ix))
@@ -124,12 +118,7 @@ def _picture_file_to_entity(filename: str, file: PictureFile) -> PictureFileEnti
         filename=filename,
         modify_timestamp=file.modify_timestamp,
         cover_source=file.cover_source,
-        format=file.picture.file_info.mime_type,
-        width=file.picture.file_info.width,
-        height=file.picture.file_info.height,
-        file_size=file.picture.file_info.file_size,
-        file_hash=file.picture.file_info.file_hash,
-        depth_bpp=file.picture.file_info.depth_bpp,
+        file_info=file.picture.file_info,
         load_issue=json.dumps(dict(file.picture.load_issue)) if file.picture.load_issue else None,
     )
 
@@ -137,12 +126,7 @@ def _picture_file_to_entity(filename: str, file: PictureFile) -> PictureFileEnti
 def _picture_to_entity(pic: Picture, embed_ix: int) -> TrackPictureEntity:
     return TrackPictureEntity(
         picture_type=pic.type,
-        format=pic.file_info.mime_type,
-        width=pic.file_info.width,
-        height=pic.file_info.height,
-        file_size=pic.file_info.file_size,
-        file_hash=pic.file_info.file_hash,
-        depth_bpp=pic.file_info.depth_bpp,
+        file_info=pic.file_info,
         description=pic.description,
         load_issue=json.dumps(dict(pic.load_issue)) if pic.load_issue else None,
         embed_ix=embed_ix,

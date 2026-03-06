@@ -1,9 +1,12 @@
 from __future__ import annotations
 
-from typing import Optional
+from typing import Any, Optional
 
-from sqlalchemy import REAL, Boolean, Column, ForeignKey, Index, Integer, LargeBinary, Table, Text, text
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+from sqlalchemy import REAL, Boolean, Column, Dialect, ForeignKey, Index, Integer, LargeBinary, Table, Text, TypeDecorator, text
+from sqlalchemy.orm import DeclarativeBase, Mapped, composite, mapped_column, relationship
+
+from ..picture.info import PictureInfo
+from ..tagger.types import PictureType, StreamInfo
 
 
 class Base(DeclarativeBase):
@@ -83,15 +86,17 @@ class PictureFileEntity(Base):
     album_id: Mapped[Optional[int]] = mapped_column(ForeignKey("album.album_id"))
 
     filename: Mapped[str] = mapped_column(Text, nullable=False)
-    file_size: Mapped[int] = mapped_column(Integer, nullable=False)
     modify_timestamp: Mapped[int] = mapped_column(Integer, nullable=False)
-    file_hash: Mapped[bytes] = mapped_column(LargeBinary, nullable=False)
-    format: Mapped[str] = mapped_column(Text, nullable=False)
-    width: Mapped[int] = mapped_column(Integer, nullable=False)
-    height: Mapped[int] = mapped_column(Integer, nullable=False)
     cover_source: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=text("0"))
-    depth_bpp: Mapped[int] = mapped_column(Integer, nullable=False, server_default=text("0"))
     load_issue: Mapped[Optional[str]] = mapped_column(Text)  # TODO parse and map to Tuple[Tuple[str, str | int], ...]
+
+    _format: Mapped[str] = mapped_column("format", Text, nullable=False)
+    _width: Mapped[int] = mapped_column("width", Integer, nullable=False)
+    _height: Mapped[int] = mapped_column("height", Integer, nullable=False)
+    _depth_bpp: Mapped[int] = mapped_column("depth_bpp", Integer, nullable=False)
+    _file_size: Mapped[int] = mapped_column("file_size", Integer, nullable=False)
+    _file_hash: Mapped[bytes] = mapped_column("file_hash", LargeBinary, nullable=False)
+    file_info = composite(PictureInfo, _format, _width, _height, _depth_bpp, _file_size, _file_hash)
 
     album: Mapped[Optional[AlbumEntity]] = relationship("AlbumEntity", back_populates="picture_files")
 
@@ -106,15 +111,31 @@ class TrackEntity(Base):
     filename: Mapped[str] = mapped_column(Text, nullable=False)
     file_size: Mapped[int] = mapped_column(Integer, nullable=False)
     modify_timestamp: Mapped[int] = mapped_column(Integer, nullable=False)
-    stream_bitrate: Mapped[int] = mapped_column(Integer, nullable=False)
-    stream_channels: Mapped[int] = mapped_column(Integer, nullable=False)
-    stream_codec: Mapped[str] = mapped_column(Text, nullable=False)
-    stream_length: Mapped[float] = mapped_column(REAL, nullable=False)
-    stream_sample_rate: Mapped[int] = mapped_column(Integer, nullable=False)
+
+    _stream_length: Mapped[float] = mapped_column("stream_length", REAL, nullable=False)
+    _stream_bitrate: Mapped[int] = mapped_column("stream_bitrate", Integer, nullable=False)
+    _stream_channels: Mapped[int] = mapped_column("stream_channels", Integer, nullable=False)
+    _stream_codec: Mapped[str] = mapped_column("stream_codec", Text, nullable=False)
+    _stream_sample_rate: Mapped[int] = mapped_column("stream_sample_rate", Integer, nullable=False)
+    stream = composite(StreamInfo, _stream_length, _stream_bitrate, _stream_channels, _stream_codec, _stream_sample_rate)
 
     album: Mapped[Optional[AlbumEntity]] = relationship("AlbumEntity", back_populates="tracks")
     pictures: Mapped[list[TrackPictureEntity]] = relationship("TrackPictureEntity", back_populates="track")
     tags: Mapped[list[TrackTagEntity]] = relationship("TrackTagEntity", back_populates="track")
+
+
+class IntEnum[EnumType](TypeDecorator[EnumType]):
+    impl = Integer
+
+    def __init__(self, enum_type: type, *args: Any, **kwargs: Any):
+        super().__init__(*args, **kwargs)
+        self._enum_type = enum_type
+
+    def process_bind_param(self, value: EnumType | None, dialect: Dialect):  # pyright: ignore[reportUnknownParameterType]
+        return None if value is None else value.value  # type: ignore
+
+    def process_result_value(self, value: int | None, dialect: Dialect):
+        return self._enum_type(value)
 
 
 class TrackPictureEntity(Base):
@@ -124,16 +145,18 @@ class TrackPictureEntity(Base):
     track_picture_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=False, primary_key=True)
     track_id: Mapped[Optional[int]] = mapped_column(ForeignKey("track.track_id"))
 
-    picture_type: Mapped[int] = mapped_column(Integer, nullable=False)
-    format: Mapped[str] = mapped_column(Text, nullable=False)
-    width: Mapped[int] = mapped_column(Integer, nullable=False)
-    height: Mapped[int] = mapped_column(Integer, nullable=False)
-    file_size: Mapped[int] = mapped_column(Integer, nullable=False)
-    file_hash: Mapped[bytes] = mapped_column(LargeBinary, nullable=False)
-    embed_ix: Mapped[int] = mapped_column(Integer, nullable=False, server_default=text("0"))
-    description: Mapped[str] = mapped_column(Text, nullable=False, server_default=text("''"))
-    depth_bpp: Mapped[int] = mapped_column(Integer, nullable=False, server_default=text("0"))
+    picture_type: Mapped[PictureType] = mapped_column(IntEnum[PictureType](PictureType), nullable=False)
+    embed_ix: Mapped[int] = mapped_column(Integer, nullable=False)
+    description: Mapped[str] = mapped_column(Text, nullable=False)
     load_issue: Mapped[Optional[str]] = mapped_column(Text)
+
+    _format: Mapped[str] = mapped_column("format", Text, nullable=False)
+    _width: Mapped[int] = mapped_column("width", Integer, nullable=False)
+    _height: Mapped[int] = mapped_column("height", Integer, nullable=False)
+    _depth_bpp: Mapped[int] = mapped_column("depth_bpp", Integer, nullable=False)
+    _file_size: Mapped[int] = mapped_column("file_size", Integer, nullable=False)
+    _file_hash: Mapped[bytes] = mapped_column("file_hash", LargeBinary, nullable=False)
+    file_info = composite(PictureInfo, _format, _width, _height, _depth_bpp, _file_size, _file_hash)
 
     track: Mapped[Optional[TrackEntity]] = relationship("TrackEntity", back_populates="pictures")
 
