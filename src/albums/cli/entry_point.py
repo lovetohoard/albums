@@ -51,7 +51,7 @@ def albums_group(
     matchers_list = (
         [("collection", c) for c in (collections or [])]
         + [("path", p) for p in (paths or [])]
-        + [(kv[0], kv[1]) for kv in (matcher.split("=") for matcher in matchers)]
+        + [(kv[0], kv[1]) for kv in (matcher.split("=", 1) for matcher in matchers)]
     )
     initial_scan = setup(ctx, app_context, verbose, matchers_list, dir, regex, library, db_file)
 

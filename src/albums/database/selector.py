@@ -48,7 +48,7 @@ def load_albums(db: Engine, **kwargs: Unpack[LoadOptions]) -> Generator[Album, N
         tags = kwargs.get("tag", [])
         if tags:
             stmt = stmt.distinct().join(TrackEntity, AlbumEntity.album_id == TrackEntity.album_id)
-            for [name, value] in [t.split(":") for t in tags]:
+            for [name, value] in [t.split(":", 1) for t in tags]:
                 entity = aliased(TrackTagEntity)
                 if regex:
                     stmt = stmt.join(entity, and_(TrackEntity.track_id == entity.track_id, entity.name == name, entity.value.regexp_match(value)))
