@@ -37,13 +37,15 @@ the tool is used, if there is a library in the configured location to scan.
 Get a list of issues with `albums check`. Learn about using `albums` to fix
 problems in [Check and Fix](./check_and_fix.md).
 
-Most commands can be filtered. For example, to list albums matching a path
-(relative path within the library), run
-`albums --regex --path "Freezepop" list`.
+Most commands can be filtered. For example, to list albums matching a partial
+path (relative path within the library), you could run
+`albums --regex --path Freezepop list`. You can also filter by tag values with
+`--match tag=name:value`, for example
+`albums --match tag=artist:Freezepop list`.
 
 Within a library, albums can be in sets called "collections". To create a
 collection named "DAP" containing albums to sync to a Digital Audio Player, use
-for example `albums -rp "Freezepop" add DAP`. Review the collection with
+for example `albums -rp Freezepop add DAP`. Review the collection with
 `albums --collection DAP list`. To copy/sync it to an SD card, see
 [Synchronize](./sync.md).
 

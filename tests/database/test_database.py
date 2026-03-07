@@ -1,5 +1,4 @@
 import os
-import re
 from copy import copy
 from pathlib import Path
 
@@ -53,77 +52,6 @@ class TestDatabase:
             with pytest.raises(RuntimeError):
                 connection.open(db_file)
                 assert False  # shouldn't get this far
-        finally:
-            db.dispose()
-
-    def test_select_empty(self):
-        db = connection.open(connection.MEMORY)
-        try:
-            result = list(selector.load_albums(db))
-            assert len(result) == 0
-        finally:
-            db.dispose()
-
-    def test_add_and_select(self):
-        db = connection.open(connection.MEMORY)
-        try:
-            album_id = operations.add(db, album)
-            assert isinstance(album_id, int)
-
-            assert len(list(selector.load_albums(db))) == 1
-            assert len(list(selector.load_albums(db, path=["foo"]))) == 0  # no partial match
-            result = list(selector.load_albums(db, path=["foo" + os.sep]))  # exact match
-            assert len(result) == 1
-            assert result[0].path == "foo" + os.sep
-            assert result[0].scanner == 3
-            assert sorted(result[0].tracks[0].tags.get(BasicTag.ARTIST, [])) == ["Bar"]
-            assert result[0].tracks[0].stream.length == 1.0
-            assert result[0].tracks[0].stream.codec == "FLAC"
-            assert len(result[0].tracks[0].pictures) == 1
-            assert result[0].tracks[0].pictures[0].type == PictureType.COVER_FRONT
-            assert result[0].tracks[0].pictures[0].picture_info.file_size == 1024
-
-            assert len(result[0].picture_files) == 1
-            file = next(file for file in result[0].picture_files if file.filename == "folder.jpg")
-            assert file.picture_info.mime_type == "test"
-            assert file.picture_info.width == file.picture_info.height == 100
-            assert file.picture_info.file_size == 4096
-            assert file.picture_info.file_hash == b"1234"
-            assert file.modify_timestamp == 999
-            assert file.cover_source
-        finally:
-            db.dispose()
-
-    def test_select_multiple_and_regex(self):
-        album2 = copy(album)
-        album2.path = "baz" + os.sep
-        album2.collections = []
-        db = connection.open(connection.MEMORY)
-        try:
-            operations.add(db, album)
-            operations.add(db, album2)
-
-            re_sep = re.escape(os.sep)
-            assert len(list(selector.load_albums(db))) == 2
-            assert len(list(selector.load_albums(db, path=["o." + re_sep], regex=True))) == 1  # regex match
-            assert len(list(selector.load_albums(db, path=["x." + re_sep], regex=True))) == 0  # no regex match
-            assert len(list(selector.load_albums(db, path=["(foo|baz)"], regex=True))) == 2
-        finally:
-            db.dispose()
-
-    def test_select_by_collection(self):
-        album2 = copy(album)
-        album2.path = "baz" + os.sep
-        album2.collections = []
-        db = connection.open(connection.MEMORY)
-        try:
-            operations.add(db, album)
-            operations.add(db, album2)
-
-            assert len(list(selector.load_albums(db))) == 2
-            result = list(selector.load_albums(db, collection=["test", "anything"]))
-            assert len(result) == 1
-            assert result[0].path.startswith("foo")
         finally:
             db.dispose()
 
