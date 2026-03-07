@@ -45,7 +45,7 @@ def albums_group(
     db_file: str,
     verbose: int,
 ):
-    if any(str.count(matcher, "=") != 1 for matcher in matchers):
+    if any(str.count(matcher, "=") < 1 for matcher in matchers):
         app_context.console.print('--match/-m options must be in the format "key=value"')
 
     matchers_list = (

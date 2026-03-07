@@ -48,10 +48,13 @@ def load_albums(db: Engine, **kwargs: Unpack[LoadOptions]) -> Generator[Album, N
         tags = kwargs.get("tag", [])
         if tags:
             stmt = stmt.distinct().join(TrackEntity, AlbumEntity.album_id == TrackEntity.album_id)
-            for [name, value] in [t.split(":", 1) for t in tags]:
+            for tag in tags:
                 entity = aliased(TrackTagEntity)
-                if regex:
-                    stmt = stmt.join(entity, and_(TrackEntity.track_id == entity.track_id, entity.name == name, entity.value.regexp_match(value)))
+                kv = tag.split(":", 1)
+                if len(kv) == 1:  # tag only, match any value
+                    stmt = stmt.join(entity, and_(TrackEntity.track_id == entity.track_id, entity.name == tag))
+                elif regex:
+                    stmt = stmt.join(entity, and_(TrackEntity.track_id == entity.track_id, entity.name == kv[0], entity.value.regexp_match(kv[1])))
                 else:
-                    stmt = stmt.join(entity, and_(TrackEntity.track_id == entity.track_id, entity.name == name, entity.value == value))
+                    stmt = stmt.join(entity, and_(TrackEntity.track_id == entity.track_id, entity.name == kv[0], entity.value == kv[1]))
         yield from (album_to_album(album[0], load_track_tags) for album in session.execute(stmt.order_by(AlbumEntity.path)))

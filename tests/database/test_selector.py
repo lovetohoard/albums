@@ -12,7 +12,7 @@ album = Album(
     [
         Track(
             "1.flac",
-            {BasicTag.TITLE: ["Foo"], BasicTag.ARTIST: ["Bar"]},
+            {BasicTag.TITLE: ["Foo"], BasicTag.ARTIST: ["Bar"], BasicTag.ALBUMARTIST: ["Various Artists"], BasicTag.ALBUM: ["=:="]},
             0,
             0,
             StreamInfo(1.0, 128000, 2, "FLAC", 44100),
@@ -28,8 +28,8 @@ album = Album(
 album2 = Album(
     "baz" + os.sep,
     [
-        Track("1.flac", {BasicTag.TITLE: ["A"], BasicTag.ARTIST: ["Baz"]}),
-        Track("2.flac", {BasicTag.TITLE: ["Foo"], BasicTag.ARTIST: ["Baz"]}),
+        Track("1.flac", {BasicTag.TITLE: ["A"], BasicTag.ARTIST: ["Baz"], BasicTag.ALBUM: ["al bum"]}),
+        Track("2.flac", {BasicTag.TITLE: ["Foo"], BasicTag.ARTIST: ["Baz"], BasicTag.ALBUM: ["al bum"]}),
     ],
 )
 
@@ -133,14 +133,26 @@ class TestSelector:
             result = list(selector.load_albums(db, tag=["artist:Baz"]))
             assert len(result) == 1
             assert result[0].path.startswith("baz")
+
             result = list(selector.load_albums(db, tag=["title:F(o)o"]))
             assert len(result) == 0
+
             result = list(selector.load_albums(db, tag=["title:F(o)o"], regex=True))
             assert len(result) == 2
+
             result = list(selector.load_albums(db, tag=["title:Foo"]))
             assert len(result) == 2
+
             result = list(selector.load_albums(db, tag=["title:Foo", "artist:Baz"]))
             assert len(result) == 1
             assert result[0].path.startswith("baz")
+
+            result = list(selector.load_albums(db, tag=["albumartist"]))
+            assert len(result) == 1
+            assert result[0].path.startswith("foo")
+
+            result = list(selector.load_albums(db, tag=["album:=:="]))
+            assert len(result) == 1
+            assert result[0].path.startswith("foo")
         finally:
             db.dispose()
