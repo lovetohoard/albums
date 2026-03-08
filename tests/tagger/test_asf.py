@@ -2,8 +2,9 @@ import os
 
 import pytest
 
+from albums.tagger.asf import WmPicture
 from albums.tagger.folder import AlbumTagger, BasicTag
-from albums.types import Album, Track
+from albums.types import Album, PictureType, Track
 
 from ..fixtures.create_library import create_library
 
@@ -119,3 +120,9 @@ class TestAsf:
             tags = dict(file.scan().tags)
         assert tags[BasicTag.DISCNUMBER] == ("2",)
         assert BasicTag.DISCTOTAL not in tags
+
+    def test_wm_picture_serialize(self):
+        original = WmPicture(PictureType.FISH, "image/png", "Description", b"-image data-")
+        serialized = original.to_bytes()
+        from_bytes = WmPicture.from_bytes(serialized)
+        assert original == from_bytes

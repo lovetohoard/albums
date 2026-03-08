@@ -22,7 +22,7 @@ BASIC_M4A_TEXT_FRAMES: Tuple[Tuple[BasicTag, str], ...] = (
 )
 
 
-class M4aTagger(AbstractMutagenTagger):
+class M4aTagger(AbstractMutagenTagger[MP4]):
     _file: MP4
     _picture_scanner: PictureScanner
 

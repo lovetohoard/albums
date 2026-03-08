@@ -11,7 +11,7 @@ MAX_BASIC_TAG_VALUE_LENGTH = 4096
 logger = logging.getLogger(__name__)
 
 
-class AbstractMutagenTagger(TaggerFile):
+class AbstractMutagenTagger[_FT: MutagenFileType](TaggerFile):
     _changed = False
     _padding: Callable[[PaddingInfo], int]
 
@@ -19,7 +19,7 @@ class AbstractMutagenTagger(TaggerFile):
         self._padding = padding
 
     # subclass must implement
-    def _get_file(self) -> MutagenFileType: ...
+    def _get_file(self) -> _FT: ...
     def _scan_tags(self) -> Tuple[Tuple[BasicTag, Tuple[str, ...]], ...]: ...
     def _set_tag(self, tag: BasicTag, value: str | List[str] | None) -> None: ...
     def _add_picture(self, new_picture: Picture, image_data: bytes) -> None: ...

@@ -12,7 +12,7 @@ from .helpers import album_picture_to_flac, scan_flac_picture, vorbis_comment_se
 from .types import BasicTag, Picture
 
 
-class FlacTagger(AbstractMutagenTagger):
+class FlacTagger(AbstractMutagenTagger[FLAC]):
     _file: FLAC
     _picture_scanner: PictureScanner
 

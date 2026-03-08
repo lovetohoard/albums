@@ -12,7 +12,7 @@ from .helpers import album_picture_to_flac, scan_flac_picture, vorbis_comment_se
 from .types import BasicTag, Picture
 
 
-class OggVorbisTagger(AbstractMutagenTagger):
+class OggVorbisTagger(AbstractMutagenTagger[OggVorbis]):
     _file: OggVorbis
     _picture_scanner: PictureScanner
 

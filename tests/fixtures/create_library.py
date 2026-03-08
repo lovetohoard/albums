@@ -9,7 +9,14 @@ from albums.picture.format import MIME_PILLOW_FORMAT
 from albums.tagger.folder import AlbumTagger, BasicTag
 from albums.types import Album, Track
 
-from .empty_files import EMPTY_FLAC_FILE_BYTES, EMPTY_M4A_FILE_BYTES, EMPTY_MP3_FILE_BYTES, EMPTY_OGG_VORBIS_FILE_BYTES, EMPTY_WMA_FILE_BYTES
+from .empty_files import (
+    EMPTY_AIFF_FILE_BYTES,
+    EMPTY_FLAC_FILE_BYTES,
+    EMPTY_M4A_FILE_BYTES,
+    EMPTY_MP3_FILE_BYTES,
+    EMPTY_OGG_VORBIS_FILE_BYTES,
+    EMPTY_WMA_FILE_BYTES,
+)
 
 test_data_path = Path(__file__).resolve().parent / "libraries"
 
@@ -27,6 +34,8 @@ def create_track_file(path: Path, spec: Track):
             file.write(EMPTY_WMA_FILE_BYTES)
         elif filename.suffix == ".ogg":
             file.write(EMPTY_OGG_VORBIS_FILE_BYTES)
+        elif filename.suffix == ".aiff":
+            file.write(EMPTY_AIFF_FILE_BYTES)
     tagger = AlbumTagger(path, padding=lambda _: 0)
     with tagger.open(spec.filename) as tags:
         for pic in spec.pictures:

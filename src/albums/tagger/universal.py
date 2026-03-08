@@ -12,7 +12,7 @@ from .types import BasicTag, MutagenFileType, Picture
 logger = logging.getLogger(__name__)
 
 
-class UniversalTagger(AbstractMutagenTagger):
+class UniversalTagger(AbstractMutagenTagger[MutagenFileType]):
     _file: MutagenFileType
 
     def __init__(self, path: Path, padding: Callable[[PaddingInfo], int]):

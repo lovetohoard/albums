@@ -63,7 +63,7 @@ class WmPicture:
         return WmPicture(PictureType(picture_type), mime_type, description, image_data)
 
 
-class AsfTagger(AbstractMutagenTagger):
+class AsfTagger(AbstractMutagenTagger[ASF]):
     _file: ASF
     _picture_scanner: PictureScanner
 
@@ -88,7 +88,6 @@ class AsfTagger(AbstractMutagenTagger):
             except Exception as ex:
                 logger.warning("failed to extract image from WM/Picture property, probably a bug:")
                 logger.warning(repr(ex))
-        yield from ()  # TODO
 
     @override
     def _add_picture(self, new_picture: Picture, image_data: bytes) -> None:
