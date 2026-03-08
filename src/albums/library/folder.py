@@ -15,7 +15,7 @@ from ..types import Album, PictureFile, Track
 
 logger = logging.getLogger(__name__)
 
-SUPPORTED_FILE_TYPES = frozenset({".flac", ".mp3", ".m4a", ".wma", ".ogg"})
+SUPPORTED_FILE_TYPES = frozenset({".flac", ".mp3", ".m4a", ".wma", ".asf", ".ogg"})
 
 MAX_IMAGE_SIZE = 128 * 1024 * 1024  # don't load and scan image files larger than this. 16 MB is the max for ID3v2 and FLAC tags.
 

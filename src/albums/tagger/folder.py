@@ -7,6 +7,7 @@ from mutagen._tags import PaddingInfo
 
 from ..picture.format import SUPPORTED_IMAGE_SUFFIXES
 from ..picture.scan import PictureScanner
+from .asf import AsfTagger
 from .flac import FlacTagger
 from .image_file_reader import ImageFileReader
 from .m4a import M4aTagger
@@ -28,6 +29,8 @@ SUFFIX_SUPPORT = {
     ".m4a": {Cap.BASIC_TAGS, Cap.PICTURES},
     ".mp3": {Cap.BASIC_TAGS, Cap.FORMATTED_TRACK_NUMBER, Cap.PICTURES, Cap.PICTURE_TYPE},
     ".ogg": {Cap.BASIC_TAGS, Cap.FORMATTED_TRACK_NUMBER, Cap.PICTURES, Cap.PICTURE_TYPE},
+    ".wma": {Cap.BASIC_TAGS, Cap.FORMATTED_TRACK_NUMBER},  # ASF / WMA reading pictures is implemented but so far untested (so no writing)
+    ".asf": {Cap.BASIC_TAGS, Cap.FORMATTED_TRACK_NUMBER},
 }
 SUFFIX_SUPPORT.update((suffix, {Cap.PICTURES}) for suffix in SUPPORTED_IMAGE_SUFFIXES)
 
@@ -74,6 +77,8 @@ class AlbumTagger:
                 tagger_file = Mp3Tagger(path, picture_scanner=self._picture_scanner, padding=self._padding, id3v1=self._id3v1)
             elif suffix == ".ogg":
                 tagger_file = OggVorbisTagger(path, picture_scanner=self._picture_scanner, padding=self._padding)
+            elif suffix in {".wma", ".asf"}:
+                tagger_file = AsfTagger(path, picture_scanner=self._picture_scanner, padding=self._padding)
             elif suffix in SUPPORTED_IMAGE_SUFFIXES:
                 tagger_file = ImageFileReader(path, picture_scanner=self._picture_scanner)
             else:

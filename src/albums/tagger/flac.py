@@ -19,7 +19,6 @@ class FlacTagger(AbstractMutagenTagger):
     def __init__(self, path: Path, picture_scanner: PictureScanner, padding: Callable[[PaddingInfo], int]):
         super().__init__(padding)
         self._file = FLAC(path)
-        self._padding = padding
         self._picture_scanner = picture_scanner
 
     @override

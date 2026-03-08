@@ -29,7 +29,6 @@ class M4aTagger(AbstractMutagenTagger):
     def __init__(self, path: Path, picture_scanner: PictureScanner, padding: Callable[[PaddingInfo], int]):
         super().__init__(padding)
         self._file = MP4(path)
-        self._padding = padding
         self._picture_scanner = picture_scanner
 
     @override

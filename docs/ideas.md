@@ -6,12 +6,17 @@ icon: lucide/flask-conical
 
 ## General features
 
-- Select/filter albums based on track tags, stream info, recent access, etc
+- Select/filter albums based on stream info, recent access, etc
 - Support additional file formats
 - Faster scan (only update what changed, don't decompress images again)
-- Localize interface
-- Improve Unicode support (if there are problems?)
+- Dynamic collections e.g. by tag value or partial path
+- Sync to predefined destinations with configuration
+    - Check destination is correct
+    - Transcode files during sync for preferred format/max bitrate
+    - Destination library layout can be different than main library
 - Option to use ID3 2.3 instead of 2.4 if people still do that
+- Improve Unicode support (if there are problems?)
+- Localize interface
 
 ### More checks and fixes
 
