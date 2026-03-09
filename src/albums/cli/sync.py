@@ -25,6 +25,6 @@ def sync(ctx: Context, destination: str, delete: bool, force: bool):
         if ctx.config.rescan == RescanOption.AUTO and ctx.click_ctx:
             ctx.click_ctx.invoke(scan)
 
-        synchronizer.do_sync(ctx, ctx.select_albums(False), dest, delete, force)
+        synchronizer.do_sync(ctx, dest, delete, force)
     else:
         ctx.console.print("The sync destination must be a directory")
