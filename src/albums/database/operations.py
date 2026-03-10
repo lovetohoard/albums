@@ -60,7 +60,7 @@ def _picture(entity: TrackPictureEntity | PictureFileEntity, picture_type: Pictu
     return Picture(
         entity.picture_info,
         picture_type,
-        "",
+        entity.description if isinstance(entity, TrackPictureEntity) else "",
     )
 
 

@@ -213,6 +213,9 @@ class TrackPictureEntity(Base):
     def to_dict(self) -> dict[str, Any]:
         return {"picture_type": PictureType(self.picture_type), "description": self.description, "picture_info": self.picture_info.to_dict()}
 
+    def __lt__(self, other: TrackPictureEntity):
+        return self.embed_ix < other.embed_ix
+
 
 class TrackTagEntity(Base):
     __tablename__ = "track_tag"
