@@ -1172,6 +1172,27 @@ files = [
 ]
 
 [[package]]
+name = "rbloom"
+version = "1.5.4"
+description = "Highly optimized Bloom filter that mimics the Python set API, written in Rust"
+optional = false
+python-versions = ">=3.7"
+groups = ["main"]
+files = [
+    {file = "rbloom-1.5.4-cp37-abi3-macosx_10_12_x86_64.whl", hash = "sha256:9c3235ada8ce33303212bf66d96ca328021e404c9c3094b9e42725163de8bd77"},
+    {file = "rbloom-1.5.4-cp37-abi3-macosx_11_0_arm64.whl", hash = "sha256:ac7b4e30fb9333ee83b325c3bbfe870ea93e6260442ada6679c42d9030e4d007"},
+    {file = "rbloom-1.5.4-cp37-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:374e3b4c2c01c9a269442e01c25564cc45bec237c5b9c67586784380298984ff"},
+    {file = "rbloom-1.5.4-cp37-abi3-manylinux_2_17_armv7l.manylinux2014_armv7l.whl", hash = "sha256:74e573b59e7e36eaa05fd76a9023e6ec8aa0b0cd756c5a36b608e83fe4e33ce6"},
+    {file = "rbloom-1.5.4-cp37-abi3-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:6f92d140c4d79e59244804397f84fa359ee5b9a614739194a7addaae6f0d64e6"},
+    {file = "rbloom-1.5.4-cp37-abi3-manylinux_2_17_s390x.manylinux2014_s390x.whl", hash = "sha256:f143744229a1ab046251fb0dab5940b5f71aa40a6e3f1e0e9acc86d5cbf3e56f"},
+    {file = "rbloom-1.5.4-cp37-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:91f25b4832986bf11f2255f963e6fa26eb98f1d71a84d8ff519b6649cd70f871"},
+    {file = "rbloom-1.5.4-cp37-abi3-manylinux_2_5_i686.manylinux1_i686.whl", hash = "sha256:a8dd11ba9d3d86e9b60db099fa9c76790db02b935599390cd99d6a9c2980e2fe"},
+    {file = "rbloom-1.5.4-cp37-abi3-win32.whl", hash = "sha256:d4d166ffc034af4af88de9af9a7a061dce2a769edf1f29b9ff0aeabd59995d53"},
+    {file = "rbloom-1.5.4-cp37-abi3-win_amd64.whl", hash = "sha256:48576b9d5bddcb8b4e89f61164e4d06a69bdb60d14c365624262db2fb6986f97"},
+    {file = "rbloom-1.5.4.tar.gz", hash = "sha256:ea6804f837c14d8ff041b07df8666798ac1ddcab709e139d06b0ea69d627f827"},
+]
+
+[[package]]
 name = "rich"
 version = "14.3.3"
 description = "Render rich text, tables, progress bars, syntax highlighting, markdown and more to the terminal"
@@ -1828,4 +1849,4 @@ pyyaml = ">=6.0.2"
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.12"
-content-hash = "f73bd97455ac2b60e41d4c7554ddaaeefb3b90f3cda344231026f6efdac0e114"
+content-hash = "24920b303c5f6ebcd7b8865901cf1be146aabeecdafb494cdb8eed5fd4ff819c"

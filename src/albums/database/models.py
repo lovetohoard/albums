@@ -134,6 +134,9 @@ class PictureFileEntity(Base):
             "picture_info": self.picture_info.to_dict(),
         }
 
+    def __lt__(self, other: TrackEntity):
+        return self.filename < other.filename
+
 
 class TrackEntity(Base):
     __tablename__ = "track"
@@ -182,6 +185,9 @@ class TrackEntity(Base):
                 return kwargs["default"]
             raise KeyError(f"{tag.value} is not in tags")
         return result
+
+    def __lt__(self, other: TrackEntity):
+        return self.filename < other.filename
 
 
 class TrackPictureEntity(Base):

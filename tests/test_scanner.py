@@ -53,43 +53,48 @@ class TestScanner:
                 assert result[1].path == "baz" + os.sep  # albums were scanned in lexical order
 
                 # flac files
-                assert result[0].tracks[0].stream.codec == "FLAC"
+                tracks = sorted(result[0].tracks)
                 assert len(result[0].tracks) == 3
-                assert result[0].tracks[0].file_size > 1
-                assert result[0].tracks[0].modify_timestamp > 1
-                assert result[0].tracks[0].stream.sample_rate == 44100
-                assert result[0].tracks[0].get(BasicTag.TITLE) == ("1",)
+                assert tracks[0].stream.codec == "FLAC"
+                assert tracks[0].file_size > 1
+                assert tracks[0].modify_timestamp > 1
+                assert tracks[0].stream.sample_rate == 44100
+                assert tracks[0].get(BasicTag.TITLE) == ("1",)
 
                 # wma files
-                assert result[1].tracks[0].stream.codec == "Windows Media Audio V8"
+                tracks = sorted(result[1].tracks)
                 assert len(result[1].tracks) == 2
-                assert result[1].tracks[0].file_size > 1
-                assert result[1].tracks[0].modify_timestamp > 1
-                assert result[1].tracks[0].stream.sample_rate == 44100
-                assert result[1].tracks[0].get(BasicTag.TITLE) == ("one",)
+                assert tracks[0].stream.codec == "Windows Media Audio V8"
+                assert tracks[0].file_size > 1
+                assert tracks[0].modify_timestamp > 1
+                assert tracks[0].stream.sample_rate == 44100
+                assert tracks[0].get(BasicTag.TITLE) == ("one",)
 
                 # m4a files
                 # TODO make sure we know what codec and stream rate is in sample file
+                tracks = sorted(result[2].tracks)
                 assert len(result[2].tracks) == 2
-                assert result[2].tracks[0].file_size > 1
-                assert result[2].tracks[0].modify_timestamp > 1
-                assert result[2].tracks[0].get(BasicTag.TITLE) == ("one",)
+                assert tracks[0].file_size > 1
+                assert tracks[0].modify_timestamp > 1
+                assert tracks[0].get(BasicTag.TITLE) == ("one",)
 
                 # mp3 files
-                assert result[3].tracks[0].stream.codec == "MP3"
+                tracks = sorted(result[3].tracks)
                 assert len(result[3].tracks) == 2
-                assert result[3].tracks[0].file_size > 1
-                assert result[3].tracks[0].modify_timestamp > 1
-                assert result[3].tracks[0].stream.sample_rate == 44100
-                assert result[3].tracks[0].get(BasicTag.TITLE) == ("1",)
+                assert tracks[0].stream.codec == "MP3"
+                assert tracks[0].file_size > 1
+                assert tracks[0].modify_timestamp > 1
+                assert tracks[0].stream.sample_rate == 44100
+                assert tracks[0].get(BasicTag.TITLE) == ("1",)
 
                 # aiff files
-                assert result[4].tracks[0].stream.codec == "AIFF"
+                tracks = sorted(result[4].tracks)
                 assert len(result[4].tracks) == 2
-                assert result[4].tracks[0].file_size > 1
-                assert result[4].tracks[0].modify_timestamp > 1
-                assert result[4].tracks[0].stream.sample_rate == 8000
-                assert result[4].tracks[0].get(BasicTag.TITLE) == ("one",)
+                assert tracks[0].stream.codec == "AIFF"
+                assert tracks[0].file_size > 1
+                assert tracks[0].modify_timestamp > 1
+                assert tracks[0].stream.sample_rate == 8000
+                assert tracks[0].get(BasicTag.TITLE) == ("one",)
 
                 # image files in folder
                 assert len(result[0].picture_files) == 1
@@ -138,8 +143,9 @@ class TestScanner:
             scan(ctx)
             with Session(db) as session:
                 result = session.execute(select(AlbumEntity).where(AlbumEntity.path.like("bar%"))).tuples().one()
-                assert result[0].tracks[0].filename == "1.flac"
-                assert result[0].tracks[0].get(BasicTag.TITLE) == ("1",)
+                tracks = sorted(result[0].tracks)
+                assert tracks[0].filename == "1.flac"
+                assert tracks[0].get(BasicTag.TITLE) == ("1",)
 
             file = FLAC(library / result[0].path / "1.flac")
             file[BasicTag.TITLE] = "new title"
@@ -148,7 +154,7 @@ class TestScanner:
 
             with Session(db) as session:
                 result = session.execute(select(AlbumEntity).where(AlbumEntity.path.like("bar%"))).tuples().one()
-                assert result[0].tracks[0].get(BasicTag.TITLE) == ("new title",)
+                assert sorted(result[0].tracks)[0].get(BasicTag.TITLE) == ("new title",)
         finally:
             db.dispose()
 
@@ -234,10 +240,9 @@ class TestScanner:
                 delete_album = result[0][0].path
                 shutil.rmtree(library / delete_album, ignore_errors=True)
 
-            scan(ctx, lambda: [(result[1][0].path, result[1][0].album_id)])
+                scan(ctx, session, iter([result[1][0]]))
 
-            # deleted path was not scanned, so album is still there
-            with Session(db) as session:
+                # deleted path was not scanned, so album is still there
                 result = session.execute(select(AlbumEntity).order_by(AlbumEntity.path)).tuples().all()
                 assert len(result) == 5
                 assert result[0][0].path == delete_album

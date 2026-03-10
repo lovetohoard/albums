@@ -1,7 +1,7 @@
 import logging
-from typing import Generator
 
 import rich_click as click
+from sqlalchemy.orm import Session
 
 from ..app import Context
 from ..configuration import RescanOption
@@ -20,7 +20,5 @@ def scan(ctx: Context, reread: bool):
         ctx.console.print("scan already done, not scanning again")
         return
 
-    def filtered_path_selector() -> Generator[tuple[str, int | None], None, None]:
-        yield from ((album.path, album.album_id) for album in ctx.select_albums(False))
-
-    scanner.scan(ctx, filtered_path_selector if ctx.is_filtered else None, reread)
+    with Session(ctx.db) as session:
+        scanner.scan(ctx, session, ctx.select_album_entities(session) if ctx.is_filtered else None, reread)

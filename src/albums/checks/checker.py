@@ -3,9 +3,12 @@ from dataclasses import dataclass
 from typing import Mapping, Sequence
 
 from rich.markup import escape
+from sqlalchemy import select
+from sqlalchemy.orm import Session
 
 from ..app import Context
 from ..database import operations
+from ..database.models import AlbumEntity
 from ..interactive.interact import interact
 from ..library import scanner
 from ..tagger.provider import AlbumTaggerProvider
@@ -121,7 +124,9 @@ class Checker:
 
                 if disposition.maybe_changed:
                     reread = True  # probably could be False -> faster
-                    (_, any_changes) = scanner.scan(self.ctx, lambda: [(album.path, album.album_id)], reread)
+                    with Session(self.ctx.db) as session:
+                        (album_entity,) = session.execute(select(AlbumEntity).where(AlbumEntity.album_id == album.album_id)).tuples().one()
+                        (_, any_changes) = scanner.scan(self.ctx, session, iter([album_entity]), reread)
                     maybe_fixable = any_changes
                     if self.ctx.db and album.album_id:
                         album = operations.load_album(self.ctx.db, album.album_id, True)
