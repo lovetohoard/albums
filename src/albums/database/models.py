@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any, List, Mapping, Optional, Sequence, Unpack
 
-from sqlalchemy import REAL, Boolean, Column, Enum, ForeignKey, Index, Integer, LargeBinary, Table, Text, text
+from sqlalchemy import REAL, Boolean, Column, Enum, ForeignKey, Index, Integer, LargeBinary, Table, Text
 from sqlalchemy.ext.associationproxy import AssociationProxy, association_proxy
 from sqlalchemy.orm import DeclarativeBase, Mapped, composite, mapped_column, relationship
 
@@ -39,7 +39,7 @@ class AlbumEntity(Base):
     album_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=False, primary_key=True)
 
     path: Mapped[str] = mapped_column(Text, nullable=False, unique=True)
-    scanner: Mapped[int] = mapped_column(Integer, nullable=False, server_default=text("0"))
+    scanner: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
 
     collection_associations: Mapped[List[AlbumCollectionAssociation]] = relationship(back_populates="album", cascade="all, delete-orphan")
     collections: AssociationProxy[List[str]] = association_proxy(
@@ -115,14 +115,14 @@ class PictureFileEntity(Base):
     album: Mapped[Optional[AlbumEntity]] = relationship("AlbumEntity", back_populates="picture_files")
 
     filename: Mapped[str] = mapped_column(Text, nullable=False)
-    modify_timestamp: Mapped[int] = mapped_column(Integer, nullable=False)
-    cover_source: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=text("0"))
-    _format: Mapped[str] = mapped_column("format", Text, nullable=False)
-    _width: Mapped[int] = mapped_column("width", Integer, nullable=False)
-    _height: Mapped[int] = mapped_column("height", Integer, nullable=False)
-    _depth_bpp: Mapped[int] = mapped_column("depth_bpp", Integer, nullable=False)
-    _file_size: Mapped[int] = mapped_column("file_size", Integer, nullable=False)
-    _file_hash: Mapped[bytes] = mapped_column("file_hash", LargeBinary, nullable=False)
+    modify_timestamp: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    cover_source: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    _format: Mapped[str] = mapped_column("format", Text, nullable=False, default="")
+    _width: Mapped[int] = mapped_column("width", Integer, nullable=False, default=0)
+    _height: Mapped[int] = mapped_column("height", Integer, nullable=False, default=0)
+    _depth_bpp: Mapped[int] = mapped_column("depth_bpp", Integer, nullable=False, default=0)
+    _file_size: Mapped[int] = mapped_column("file_size", Integer, nullable=False, default=0)
+    _file_hash: Mapped[bytes] = mapped_column("file_hash", LargeBinary, nullable=False, default=b"")
     _load_issue: Mapped[LoadIssuesType] = mapped_column("load_issue", LoadIssuesAsJson)
     picture_info = composite(PictureInfo, _format, _width, _height, _depth_bpp, _file_size, _file_hash, _load_issue)
 
@@ -147,13 +147,13 @@ class TrackEntity(Base):
     album: Mapped[Optional[AlbumEntity]] = relationship("AlbumEntity", back_populates="tracks")
 
     filename: Mapped[str] = mapped_column(Text, nullable=False)
-    file_size: Mapped[int] = mapped_column(Integer, nullable=False)
-    modify_timestamp: Mapped[int] = mapped_column(Integer, nullable=False)
-    _stream_length: Mapped[float] = mapped_column("stream_length", REAL, nullable=False)
-    _stream_bitrate: Mapped[int] = mapped_column("stream_bitrate", Integer, nullable=False)
-    _stream_channels: Mapped[int] = mapped_column("stream_channels", Integer, nullable=False)
-    _stream_codec: Mapped[str] = mapped_column("stream_codec", Text, nullable=False)
-    _stream_sample_rate: Mapped[int] = mapped_column("stream_sample_rate", Integer, nullable=False)
+    file_size: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    modify_timestamp: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    _stream_length: Mapped[float] = mapped_column("stream_length", REAL, nullable=False, default=0)
+    _stream_bitrate: Mapped[int] = mapped_column("stream_bitrate", Integer, nullable=False, default=0)
+    _stream_channels: Mapped[int] = mapped_column("stream_channels", Integer, nullable=False, default=0)
+    _stream_codec: Mapped[str] = mapped_column("stream_codec", Text, nullable=False, default="")
+    _stream_sample_rate: Mapped[int] = mapped_column("stream_sample_rate", Integer, nullable=False, default=0)
     stream = composite(StreamInfo, _stream_length, _stream_bitrate, _stream_channels, _stream_codec, _stream_sample_rate)
 
     pictures: Mapped[List[TrackPictureEntity]] = relationship("TrackPictureEntity", back_populates="track", cascade="all, delete-orphan")
@@ -199,8 +199,8 @@ class TrackPictureEntity(Base):
     track: Mapped[Optional[TrackEntity]] = relationship("TrackEntity", back_populates="pictures")
 
     picture_type: Mapped[PictureType] = mapped_column(IntEnumAsInt[PictureType](PictureType), nullable=False)
-    embed_ix: Mapped[int] = mapped_column(Integer, nullable=False)
-    description: Mapped[str] = mapped_column(Text, nullable=False)
+    embed_ix: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    description: Mapped[str] = mapped_column(Text, nullable=False, default="")
     _format: Mapped[str] = mapped_column("format", Text, nullable=False)
     _width: Mapped[int] = mapped_column("width", Integer, nullable=False)
     _height: Mapped[int] = mapped_column("height", Integer, nullable=False)
