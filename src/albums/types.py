@@ -52,13 +52,6 @@ class Album:
 
 
 @dataclass
-class ScanHistoryEntry:
-    timestamp: int
-    folders_scanned: int
-    albums_total: int
-
-
-@dataclass
 class Fixer:
     fix: Callable[[str], bool]
     options: Sequence[str]  # at least one option should be provided if "free text" is not an option

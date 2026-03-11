@@ -16,10 +16,8 @@ from sqlalchemy import delete, desc, select
 from sqlalchemy.orm import Session
 
 from ..app import SCANNER_VERSION, Context
-from ..database import operations
 from ..database.models import AlbumEntity, PictureFileEntity, ScanHistoryEntity, TrackEntity, TrackPictureEntity, TrackTagEntity
 from ..tagger.folder import AUDIO_FILE_SUFFIXES, AlbumTagger
-from ..types import ScanHistoryEntry
 from .folder import Ministat, read_binary_file, stat_dir
 
 MAX_IMAGE_SIZE = 128 * 1024 * 1024  # don't load and scan image files larger than this. 16 MB is the max for ID3v2 and FLAC tags.
@@ -39,7 +37,10 @@ logger = logging.getLogger(__name__)
 def scan(ctx: Context, session: Session | None = None, scan_albums: Iterator[AlbumEntity] | None = None, reread: bool = False) -> tuple[int, bool]:
     if session is None:
         with Session(ctx.db) as session:
-            return scan(ctx, session, scan_albums, reread)
+            (albums_total, any_changes) = scan(ctx, session, scan_albums, reread)
+            if any_changes:
+                session.commit()
+            return (albums_total, any_changes)
 
     start_time = time.perf_counter()
     expected_path_count = 0
@@ -83,7 +84,7 @@ def scan(ctx: Context, session: Session | None = None, scan_albums: Iterator[Alb
         albums_total = scan_results[AlbumScanResult.NEW] + scan_results[AlbumScanResult.UPDATED] + scan_results[AlbumScanResult.UNCHANGED]
         any_changes = any(k in scan_results for k in [AlbumScanResult.NEW, AlbumScanResult.UPDATED, AlbumScanResult.REMOVED])
         if full_scan:
-            operations.record_full_scan(ctx.db, ScanHistoryEntry(int(time.perf_counter()), scanned, albums_total))
+            session.add(ScanHistoryEntity(timestamp=int(time.perf_counter()), folders_scanned=scanned, albums_total=albums_total))
         session.flush()
     except KeyboardInterrupt:
         session.commit()  # nested transaction should have rolled back, but commit completed scans
@@ -142,7 +143,7 @@ def scan_library(
         update_progress()
 
     for album_id in unvisited_album_ids:
-        logger.info(f"REMOVED album {album_id} (not found)")
+        logger.info(f"{AlbumScanResult.REMOVED.name} album {album_id} (not found)")
         session.execute(delete(AlbumEntity).where(AlbumEntity.album_id == album_id))
     return scan_results
 

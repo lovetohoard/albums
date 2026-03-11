@@ -1,15 +1,14 @@
 import logging
 from typing import Sequence
 
-from sqlalchemy import Engine, delete, desc, select
+from sqlalchemy import Engine, delete, select
 from sqlalchemy.orm import Session
 
 from ..tagger.types import BasicTag, Picture, PictureType, StreamInfo
-from ..types import Album, PictureFile, ScanHistoryEntry, Track
+from ..types import Album, PictureFile, Track
 from .models import (
     AlbumEntity,
     PictureFileEntity,
-    ScanHistoryEntity,
     TrackEntity,
     TrackPictureEntity,
     TrackTagEntity,
@@ -152,18 +151,3 @@ def update_picture_files(db: Engine, album_id: int, picture_files: Sequence[Pict
         album = session.scalars(select(AlbumEntity).where(AlbumEntity.album_id == album_id)).one()
         album.picture_files = [_picture_file_to_entity(file) for file in picture_files]
         session.commit()
-
-
-def record_full_scan(db: Engine, entry: ScanHistoryEntry):
-    with Session(db) as session:
-        session.add(ScanHistoryEntity(timestamp=entry.timestamp, folders_scanned=entry.folders_scanned, albums_total=entry.albums_total))
-        session.commit()
-
-
-def get_last_scan_info(db: Engine) -> ScanHistoryEntry | None:
-    with Session(db) as session:
-        row = session.execute(select(ScanHistoryEntity).order_by(desc(ScanHistoryEntity.timestamp))).tuples().first()
-        if row is None:
-            return None
-        (entity,) = row
-        return ScanHistoryEntry(entity.timestamp, entity.folders_scanned, entity.albums_total)

@@ -3,14 +3,14 @@ from copy import copy
 from pathlib import Path
 
 import pytest
-from sqlalchemy import select, text
+from sqlalchemy import desc, select, text
 from sqlalchemy.orm import Session
 
 from albums.database import connection, operations, schema
-from albums.database.models import AlbumEntity
+from albums.database.models import AlbumEntity, ScanHistoryEntity
 from albums.picture.info import PictureInfo
 from albums.tagger.types import Picture, PictureType, StreamInfo
-from albums.types import Album, BasicTag, PictureFile, ScanHistoryEntry, Track
+from albums.types import Album, BasicTag, PictureFile, Track
 
 embedded_cover = Picture(PictureInfo("image/jpeg", 200, 200, 24, 1024, b"1234", (("format", "image/png"),)), PictureType.COVER_FRONT, "")
 track = Track("1.flac", {BasicTag.ARTIST: ["Bar"]}, 0, 0, StreamInfo(1.0, 128000, 2, "FLAC", 44100), [embedded_cover])
@@ -132,13 +132,19 @@ class TestDatabase:
     def test_scan_history(self):
         db = connection.open(connection.MEMORY)
         try:
-            assert operations.get_last_scan_info(db) is None
-            operations.record_full_scan(db, ScanHistoryEntry(3, 2, 1))
-            entry = operations.get_last_scan_info(db)
-            assert entry
-            assert entry.timestamp == 3
-            assert entry.folders_scanned == 2
-            assert entry.albums_total == 1
+            with Session(db) as session:
+                last_scan = session.execute(select(ScanHistoryEntity).order_by(desc(ScanHistoryEntity.timestamp))).tuples().one_or_none()
+                assert last_scan is None
+
+                session.add(ScanHistoryEntity(timestamp=999, folders_scanned=1001, albums_total=1000))
+                session.flush()
+
+                last_scan = session.execute(select(ScanHistoryEntity).order_by(desc(ScanHistoryEntity.timestamp))).tuples().one_or_none()
+                assert last_scan
+                (scan,) = last_scan
+                assert scan.timestamp == 999
+                assert scan.folders_scanned == 1001
+                assert scan.albums_total == 1000
         finally:
             db.dispose()
 
