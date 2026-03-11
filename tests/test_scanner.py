@@ -7,11 +7,11 @@ from sqlalchemy.orm import Session
 
 from albums.app import SCANNER_VERSION, Context
 from albums.database import connection
-from albums.library.scanner import AlbumEntity, scan
+from albums.library.scanner import AlbumEntity, AlbumTagger, PictureFileEntity, TrackEntity, scan
 from albums.picture.info import PictureInfo
 from albums.types import Album, BasicTag, Path, PictureFile, Track
 
-from .fixtures.create_library import create_album_in_library, create_library
+from .fixtures.create_library import create_album_in_library, create_library, create_picture_file
 
 
 def context(db: Engine, library: Path):
@@ -275,5 +275,127 @@ class TestScanner:
                 result = session.execute(select(AlbumEntity)).tuples().all()
                 assert len(result) == 3
                 assert all(album.scanner == SCANNER_VERSION for [album] in result)
+        finally:
+            db.dispose()
+
+    def test_scanner_replace_track(self):
+        created_album = self.sample_library[0]
+        library = create_library("test_scanner_replace_track", [created_album])
+        db = connection.open(connection.MEMORY)
+        try:
+            ctx = context(db, library)
+            with Session(db) as session:
+                assert scan(ctx, session) == (1, True)
+                (album,) = session.execute(select(AlbumEntity)).tuples().one()
+                assert len(album.tracks) == 3
+                tracks = sorted(album.tracks)
+                assert tracks[0].get(BasicTag.TITLE) == ("1",)
+                assert not tracks[0].has(BasicTag.ARTIST)
+                track_id = tracks[0].track_id
+
+                with AlbumTagger(library / created_album.path).open(tracks[0].filename) as tags:
+                    tags.set_tag(BasicTag.ARTIST, "test replace track")
+
+                assert scan(ctx, session) == (1, True)
+                (album,) = session.execute(select(AlbumEntity)).tuples().one()
+                assert len(album.tracks) == 3
+                tracks = sorted(album.tracks)
+                assert tracks[0].get(BasicTag.TITLE) == ("1",)
+                assert tracks[0].get(BasicTag.ARTIST) == ("test replace track",)
+                assert tracks[1].get(BasicTag.TITLE) == ("2",)
+                assert tracks[2].get(BasicTag.TITLE) == ("3",)
+
+                old_track = session.execute(select(TrackEntity).where(TrackEntity.track_id == track_id)).one_or_none()
+                assert old_track is None
+
+        finally:
+            db.dispose()
+
+    def test_scanner_remove_track(self):
+        created_album = self.sample_library[0]
+        library = create_library("test_scanner_remove_track", [created_album])
+        db = connection.open(connection.MEMORY)
+        try:
+            ctx = context(db, library)
+            with Session(db) as session:
+                assert scan(ctx, session) == (1, True)
+                (album,) = session.execute(select(AlbumEntity)).tuples().one()
+                assert len(album.tracks) == 3
+                tracks = sorted(album.tracks)
+                assert tracks[0].get(BasicTag.TITLE) == ("1",)
+                assert tracks[1].get(BasicTag.TITLE) == ("2",)
+                assert tracks[2].get(BasicTag.TITLE) == ("3",)
+                track_id = tracks[2].track_id
+
+                os.unlink(library / created_album.path / tracks[2].filename)
+
+                assert scan(ctx, session) == (1, True)
+                (album,) = session.execute(select(AlbumEntity)).tuples().one()
+                assert len(album.tracks) == 2
+                tracks = sorted(album.tracks)
+                assert tracks[0].get(BasicTag.TITLE) == ("1",)
+                assert tracks[1].get(BasicTag.TITLE) == ("2",)
+
+                old_track = session.execute(select(TrackEntity).where(TrackEntity.track_id == track_id)).one_or_none()
+                assert old_track is None
+
+        finally:
+            db.dispose()
+
+    def test_scanner_replace_picture_file(self):
+        created_album = self.sample_library[0]
+        library = create_library("test_scanner_replace_picture_file", [created_album])
+        db = connection.open(connection.MEMORY)
+        try:
+            ctx = context(db, library)
+            with Session(db) as session:
+                assert scan(ctx, session) == (1, True)
+                (album,) = session.execute(select(AlbumEntity)).tuples().one()
+                assert len(album.picture_files) == 1
+                assert album.picture_files[0].filename == "cover.jpg"
+                assert album.picture_files[0].picture_info.width == 410
+                picture_file_id = album.picture_files[0].album_picture_file_id
+
+                create_picture_file(library / album.path / "cover.jpg", 123, 321, "pink")
+
+                assert scan(ctx, session) == (1, True)
+                (album,) = session.execute(select(AlbumEntity)).tuples().one()
+                assert len(album.picture_files) == 1
+                assert album.picture_files[0].filename == "cover.jpg"
+                assert album.picture_files[0].picture_info.width == 123
+
+                old_picture_file = session.execute(
+                    select(PictureFileEntity).where(PictureFileEntity.album_picture_file_id == picture_file_id)
+                ).one_or_none()
+                assert old_picture_file is None
+
+        finally:
+            db.dispose()
+
+    def test_scanner_remove_picture_file(self):
+        created_album = self.sample_library[0]
+        library = create_library("test_scanner_replace_picture_file", [created_album])
+        db = connection.open(connection.MEMORY)
+        try:
+            ctx = context(db, library)
+            with Session(db) as session:
+                assert scan(ctx, session) == (1, True)
+                (album,) = session.execute(select(AlbumEntity)).tuples().one()
+                assert len(album.picture_files) == 1
+                assert album.picture_files[0].filename == "cover.jpg"
+                assert album.picture_files[0].picture_info.width == 410
+                picture_file_id = album.picture_files[0].album_picture_file_id
+
+                os.unlink(library / album.path / "cover.jpg")
+
+                assert scan(ctx, session) == (1, True)
+                (album,) = session.execute(select(AlbumEntity)).tuples().one()
+                assert len(album.picture_files) == 0
+
+                old_picture_file = session.execute(
+                    select(PictureFileEntity).where(PictureFileEntity.album_picture_file_id == picture_file_id)
+                ).one_or_none()
+                assert old_picture_file is None
+
         finally:
             db.dispose()

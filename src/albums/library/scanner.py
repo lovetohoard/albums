@@ -5,7 +5,6 @@ import mimetypes
 import time
 from collections import defaultdict
 from enum import Enum, auto
-from itertools import chain
 from pathlib import Path
 from typing import Callable, Iterator, Mapping
 
@@ -201,14 +200,15 @@ def _scan_picture_file(tagger: AlbumTagger, filename: str, stat: Ministat):
 def _scan_file(album: AlbumEntity, tagger: AlbumTagger, path: Path, stat: Ministat, replace: bool) -> None:
     if str.lower(path.suffix) in AUDIO_FILE_SUFFIXES:
         if replace:
-            album.tracks.remove(next(t for t in album.tracks if t.filename == path.name))
+            while (to_remove := next((t for t in album.tracks if t.filename == path.name), None)) is not None:
+                album.tracks.remove(to_remove)
         album.tracks.append(_scan_track(tagger, path.name, stat))
     else:
         cover_source = False
         if replace:
-            original = next(f for f in album.picture_files if f.filename == path.name)
-            cover_source = original.cover_source
-            album.picture_files.remove(original)
+            while (original := next((f for f in album.picture_files if f.filename == path.name), None)) is not None:
+                cover_source = original.cover_source
+                album.picture_files.remove(original)
         new_picture_file = _scan_picture_file(tagger, path.name, stat)
         if new_picture_file:
             new_picture_file.cover_source = cover_source
@@ -217,29 +217,28 @@ def _scan_file(album: AlbumEntity, tagger: AlbumTagger, path: Path, stat: Minist
 
 def _scan_album(ctx: Context, tagger: AlbumTagger, album: AlbumEntity, reread: bool = False) -> AlbumScanResult:
     album_path = ctx.config.library / album.path
-    stored_files = dict(
-        chain(
-            ((album_path / t.filename, Ministat(t.file_size, t.modify_timestamp)) for t in album.tracks),
-            ((album_path / f.filename, Ministat(f.picture_info.file_size, f.modify_timestamp)) for f in album.picture_files),
-        )
-    )
+    stored_files_list = [(t.filename, Ministat(t.file_size, t.modify_timestamp)) for t in album.tracks] + [
+        (f.filename, Ministat(f.picture_info.file_size, f.modify_timestamp)) for f in album.picture_files
+    ]
+    duplicate_files = set(filename for (filename, _) in stored_files_list if sum(1 if filename == fn else 0 for (fn, _) in stored_files_list) > 1)
+    stored_files = dict(stored_files_list)
     updated = False
     for path, stat in stat_dir(album_path):
-        if path in stored_files:
-            if reread or stat != stored_files[path]:
+        if path.name in stored_files:
+            if reread or stat != stored_files[path.name] or path.name in duplicate_files:
                 logger.debug(f"re-scanning file: {str(path)}")
                 _scan_file(album, tagger, path, stat, True)
                 updated = True  # TODO if reread==True, check whether file actually changed
-            del stored_files[path]
+            del stored_files[path.name]
         else:
             logger.debug(f"scanning new file: {str(path)}")
             _scan_file(album, tagger, path, stat, False)
             updated = True
-    for path in stored_files:  # anything left has been deleted
-        if path.suffix in AUDIO_FILE_SUFFIXES:
-            album.tracks.remove(next(t for t in album.tracks if t.filename == path.name))
+    for filename in stored_files:  # anything left has been deleted
+        if Path(filename).suffix in AUDIO_FILE_SUFFIXES:
+            album.tracks.remove(next(t for t in album.tracks if t.filename == filename))
         else:
-            album.picture_files.remove(next(f for f in album.picture_files if f.filename == path.name))
+            album.picture_files.remove(next(f for f in album.picture_files if f.filename == filename))
         updated = True
     if len(album.tracks) == 0:
         return AlbumScanResult.REMOVED
