@@ -49,9 +49,9 @@ library and keep digital audio players synced.
 
 ## Supported Media
 
-**FLAC**, **Ogg Vorbis**, **MP3/ID3** and **M4A** containers are supported.
-**WMA** files are read but `albums` doesn't comprehend their tags yet so most
-checks are skipped. Image files (PNG, JPEG, GIF, BMP, WEBP, TIFF, etc) in the
+**FLAC**, **Ogg Vorbis**, **MP3/ID3**, **M4A**, **ASF/WMA** and **AIFF**
+containers/types are supported with standard tags. **ASF/WMA** embedded image
+support is read-only. Image files (PNG, JPEG, GIF, BMP, WEBP, TIFF, etc) in the
 album folder are scanned and can be automatically converted and embedded.
 
 More formats and tag comprehension will likely be added if requested.
