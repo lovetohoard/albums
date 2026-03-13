@@ -106,7 +106,7 @@ class CheckAlbumArtist(Check):
                     show_tag(track.get(BasicTag.ARTIST, default=None)),
                     show_tag(track.get(BasicTag.ALBUMARTIST, default=None)),
                 ]
-                for track in album.tracks
+                for track in sorted(album.tracks)
             ],
         )
         return Fixer(

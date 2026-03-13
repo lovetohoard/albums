@@ -73,7 +73,7 @@ class CheckPictureMetadata(Check):
                 fixes.append("renaming image files")
             options = [f">> Fix by {' and '.join(fixes)}"]
             option_automatic_index = 0
-            files = [escape(track.filename) for track in album.tracks] + [escape(file.filename) for file in album.picture_files]
+            files = [escape(track.filename) for track in sorted(album.tracks)] + [escape(file.filename) for file in sorted(album.picture_files)]
             table = (["filename", "image metadata issues"], [[file, file_issues[ix]] for ix, file in enumerate(files)])
             return CheckResult(
                 f"{' and '.join(problems)}, example {example}",

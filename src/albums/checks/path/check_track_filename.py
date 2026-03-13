@@ -26,7 +26,7 @@ class CheckTrackFilename(Check):
         self.join_multiple = str(check_config.get("join_multiple", self.default_config["join_multiple"]))
 
     def check(self, album: Album):
-        generated_filenames = [self._generate_filename(album, track) for track in album.tracks]
+        generated_filenames = [self._generate_filename(album, track) for track in sorted(album.tracks)]
         generated_filenames_lower: set[str] = set()
         for ix, filename in enumerate(generated_filenames):
             filename_lower = str.lower(filename)
@@ -36,11 +36,11 @@ class CheckTrackFilename(Check):
             generated_filenames_lower.add(filename_lower)
         if any(filename.startswith(".") for filename in generated_filenames):
             return CheckResult("cannot generate filenames that start with . character (maybe a track has no track number or title)")
-        if any(track.filename != generated_filenames[ix] for ix, track in enumerate(album.tracks)):
+        if any(track.filename != generated_filenames[ix] for ix, track in enumerate(sorted(album.tracks))):
             options = [">> Use generated filenames"]
             option_automatic_index = 0
             headers = ["Current Filename", "Disc#", "Track#", "Title Tag", "Proposed Filename"]
-            table = (headers, [self._table_row(album, track) for track in album.tracks])
+            table = (headers, [self._table_row(album, track) for track in sorted(album.tracks)])
             return CheckResult(
                 "track filenames do not match configured pattern",
                 Fixer(lambda _: self._fix_use_generated(album), options, False, option_automatic_index, table),
@@ -104,7 +104,7 @@ class CheckTrackFilename(Check):
     def _fix_use_generated(self, album: Album):
         album_path = self.ctx.config.library / album.path
 
-        tracks_to_rename = [track for track in album.tracks if self._generate_filename(album, track) != track.filename]
+        tracks_to_rename = [track for track in sorted(album.tracks) if self._generate_filename(album, track) != track.filename]
         new_filenames = [self._generate_filename(album, track) for track in tracks_to_rename]
 
         old_filenames_lower = {str.lower(track.filename) for track in tracks_to_rename}

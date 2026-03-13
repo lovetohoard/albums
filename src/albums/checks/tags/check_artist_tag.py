@@ -65,7 +65,7 @@ class CheckArtistTag(Check):
                     show_tag(track.get(BasicTag.ARTIST, default=None)),
                     show_tag([candidates[0]] if candidates and not track.has(BasicTag.ARTIST) else None),
                 ]
-                for track in album.tracks
+                for track in sorted(album.tracks)
             ],
         )
         option_free_text = True

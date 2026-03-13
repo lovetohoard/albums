@@ -25,7 +25,7 @@ def do_sync(ctx: Context, dest: Path, delete: bool, force: bool):
     tracks: list[tuple[Path, Path, int]] = []  # list of (source, destination, size)
     with Session(ctx.db) as session:
         for album in ctx.select_album_entities(session):
-            for track in album.tracks:
+            for track in sorted(album.tracks):
                 # remove in-use dirs from destination set if present
                 dest_path = dest / Path(album.path)
                 while dest_path.relative_to(dest).name != "":

@@ -14,9 +14,9 @@ class CheckDuplicatePathname(Check):
     def check(self, album: Album):
         issues: set[str] = set()
         filenames: defaultdict[str, int] = defaultdict(int)
-        for track in album.tracks:
+        for track in sorted(album.tracks):
             filenames[str.lower(track.filename)] += 1
-        for picture_file in album.picture_files:
+        for picture_file in sorted(album.picture_files):
             filenames[str.lower(picture_file.filename)] += 1
 
         for duplicate_filename in (filename for (filename, count) in filenames.items() if count > 1):

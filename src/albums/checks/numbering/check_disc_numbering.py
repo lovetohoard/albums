@@ -134,7 +134,7 @@ class CheckDiscNumbering(Check):
             raise ValueError(f"invalid option {option}")
 
         changed = False
-        for track in album.tracks:
+        for track in sorted(album.tracks):
             path = self.ctx.config.library / album.path / track.filename
             if value is None and track.has(BasicTag.DISCTOTAL):
                 self.ctx.console.print(f"removing disctotal from {track.filename}")

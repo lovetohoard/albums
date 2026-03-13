@@ -18,7 +18,7 @@ class CheckExtraWhitespace(Check):
         tags: set[BasicTag] = set()
         filenames: set[str] = set()
         example: str | None = None
-        for tag, values, filename in [(k, v, track.filename) for track in album.tracks for k, v in track.tag_dict().items()]:
+        for tag, values, filename in [(k, v, track.filename) for track in sorted(album.tracks) for k, v in track.tag_dict().items()]:
             if bad_value := next((value for value in values if value.strip() != value), None):
                 example = f'{tag.value}="{bad_value}"'
                 tags.add(tag)
@@ -39,7 +39,7 @@ class CheckExtraWhitespace(Check):
     def _fix_strip_tags(self, album: Album, filenames: Collection[str]) -> bool:
         changed = False
         tagger = self.tagger.get(album.path)
-        for track in (track for track in album.tracks if track.filename in filenames):
+        for track in (track for track in sorted(album.tracks) if track.filename in filenames):
             with tagger.open(track.filename) as tags:
                 for tag, values in track.tag_dict().items():
                     new_values = [v.strip() for v in values]

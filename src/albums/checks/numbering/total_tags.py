@@ -59,7 +59,7 @@ def check_policy(
                 else:
                     value = option
                 changed = False
-                for track in album.tracks:
+                for track in sorted(album.tracks):
                     path = ctx.config.library / album.path / track.filename
                     if value is None and track.has(tag):
                         ctx.console.print(f"removing {tag} from {track.filename}")

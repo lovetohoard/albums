@@ -200,7 +200,7 @@ class CheckCoverEmbedded(Check):
         new_info = PictureInfo(self.create_mime_type, image.width, image.height, 24, len(image_data), b"")  # hash fixed on rescan
         new_cover = Picture(new_info, PictureType.COVER_FRONT, "")
         tagger = self.tagger.get(album.path)
-        for track in album.tracks:
+        for track in sorted(album.tracks):
             if tagger.supports(track.filename, Cap.PICTURES):
                 with tagger.open(track.filename) as tags:
                     current_cover = next((pic for pic, _data in tags.get_pictures() if pic.type == PictureType.COVER_FRONT), None)

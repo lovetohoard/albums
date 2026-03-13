@@ -71,7 +71,7 @@ class CheckSingleValueTags(Check):
             raise ValueError(f"invalid option {option}")
 
         changed = False
-        for track in album.tracks:
+        for track in sorted(album.tracks):
             file = self.ctx.config.library / album.path / track.filename
             new_values: list[tuple[BasicTag, str | list[str] | None]] = []
             tags = track.tag_dict()

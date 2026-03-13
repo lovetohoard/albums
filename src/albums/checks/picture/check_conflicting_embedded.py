@@ -18,7 +18,7 @@ class CheckConflictingEmbedded(Check):
         self.cover_only = bool(check_config.get("cover_only", CheckConflictingEmbedded.default_config["cover_only"]))
 
     def check(self, album: Album) -> CheckResult | None:
-        for track in album.tracks:
+        for track in sorted(album.tracks):
             pics_by_type: defaultdict[PictureType, list[Picture]] = defaultdict(list[Picture])
             pics_by_type = reduce(lambda acc, item: acc[item.picture_type].append(item.to_picture()) or acc, track.pictures, pics_by_type)
             conflict_type = next(

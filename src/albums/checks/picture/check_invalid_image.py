@@ -58,7 +58,7 @@ class CheckInvalidImage(Check):
                 changed = True
 
         tagger = self.tagger.get(album.path)
-        for track in album.tracks:
+        for track in sorted(album.tracks):
             for pic in track.pictures:
                 load_issue = dict(pic.picture_info.load_issue)
                 if "error" in load_issue:

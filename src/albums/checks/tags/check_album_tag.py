@@ -67,7 +67,7 @@ class CheckAlbumTag(Check):
                     show_tag(track.get(BasicTag.ARTIST, default=None)),
                     show_tag(track.get(BasicTag.ALBUMARTIST, default=None)),
                 ]
-                for track in album.tracks
+                for track in sorted(album.tracks)
             ],
         )
         return Fixer(
@@ -81,7 +81,7 @@ class CheckAlbumTag(Check):
 
     def _fix(self, album: Album, option: str) -> bool:
         changed = False
-        for track in album.tracks:
+        for track in sorted(album.tracks):
             file = self.ctx.config.library / album.path / track.filename
             if track.get(BasicTag.ALBUM, default=[]) != (option,):
                 self.ctx.console.print(f"setting album on {track.filename}")

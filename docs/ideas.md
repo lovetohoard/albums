@@ -20,7 +20,7 @@ icon: lucide/flask-conical
 
 ### More checks and fixes
 
-- scan genre, require/guess/validate
+- check genre, require/guess/validate
 - scan date(s), require/special validate
 - many suggested fixes for current no-fix check failures in TODOs
 - low bitrate or suboptimal codec

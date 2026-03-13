@@ -23,7 +23,7 @@ class CheckTrackTitle(Check):
 
         no_title = sum(0 if track.get(BasicTag.TITLE, default="") else 1 for track in album.tracks)
         if no_title:
-            proposed_titles = list(self._proposed_title(track) for track in album.tracks)
+            proposed_titles = list(self._proposed_title(track) for track in sorted(album.tracks))
             any_fixable = any(not track.get(BasicTag.TITLE, default="") and proposed_titles[ix] for (ix, track) in enumerate(album.tracks))
             if any_fixable:
                 table = (
@@ -34,7 +34,7 @@ class CheckTrackTitle(Check):
                             show_tag(track.get(BasicTag.TITLE, default=None)),
                             escape(str(proposed_titles[ix])) if proposed_titles[ix] else "[bold italic]None[/bold italic]",
                         ]
-                        for (ix, track) in enumerate(album.tracks)
+                        for (ix, track) in enumerate(sorted(album.tracks))
                     ],
                 )
                 option_free_text = False
@@ -57,7 +57,7 @@ class CheckTrackTitle(Check):
 
     def _fix(self, album: Album, option: str) -> bool:
         changed = False
-        for track in album.tracks:
+        for track in sorted(album.tracks):
             file = self.ctx.config.library / album.path / track.filename
             new_title = self._proposed_title(track)
             if new_title:

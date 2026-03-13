@@ -174,8 +174,12 @@ def _picture_cache(album: Album | None) -> PictureScannerCache:
         return {}
     return dict(
         itertools.chain(
-            (((pic.picture_info.file_size, pic.picture_info.file_hash), pic.picture_info) for track in album.tracks for pic in track.pictures),
-            (((file.picture_info.file_size, file.picture_info.file_hash), file.picture_info) for file in album.picture_files),
+            (
+                ((pic.picture_info.file_size, pic.picture_info.file_hash), pic.picture_info)
+                for track in sorted(album.tracks)
+                for pic in track.pictures
+            ),
+            (((file.picture_info.file_size, file.picture_info.file_hash), file.picture_info) for file in sorted(album.picture_files)),
         )
     )
 

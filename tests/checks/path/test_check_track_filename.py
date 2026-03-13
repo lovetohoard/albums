@@ -150,6 +150,7 @@ class TestCheckTrackFilename:
         # these track numbers get padding per default zero-pad-numbers settings because m4a track numbers are numeric and cannot store formatting
         tracks = [
             Track(filename="1.m4a", tag={BasicTag.TRACKNUMBER: "1", BasicTag.TITLE: "one"}),
+            Track(filename="10.m4a", tag={BasicTag.TRACKNUMBER: "10", BasicTag.TITLE: "ten"}),
             Track(filename="2.m4a", tag={BasicTag.TRACKNUMBER: "2", BasicTag.TITLE: "two"}),
             Track(filename="3.m4a", tag={BasicTag.TRACKNUMBER: "3", BasicTag.TITLE: "three"}),
             Track(filename="4.m4a", tag={BasicTag.TRACKNUMBER: "4", BasicTag.TITLE: "four"}),
@@ -158,7 +159,6 @@ class TestCheckTrackFilename:
             Track(filename="7.m4a", tag={BasicTag.TRACKNUMBER: "7", BasicTag.TITLE: "seven"}),
             Track(filename="8.m4a", tag={BasicTag.TRACKNUMBER: "8", BasicTag.TITLE: "eight"}),
             Track(filename="9.m4a", tag={BasicTag.TRACKNUMBER: "9", BasicTag.TITLE: "nine"}),
-            Track(filename="10.m4a", tag={BasicTag.TRACKNUMBER: "10", BasicTag.TITLE: "ten"}),
         ]
         album = Album(path="foo" + os.sep, tracks=tracks)
         result = CheckTrackFilename(Context()).check(album)
@@ -172,6 +172,7 @@ class TestCheckTrackFilename:
         assert result.fixer.fix(result.fixer.options[result.fixer.option_automatic_index])
         assert mock_rename.call_args_list == [
             call(Path(album.path) / "1.m4a", Path(album.path) / "01 one.m4a"),
+            call(Path(album.path) / "10.m4a", Path(album.path) / "10 ten.m4a"),
             call(Path(album.path) / "2.m4a", Path(album.path) / "02 two.m4a"),
             call(Path(album.path) / "3.m4a", Path(album.path) / "03 three.m4a"),
             call(Path(album.path) / "4.m4a", Path(album.path) / "04 four.m4a"),
@@ -180,7 +181,6 @@ class TestCheckTrackFilename:
             call(Path(album.path) / "7.m4a", Path(album.path) / "07 seven.m4a"),
             call(Path(album.path) / "8.m4a", Path(album.path) / "08 eight.m4a"),
             call(Path(album.path) / "9.m4a", Path(album.path) / "09 nine.m4a"),
-            call(Path(album.path) / "10.m4a", Path(album.path) / "10 ten.m4a"),
         ]
 
     def test_track_filename_use_formatted_tag(self, mocker):
@@ -209,6 +209,7 @@ class TestCheckTrackFilename:
         assert result.fixer.fix(result.fixer.options[result.fixer.option_automatic_index])
         assert mock_rename.call_args_list == [
             call(Path(album.path) / "1.mp3", Path(album.path) / "1 one.mp3"),
+            call(Path(album.path) / "10.mp3", Path(album.path) / "10 ten.mp3"),
             call(Path(album.path) / "2.mp3", Path(album.path) / "2 two.mp3"),
             call(Path(album.path) / "3.mp3", Path(album.path) / "3 three.mp3"),
             call(Path(album.path) / "4.mp3", Path(album.path) / "4 four.mp3"),
@@ -217,7 +218,6 @@ class TestCheckTrackFilename:
             call(Path(album.path) / "7.mp3", Path(album.path) / "7 seven.mp3"),
             call(Path(album.path) / "8.mp3", Path(album.path) / "8 eight.mp3"),
             call(Path(album.path) / "9.mp3", Path(album.path) / "9 nine.mp3"),
-            call(Path(album.path) / "10.mp3", Path(album.path) / "10 ten.mp3"),
         ]
 
     def test_track_filename_swap(self, mocker):

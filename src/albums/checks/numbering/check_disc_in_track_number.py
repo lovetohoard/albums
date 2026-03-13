@@ -42,7 +42,7 @@ class CheckDiscInTrackNumber(Check):
         if option != OPTION_USE_PROPOSED:
             raise ValueError(f"invalid option {option}")
 
-        for track in album.tracks:
+        for track in sorted(album.tracks):
             path = self.ctx.config.library / album.path / track.filename
             self.ctx.console.print(f"setting discnumber and tracknumber on {track.filename}")
             (discnumber, tracknumber) = self._proposed_disc_and_tracknumber(track)

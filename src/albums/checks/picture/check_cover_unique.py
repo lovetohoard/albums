@@ -108,7 +108,9 @@ class CheckCoverUnique(Check):
                 )
             # else
             if cover_source_filename is None or len(cover_image_files) > 1 or len(cover_embedded) > 1:
-                tracks_have_covers = all(any(pic for pic in track.pictures if pic.picture_type == PictureType.COVER_FRONT) for track in album.tracks)
+                tracks_have_covers = all(
+                    any(pic for pic in track.pictures if pic.picture_type == PictureType.COVER_FRONT) for track in sorted(album.tracks)
+                )
                 if tracks_have_covers:
                     # Maybe the tracks have unique cover art on purpose?
                     return CheckResult(
