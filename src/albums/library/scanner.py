@@ -48,12 +48,13 @@ def scan(ctx: Context, session: Session | None = None, scan_albums: Iterator[Alb
     paths: Iterator[str] | None = None
     full_scan = not scan_albums
     if full_scan:
-        last_folders_scanned = session.scalar(select(ScanHistoryEntity.folders_scanned).order_by(desc(ScanHistoryEntity.timestamp)))
-        if last_folders_scanned:
+        last_folders = session.execute(select(ScanHistoryEntity.folders_scanned).order_by(desc(ScanHistoryEntity.timestamp))).first()
+        if last_folders:
             # make scan faster while retaining progress bar by using last scan stats for approx folder count
             paths = glob.iglob("**/", root_dir=ctx.config.library, recursive=True)
             # estimate more folders than last scan to maybe avoid progress bar hanging at 100% if albums were added
-            expected_path_count = int(last_folders_scanned * 1.01)
+            expected_path_count = int(last_folders[0] * 1.01)
+            logger.info(f"expect to scan about {expected_path_count} paths")
         else:
             with ctx.console.status(f"finding folders in {escape(str(ctx.config.library))}", spinner="bouncingBar"):
                 path_list = glob.glob("**/", root_dir=ctx.config.library, recursive=True)
@@ -85,7 +86,7 @@ def scan(ctx: Context, session: Session | None = None, scan_albums: Iterator[Alb
         albums_total = scan_results[AlbumScanResult.NEW] + scan_results[AlbumScanResult.UPDATED] + scan_results[AlbumScanResult.UNCHANGED]
         any_changes = any(k in scan_results for k in [AlbumScanResult.NEW, AlbumScanResult.UPDATED, AlbumScanResult.REMOVED])
         if full_scan:
-            session.add(ScanHistoryEntity(timestamp=int(time.perf_counter()), folders_scanned=scanned, albums_total=albums_total))
+            session.add(ScanHistoryEntity(timestamp=int(time.time()), folders_scanned=scanned, albums_total=albums_total))
         session.flush()
     except KeyboardInterrupt:
         session.commit()  # nested transaction should have rolled back, but commit completed scans
