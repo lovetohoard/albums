@@ -4,7 +4,7 @@ from albums.app import Context
 from albums.checks.numbering.check_zero_pad_numbers import CheckZeroPadNumbers
 from albums.tagger.folder import AlbumTagger
 from albums.tagger.types import BasicTag
-from albums.types import Album, Tag, Track
+from albums.types import Album, TagV, Track
 
 
 class TestZeroPadNumbers:
@@ -106,8 +106,8 @@ class TestZeroPadNumbers:
                     Track(
                         filename=f"{discnumber}-{tracknumber}.flac",
                         tags=[
-                            Tag(tag=BasicTag.DISCNUMBER, value=str(discnumber)),
-                            Tag(tag=BasicTag.TRACKNUMBER, value=str(tracknumber)),
+                            TagV(tag=BasicTag.DISCNUMBER, value=str(discnumber)),
+                            TagV(tag=BasicTag.TRACKNUMBER, value=str(tracknumber)),
                         ],
                     )
                 )

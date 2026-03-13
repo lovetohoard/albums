@@ -5,7 +5,7 @@ from sqlalchemy import and_, or_, select
 from sqlalchemy.orm import Session, aliased
 
 from ..tagger.types import BasicTag
-from ..types import Album, AlbumCollectionAssociation, CollectionEntity, IgnoreCheckEntity, Tag, Track
+from ..types import Album, AlbumCollectionAssociation, CollectionEntity, IgnoreCheckEntity, TagV, Track
 
 logger = logging.getLogger(__name__)
 
@@ -62,7 +62,7 @@ def load_album_entities(session: Session, **kwargs: Unpack[LoadEntityOptions]) -
     if tags:
         stmt = stmt.distinct().join(Track, Album.album_id == Track.album_id)
         for spec in tags:
-            entity = aliased(Tag)
+            entity = aliased(TagV)
             kv = spec.split(":", 1)
             tag = BasicTag(kv[0])
             if len(kv) == 1:  # tag only, match any value

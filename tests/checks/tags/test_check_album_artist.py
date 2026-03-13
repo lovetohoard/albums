@@ -4,7 +4,7 @@ from albums.app import Context
 from albums.checks.tags.check_album_artist import CheckAlbumArtist
 from albums.tagger.folder import AlbumTagger
 from albums.tagger.types import BasicTag
-from albums.types import Album, Tag, Track
+from albums.types import Album, TagV, Track
 
 
 class TestCheckAlbumArtist:
@@ -255,6 +255,6 @@ class TestCheckAlbumArtist:
         assert result is None
 
         # same artists, all albumartist the same
-        album.tracks[1].tags = [Tag(tag=BasicTag.ARTIST, value="A"), Tag(tag=BasicTag.ALBUMARTIST, value="A")]
+        album.tracks[1].tags = [TagV(tag=BasicTag.ARTIST, value="A"), TagV(tag=BasicTag.ALBUMARTIST, value="A")]
         result = checker.check(album)
         assert result is None

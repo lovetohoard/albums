@@ -6,7 +6,7 @@ from albums.app import Context
 from albums.checks.numbering.check_track_numbering import CheckTrackNumbering
 from albums.tagger.folder import AlbumTagger
 from albums.tagger.types import BasicTag
-from albums.types import Album, Tag, Track
+from albums.types import Album, TagV, Track
 
 
 class TestCheckTrackNumbering:
@@ -115,8 +115,8 @@ class TestCheckTrackNumbering:
         album = Album(
             path="foo" + os.sep,
             tracks=[
-                Track(filename="1-1.flac", tags=[Tag(tag=BasicTag.DISCNUMBER, value="1")]),
-                Track(filename="1-2.flac", tags=[Tag(tag=BasicTag.DISCNUMBER, value="1")]),
+                Track(filename="1-1.flac", tags=[TagV(tag=BasicTag.DISCNUMBER, value="1")]),
+                Track(filename="1-2.flac", tags=[TagV(tag=BasicTag.DISCNUMBER, value="1")]),
                 Track(filename="2-1.flac", tag={BasicTag.TRACKNUMBER: "1", BasicTag.DISCNUMBER: "2"}),
             ],
         )

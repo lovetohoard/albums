@@ -18,7 +18,7 @@ from sqlalchemy.orm import Session
 from ..app import SCANNER_VERSION, Context
 from ..picture.scan import PictureScannerCache
 from ..tagger.folder import AUDIO_FILE_SUFFIXES, AlbumTagger
-from ..types import Album, PictureFile, ScanHistoryEntity, Tag, Track, TrackPicture
+from ..types import Album, PictureFile, ScanHistoryEntity, TagV, Track, TrackPicture
 from .folder import Ministat, read_binary_file, stat_dir
 
 MAX_IMAGE_SIZE = 128 * 1024 * 1024  # don't load and scan image files larger than this. 16 MB is the max for ID3v2 and FLAC tags.
@@ -183,7 +183,7 @@ def _picture_cache(album: Album | None) -> PictureScannerCache:
 def _scan_track(tagger: AlbumTagger, filename: str, stat: Ministat):
     with tagger.open(filename) as tags:
         scan_result = tags.scan()
-        tags = [Tag(tag=tag, value=value) for tag, values in scan_result.tags for value in values]
+        tags = [TagV(tag=tag, value=value) for tag, values in scan_result.tags for value in values]
         pictures = [
             TrackPicture(picture_type=picture.type, picture_info=picture.picture_info, description=picture.description, embed_ix=embed_ix)
             for embed_ix, picture in enumerate(scan_result.pictures)

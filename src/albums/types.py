@@ -92,7 +92,7 @@ class TrackPicture(Base):
         return self.embed_ix < other.embed_ix
 
 
-class Tag(Base):
+class TagV(Base):
     __tablename__ = "track_tag"
     __table_args__ = (Index("idx_track_tag_track_id", "track_id"),)
 
@@ -123,7 +123,7 @@ class Track(Base):
     stream = composite(StreamInfo, _stream_length, _stream_bitrate, _stream_channels, _stream_codec, _stream_sample_rate)
 
     pictures: Mapped[List[TrackPicture]] = relationship("TrackPicture", back_populates="track", cascade="all, delete-orphan")
-    tags: Mapped[List[Tag]] = relationship("Tag", back_populates="track", cascade="all, delete-orphan")
+    tags: Mapped[List[TagV]] = relationship("TagV", back_populates="track", cascade="all, delete-orphan")
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -159,7 +159,7 @@ class Track(Base):
     def __init__(self, **kw: Any):
         if "tags" not in kw and "tag" in kw and isinstance(kw["tag"], Mapping):
             t: Mapping[BasicTag, str | Sequence[str]] = kw["tag"]  # pyright: ignore[reportUnknownVariableType]
-            kw["tags"] = [Tag(tag=tag, value=v) for tag, values in t.items() for v in ([values] if isinstance(values, str) else values)]
+            kw["tags"] = [TagV(tag=tag, value=v) for tag, values in t.items() for v in ([values] if isinstance(values, str) else values)]
             del kw["tag"]
         super().__init__(**kw)
 
