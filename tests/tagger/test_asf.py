@@ -2,7 +2,7 @@ import os
 
 import pytest
 
-from albums.tagger.asf import WmPicture
+from albums.tagger.file_types.asf import WmPicture
 from albums.tagger.folder import AlbumTagger, BasicTag
 from albums.tagger.types import PictureType
 from albums.types import Album, Track

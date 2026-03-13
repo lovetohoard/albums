@@ -1,7 +1,7 @@
 from pathlib import Path
 
+from .base_id3 import ID3v1Policy
 from .folder import AlbumTagger
-from .mp3 import ID3v1Policy
 
 
 class AlbumTaggerProvider:

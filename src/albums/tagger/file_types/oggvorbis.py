@@ -6,10 +6,10 @@ from mutagen._tags import PaddingInfo
 from mutagen.flac import Picture as FlacPicture
 from mutagen.oggvorbis import OggVorbis
 
-from ..picture.scan import PictureScanner
-from .base_mutagen import AbstractMutagenTagger
-from .helpers import album_picture_to_flac, scan_flac_picture, vorbis_comment_set_tag, vorbis_comment_tags
-from .types import BasicTag, Picture
+from ...picture.scan import PictureScanner
+from ..base_mutagen import AbstractMutagenTagger
+from ..helpers import album_picture_to_flac, scan_flac_picture, vorbis_comment_set_tag, vorbis_comment_tags
+from ..types import BasicTag, Picture
 
 
 class OggVorbisTagger(AbstractMutagenTagger[OggVorbis]):

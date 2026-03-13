@@ -1,8 +1,8 @@
 from pathlib import Path
 from typing import Generator, List, Tuple, override
 
-from ..picture.scan import PictureScanner
-from .types import BasicTag, Picture, PictureType, ScanResult, StreamInfo, TaggerFile
+from ...picture.scan import PictureScanner
+from ..types import BasicTag, Picture, PictureType, ScanResult, StreamInfo, TaggerFile
 
 
 class ImageFileReader(TaggerFile):

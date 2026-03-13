@@ -6,9 +6,9 @@ from typing import Callable, Generator, List, Tuple, override
 from mutagen._tags import PaddingInfo
 from mutagen.mp4 import MP4, MP4Cover, MP4Tags
 
-from ..picture.scan import PictureScanner
-from .base_mutagen import AbstractMutagenTagger
-from .types import BasicTag, Picture, PictureType
+from ...picture.scan import PictureScanner
+from ..base_mutagen import AbstractMutagenTagger
+from ..types import BasicTag, Picture, PictureType
 
 logger = logging.getLogger(__name__)
 

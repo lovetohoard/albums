@@ -8,9 +8,9 @@ from mutagen._tags import PaddingInfo
 from mutagen.asf import ASF, ASFTags
 from mutagen.asf._attrs import ASFByteArrayAttribute
 
-from ..picture.scan import PictureScanner
-from .base_mutagen import AbstractMutagenTagger
-from .types import BasicTag, Picture, PictureType
+from ...picture.scan import PictureScanner
+from ..base_mutagen import AbstractMutagenTagger
+from ..types import BasicTag, Picture, PictureType
 
 logger = logging.getLogger(__name__)
 

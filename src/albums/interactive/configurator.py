@@ -10,7 +10,7 @@ from rich.prompt import FloatPrompt, IntPrompt
 from ..app import Context
 from ..configuration import PathCompatibilityOption, RescanOption
 from ..database import db_config
-from ..tagger.mp3 import ID3v1Policy
+from ..tagger.base_id3 import ID3v1Policy
 
 
 def interactive_config(ctx: Context):

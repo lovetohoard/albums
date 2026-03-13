@@ -7,15 +7,16 @@ from mutagen._tags import PaddingInfo
 
 from ..picture.format import SUPPORTED_IMAGE_SUFFIXES
 from ..picture.scan import PictureScanner, PictureScannerCache
-from .aiff import AiffTagger
-from .asf import AsfTagger
-from .flac import FlacTagger
-from .image_file_reader import ImageFileReader
-from .m4a import M4aTagger
-from .mp3 import ID3v1Policy, Mp3Tagger
-from .oggvorbis import OggVorbisTagger
+from .base_id3 import ID3v1Policy
+from .file_types.aiff import AiffTagger
+from .file_types.asf import AsfTagger
+from .file_types.flac import FlacTagger
+from .file_types.image_file_reader import ImageFileReader
+from .file_types.m4a import M4aTagger
+from .file_types.mp3 import Mp3Tagger
+from .file_types.oggvorbis import OggVorbisTagger
+from .file_types.universal import UniversalTagger
 from .types import BasicTag, TaggerFile
-from .universal import UniversalTagger
 
 
 class Cap(Enum):
