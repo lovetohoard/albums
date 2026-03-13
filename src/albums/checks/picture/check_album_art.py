@@ -6,10 +6,9 @@ from typing import Any, Mapping
 import humanize
 
 from ...checks.helpers import FRONT_COVER_FILENAME
-from ...database.models import AlbumEntity
 from ...interactive.image_table import render_image_table
 from ...tagger.types import Picture, PictureType
-from ...types import CheckResult, Fixer
+from ...types import AlbumEntity, CheckResult, Fixer
 from ..base_check import Check
 
 logger = logging.getLogger(__name__)

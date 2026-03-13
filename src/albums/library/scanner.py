@@ -16,8 +16,8 @@ from sqlalchemy import delete, desc, select
 from sqlalchemy.orm import Session
 
 from ..app import SCANNER_VERSION, Context
-from ..database.models import AlbumEntity, PictureFileEntity, ScanHistoryEntity, TrackEntity, TrackPictureEntity, TrackTagEntity
 from ..tagger.folder import AUDIO_FILE_SUFFIXES, AlbumTagger
+from ..types import AlbumEntity, PictureFileEntity, ScanHistoryEntity, TrackEntity, TrackPictureEntity, TrackTagEntity
 from .folder import Ministat, read_binary_file, stat_dir
 
 MAX_IMAGE_SIZE = 128 * 1024 * 1024  # don't load and scan image files larger than this. 16 MB is the max for ID3v2 and FLAC tags.

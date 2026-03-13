@@ -12,8 +12,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from ..app import Context
-from ..database.models import AlbumEntity
-from ..types import CheckResult
+from ..types import AlbumEntity, CheckResult
 
 logger = logging.getLogger(__name__)
 

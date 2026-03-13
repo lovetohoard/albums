@@ -3,10 +3,9 @@ from typing import Any
 
 from rich.markup import escape
 
-from ...database.models import AlbumEntity
 from ...tagger.folder import AlbumTagger, Cap
 from ...tagger.types import BasicTag
-from ...types import CheckResult, Fixer
+from ...types import AlbumEntity, CheckResult, Fixer
 from ..base_check import Check
 from ..helpers import describe_track_number, get_tracks_by_disc, ordered_tracks
 from . import total_tags

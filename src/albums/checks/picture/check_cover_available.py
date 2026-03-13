@@ -7,12 +7,11 @@ from typing import Any, Dict, List, Mapping, Sequence
 
 from rich.markup import escape
 
-from ...database.models import AlbumEntity
 from ...interactive.image_table import render_image_table
 from ...picture.format import SUPPORTED_IMAGE_SUFFIXES
 from ...tagger.folder import AlbumTagger, Cap
 from ...tagger.types import Picture, PictureType
-from ...types import CheckResult, Fixer
+from ...types import AlbumEntity, CheckResult, Fixer
 from ..base_check import Check
 from ..helpers import FRONT_COVER_FILENAME
 

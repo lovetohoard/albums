@@ -5,10 +5,9 @@ from pathlib import Path
 
 from rich.markup import escape
 
-from ...database.models import AlbumEntity
 from ...tagger.folder import AlbumTagger, Cap
 from ...tagger.types import Picture
-from ...types import CheckResult, Fixer
+from ...types import AlbumEntity, CheckResult, Fixer
 from ..base_check import Check
 
 logger = logging.getLogger(__name__)

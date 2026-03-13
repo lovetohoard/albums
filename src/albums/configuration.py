@@ -6,6 +6,11 @@ from pathlib import Path
 from string import Template
 from typing import Dict, Iterator, Mapping, Union
 
+from sqlalchemy import Text
+from sqlalchemy.orm import Mapped, mapped_column
+
+from albums.database.orm import Base, SerializableValueAsJson
+
 from .tagger.mp3 import ID3v1Policy
 from .types import CheckConfiguration, Sequence, Tuple
 
@@ -13,6 +18,13 @@ logger = logging.getLogger(__name__)
 
 
 type SettingValueType = Union[str, int, float, bool, Sequence[str]]
+
+
+class SettingEntity(Base):
+    __tablename__ = "setting"
+
+    name: Mapped[str] = mapped_column(Text, nullable=False, primary_key=True)
+    value: Mapped[SettingValueType] = mapped_column("value_json", SerializableValueAsJson[SettingValueType], nullable=False)
 
 
 class PathCompatibilityOption(StrEnum):

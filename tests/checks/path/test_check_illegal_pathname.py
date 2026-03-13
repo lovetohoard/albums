@@ -5,8 +5,8 @@ from unittest.mock import call
 from albums.app import Context
 from albums.checks.path.check_illegal_pathname import CheckIllegalPathname
 from albums.configuration import PathCompatibilityOption
-from albums.database.models import AlbumEntity, PictureFileEntity, TrackEntity
 from albums.picture.info import PictureInfo
+from albums.types import AlbumEntity, PictureFileEntity, TrackEntity
 
 
 class TestCheckIllegalPathname:

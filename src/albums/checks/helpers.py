@@ -6,8 +6,8 @@ from typing import Collection, List, Mapping, Sequence, Tuple
 from rich.markup import escape
 
 from ..app import Context
-from ..database.models import AlbumEntity, TrackEntity
 from ..tagger.types import BasicTag
+from ..types import AlbumEntity, TrackEntity
 
 FRONT_COVER_FILENAME = "cover"
 

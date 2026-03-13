@@ -6,10 +6,9 @@ from typing import Any, Literal, Sequence
 from pathvalidate import sanitize_filename
 from rich.console import RenderableType
 
-from ...database.models import AlbumEntity, TrackEntity
 from ...tagger.folder import Cap
 from ...tagger.types import BasicTag
-from ...types import CheckResult, Fixer
+from ...types import AlbumEntity, CheckResult, Fixer, TrackEntity
 from ..base_check import Check
 from ..numbering.check_zero_pad_numbers import CheckZeroPadNumbers, ZeroPadPolicy, apply_pad_policy
 

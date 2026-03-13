@@ -9,10 +9,10 @@ from sqlalchemy.orm import Session
 from albums.app import Context
 from albums.checks.picture.check_cover_unique import CheckCoverUnique
 from albums.database import connection
-from albums.database.models import AlbumEntity, PictureFileEntity, TrackEntity, TrackPictureEntity
 from albums.library import scanner
 from albums.picture.info import PictureInfo
 from albums.tagger.types import PictureType
+from albums.types import AlbumEntity, PictureFileEntity, TrackEntity, TrackPictureEntity
 
 from ...fixtures.create_library import create_library
 

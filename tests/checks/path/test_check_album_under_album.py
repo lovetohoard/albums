@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from albums.app import Context
 from albums.checks.path.check_album_under_album import CheckAlbumUnderAlbum
 from albums.database import connection
-from albums.database.models import AlbumEntity, TrackEntity
+from albums.types import AlbumEntity, TrackEntity
 
 
 class TestCheckAlbumUnderAlbum:

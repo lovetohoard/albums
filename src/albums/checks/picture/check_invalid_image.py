@@ -6,10 +6,9 @@ from typing import Sequence
 from rich.console import RenderableType
 from rich.markup import escape
 
-from ...database.models import AlbumEntity
 from ...picture.format import SUPPORTED_IMAGE_SUFFIXES
 from ...tagger.folder import Cap
-from ...types import CheckResult, Fixer
+from ...types import AlbumEntity, CheckResult, Fixer
 from ..base_check import Check
 
 logger = logging.getLogger(__name__)

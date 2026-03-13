@@ -7,9 +7,9 @@ from sqlalchemy.orm import Session
 from albums.app import Context
 from albums.checks.checker import Checker
 from albums.database import connection, selector
-from albums.database.models import AlbumEntity, TrackEntity, TrackTagEntity
 from albums.library import scanner
 from albums.tagger.types import BasicTag
+from albums.types import AlbumEntity, TrackEntity, TrackTagEntity
 
 from .fixtures.create_library import create_library
 

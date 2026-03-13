@@ -3,11 +3,10 @@ from collections import defaultdict
 from pathlib import Path
 from typing import Any
 
-from ...database.models import AlbumEntity
 from ...interactive.image_table import render_image_table
 from ...picture.format import SUPPORTED_IMAGE_SUFFIXES
 from ...tagger.types import Picture, PictureType
-from ...types import CheckResult, Fixer
+from ...types import AlbumEntity, CheckResult, Fixer
 from ..base_check import Check
 from ..helpers import delete_files_except
 

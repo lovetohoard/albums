@@ -3,9 +3,8 @@ from __future__ import annotations
 from typing import Any
 
 from ..app import Context
-from ..database.models import AlbumEntity
 from ..tagger.provider import AlbumTaggerProvider
-from ..types import CheckConfiguration, CheckResult
+from ..types import AlbumEntity, CheckConfiguration, CheckResult
 
 
 class Check:

@@ -5,7 +5,7 @@ from sqlalchemy import and_, or_, select
 from sqlalchemy.orm import Session, aliased
 
 from ..tagger.types import BasicTag
-from .models import AlbumCollectionAssociation, AlbumEntity, CollectionEntity, IgnoreCheckEntity, TrackEntity, TrackTagEntity
+from ..types import AlbumCollectionAssociation, AlbumEntity, CollectionEntity, IgnoreCheckEntity, TrackEntity, TrackTagEntity
 
 logger = logging.getLogger(__name__)
 

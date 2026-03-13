@@ -14,10 +14,10 @@ from albums.configuration import (
     Configuration,
     PathCompatibilityOption,
     RescanOption,
+    SettingEntity,
 )
 from albums.database import connection
 from albums.database.db_config import load, save
-from albums.database.models import SettingEntity
 
 
 class TestDatabaseConfig:

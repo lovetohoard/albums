@@ -8,12 +8,11 @@ from typing import Any, Callable, Dict, List, Tuple
 
 from PIL import Image
 
-from ...database.models import AlbumEntity, PictureFileEntity
 from ...interactive.image_table import render_image_table
 from ...picture.format import IMAGE_MODE_BPP, MIME_PILLOW_FORMAT
 from ...picture.info import PictureInfo
 from ...tagger.types import Picture, PictureType
-from ...types import CheckResult, Fixer
+from ...types import AlbumEntity, CheckResult, Fixer, PictureFileEntity
 from ..base_check import Check
 
 logger = logging.getLogger(__name__)

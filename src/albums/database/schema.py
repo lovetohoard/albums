@@ -3,7 +3,7 @@ import logging
 from sqlalchemy import Engine, select, update
 from sqlalchemy.orm import Session
 
-from .models import schema_table
+from .orm import schema_table
 
 logger = logging.getLogger(__name__)
 

@@ -1,7 +1,6 @@
 from sqlalchemy import text
 
-from ...database.models import AlbumEntity
-from ...types import CheckResult
+from ...types import AlbumEntity, CheckResult
 from ..base_check import Check
 from ..helpers import album_display_name
 

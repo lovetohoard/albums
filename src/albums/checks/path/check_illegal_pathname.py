@@ -4,8 +4,7 @@ from os import rename
 from pathvalidate import ValidationError, sanitize_filename, validate_filename
 from rich.markup import escape
 
-from ...database.models import AlbumEntity
-from ...types import CheckResult, Fixer
+from ...types import AlbumEntity, CheckResult, Fixer
 from ..base_check import Check
 
 logger = logging.getLogger(__name__)

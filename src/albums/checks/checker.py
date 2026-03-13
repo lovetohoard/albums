@@ -8,11 +8,10 @@ from sqlalchemy.orm import Session
 from albums.database import selector
 
 from ..app import Context
-from ..database.models import AlbumEntity
 from ..interactive.interact import interact
 from ..library import scanner
 from ..tagger.provider import AlbumTaggerProvider
-from ..types import CheckResult
+from ..types import AlbumEntity, CheckResult
 from .all import ALL_CHECKS
 from .base_check import Check
 from .helpers import album_display_name

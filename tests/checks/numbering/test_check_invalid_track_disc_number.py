@@ -2,9 +2,9 @@ from pathlib import Path
 
 from albums.app import Context
 from albums.checks.numbering.check_invalid_track_or_disc_number import CheckInvalidTrackOrDiscNumber
-from albums.database.models import AlbumEntity, TrackEntity, TrackTagEntity
 from albums.tagger.folder import AlbumTagger
 from albums.tagger.types import BasicTag
+from albums.types import AlbumEntity, TrackEntity, TrackTagEntity
 
 
 class TestCheckInvalidTrackOrDiscNumber:

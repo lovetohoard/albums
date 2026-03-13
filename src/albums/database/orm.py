@@ -1,10 +1,19 @@
+from __future__ import annotations
+
 import json
 from typing import Any, override
 
-from sqlalchemy import Dialect, Integer, Text, TypeDecorator
+from sqlalchemy import Column, Dialect, Integer, Table, Text, TypeDecorator
+from sqlalchemy.orm import DeclarativeBase
 
 from ..picture.info import LoadIssuesType
 
+
+class Base(DeclarativeBase):
+    pass
+
+
+schema_table = Table("_schema", Base.metadata, Column("version", Integer, nullable=False, unique=True))
 NO_DEFAULT_VALUE_LIST_STR = ["".join(["!", "NO DEFAULT VALUE"])]  # generate string at runtime and use special characters, so it won't be interned
 
 

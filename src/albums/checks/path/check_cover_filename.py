@@ -5,10 +5,9 @@ from typing import Any
 
 from PIL import Image
 
-from ...database.models import AlbumEntity
 from ...library.folder import read_binary_file
 from ...tagger.types import PictureType
-from ...types import CheckResult, Fixer
+from ...types import AlbumEntity, CheckResult, Fixer
 from ..base_check import Check
 
 

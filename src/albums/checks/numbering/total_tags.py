@@ -3,10 +3,9 @@ from enum import Enum, auto
 from rich.markup import escape
 
 from ...app import Context
-from ...database.models import AlbumEntity
 from ...tagger.folder import AlbumTagger
 from ...tagger.types import BasicTag
-from ...types import CheckResult, Fixer
+from ...types import AlbumEntity, CheckResult, Fixer
 from ..helpers import describe_track_number, ordered_tracks
 
 

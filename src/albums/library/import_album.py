@@ -8,9 +8,9 @@ from string import Template
 from pathvalidate import sanitize_filename, sanitize_filepath
 from rich.markup import escape
 
-from albums.database.models import AlbumEntity
 from albums.library.synchronizer import copy_files_with_progress
 from albums.tagger.types import BasicTag
+from albums.types import AlbumEntity
 
 from ..app import Context
 

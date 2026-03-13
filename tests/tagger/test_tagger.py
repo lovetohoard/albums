@@ -3,10 +3,10 @@ import os
 import pytest
 from mutagen.mp3 import MP3
 
-from albums.database.models import AlbumEntity, TrackEntity, TrackPictureEntity, TrackTagEntity
 from albums.picture.info import PictureInfo
 from albums.tagger.folder import AlbumTagger, BasicTag
 from albums.tagger.types import PictureType
+from albums.types import AlbumEntity, TrackEntity, TrackPictureEntity, TrackTagEntity
 
 from ..fixtures.create_library import create_library
 

@@ -2,10 +2,9 @@ import logging
 
 from rich.markup import escape
 
-from ...database.models import AlbumEntity, TrackEntity
 from ...tagger.folder import AlbumTagger, Cap
 from ...tagger.types import BasicTag
-from ...types import CheckResult, Fixer
+from ...types import AlbumEntity, CheckResult, Fixer, TrackEntity
 from ..base_check import Check
 from ..helpers import parse_filename, show_tag
 

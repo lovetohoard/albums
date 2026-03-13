@@ -2,9 +2,9 @@ from pathlib import Path
 
 from albums.app import Context
 from albums.checks.tags.check_single_value_tags import CheckSingleValueTags
-from albums.database.models import AlbumEntity, TrackEntity, TrackTagEntity
 from albums.tagger.folder import AlbumTagger
 from albums.tagger.types import BasicTag
+from albums.types import AlbumEntity, TrackEntity, TrackTagEntity
 
 
 def context(checks, db=None):

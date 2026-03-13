@@ -3,10 +3,10 @@ from unittest.mock import call, mock_open, patch
 
 from albums.app import Context
 from albums.checks.picture.check_album_art import CheckAlbumArt
-from albums.database.models import AlbumEntity, TrackEntity, TrackPictureEntity
 from albums.picture.info import PictureInfo
 from albums.tagger.folder import AlbumTagger
 from albums.tagger.types import PictureType, TaggerFile
+from albums.types import AlbumEntity, TrackEntity, TrackPictureEntity
 
 from ...fixtures.create_library import make_image_data
 

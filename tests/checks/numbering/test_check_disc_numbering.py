@@ -4,9 +4,9 @@ from unittest.mock import call
 
 from albums.app import Context
 from albums.checks.numbering.check_disc_numbering import CheckDiscNumbering
-from albums.database.models import AlbumEntity, TrackEntity, TrackTagEntity
 from albums.tagger.folder import AlbumTagger, TaggerFile
 from albums.tagger.types import BasicTag
+from albums.types import AlbumEntity, TrackEntity, TrackTagEntity
 
 
 class TestCheckDiscNumbering:

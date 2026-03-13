@@ -4,9 +4,8 @@ from typing import Any
 
 from rich.markup import escape
 
-from ...database.models import AlbumEntity
 from ...tagger.types import Picture, PictureType
-from ...types import CheckResult
+from ...types import AlbumEntity, CheckResult
 from ..base_check import Check
 
 

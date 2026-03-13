@@ -8,7 +8,7 @@ from sqlalchemy import Engine
 from sqlalchemy.orm import Session
 
 from .configuration import Configuration
-from .database.models import AlbumEntity
+from .types import AlbumEntity
 
 logger = logging.getLogger(__name__)
 

@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 
 from ..app import Context
 from ..checks.helpers import album_display_name
-from ..database.models import AlbumCollectionAssociation, CollectionEntity
+from ..types import AlbumCollectionAssociation, CollectionEntity
 from .cli_context import pass_context, require_persistent_context
 
 

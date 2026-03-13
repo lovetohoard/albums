@@ -9,13 +9,12 @@ from rich.markup import escape
 
 from albums.tagger.folder import Cap
 
-from ...database.models import AlbumEntity, PictureFileEntity
 from ...interactive.image_table import render_image_table
 from ...library.folder import read_binary_file
 from ...picture.format import MIME_PILLOW_FORMAT
 from ...picture.info import PictureInfo
 from ...tagger.types import Picture, PictureType
-from ...types import CheckResult, Fixer
+from ...types import AlbumEntity, CheckResult, Fixer, PictureFileEntity
 from ..base_check import Check
 from ..helpers import FRONT_COVER_FILENAME
 

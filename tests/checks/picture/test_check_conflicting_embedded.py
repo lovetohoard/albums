@@ -1,8 +1,8 @@
 from albums.app import Context
 from albums.checks.picture.check_conflicting_embedded import CheckConflictingEmbedded
-from albums.database.models import AlbumEntity, TrackEntity, TrackPictureEntity
 from albums.picture.info import PictureInfo
 from albums.tagger.types import PictureType
+from albums.types import AlbumEntity, TrackEntity, TrackPictureEntity
 
 
 class TestCheckConflictingEmbedded:

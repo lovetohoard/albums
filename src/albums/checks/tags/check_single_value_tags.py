@@ -4,10 +4,9 @@ from typing import Any, Sequence
 import yaml
 from rich.markup import escape
 
-from ...database.models import AlbumEntity
 from ...tagger.folder import AlbumTagger, Cap
 from ...tagger.types import BASIC_TAGS, BasicTag
-from ...types import CheckResult, Fixer
+from ...types import AlbumEntity, CheckResult, Fixer
 from ..base_check import Check
 from ..helpers import describe_track_number, ordered_tracks
 

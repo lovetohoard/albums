@@ -7,10 +7,10 @@ from PIL import Image
 
 from albums.app import Context
 from albums.checks.picture.check_cover_embedded import CheckCoverEmbedded
-from albums.database.models import AlbumEntity, PictureFileEntity, TrackEntity, TrackPictureEntity
 from albums.picture.info import PictureInfo
 from albums.tagger.provider import AlbumTagger
 from albums.tagger.types import Picture, PictureType, TaggerFile
+from albums.types import AlbumEntity, PictureFileEntity, TrackEntity, TrackPictureEntity
 
 from ...fixtures.create_library import make_image_data
 
