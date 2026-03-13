@@ -3,16 +3,16 @@ from dataclasses import dataclass
 from typing import Mapping, Sequence
 
 from rich.markup import escape
-from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from albums.database import selector
+
 from ..app import Context
-from ..database import operations
 from ..database.models import AlbumEntity
 from ..interactive.interact import interact
 from ..library import scanner
 from ..tagger.provider import AlbumTaggerProvider
-from ..types import Album, CheckResult
+from ..types import CheckResult
 from .all import ALL_CHECKS
 from .base_check import Check
 from .helpers import album_display_name
@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 
 @dataclass(frozen=True)
 class CheckDisposition:
-    album: Album
+    # album: Album
     passed: bool
     maybe_changed: bool
     user_quit: bool
@@ -64,32 +64,36 @@ class Checker:
         check_instances = [check(self.ctx, tagger) for check in ALL_CHECKS if self.ctx.config.checks[check.name]["enabled"]]
 
         issues_displayed = 0
-        for album in self.ctx.select_albums(True):
-            checks_passed: set[str] = set()
-            preview_failed_checks = []
-            for check in check_instances:
-                if check.name not in album.ignore_checks:
-                    missing_dependent_checks = check.must_pass_checks - checks_passed
-                    if missing_dependent_checks:
-                        for message in preview_failed_checks:
-                            self.ctx.console.print(message, highlight=False)
-                        preview_failed_checks = []
-                        self.ctx.console.print(
-                            f'[bold]dependency not met for check {check.name}[/bold] on "{album_display_name(self.ctx, album)}": {" and ".join(missing_dependent_checks)} must pass first',
-                            highlight=False,
-                        )
-                        issues_displayed += 1
-                    else:
-                        disposition = self._run_check(check, album)
-                        album = disposition.album
-                        if disposition.passed:
-                            checks_passed.add(check.name)
-                        if disposition.suppressed_failure_message:
-                            preview_failed_checks.append(disposition.suppressed_failure_message)
-                        if disposition.displayed:
+        with Session(self.ctx.db) as session:
+            for album in self.ctx.select_album_entities(session):
+                checks_passed: set[str] = set()
+                preview_failed_checks = []
+                for check in check_instances:
+                    if check.name not in album.ignore_checks:
+                        missing_dependent_checks = check.must_pass_checks - checks_passed
+                        if missing_dependent_checks:
+                            for message in preview_failed_checks:
+                                self.ctx.console.print(message, highlight=False)
+                            preview_failed_checks = []
+                            self.ctx.console.print(
+                                f'[bold]dependency not met for check {check.name}[/bold] on "{album_display_name(self.ctx, album)}": {" and ".join(missing_dependent_checks)} must pass first',
+                                highlight=False,
+                            )
                             issues_displayed += 1
-                else:
-                    logger.debug(f"skipping ignored check {check.name} for album {album.path}")
+                        else:
+                            disposition = self._run_check(session, check, album)
+                            if disposition.maybe_changed:
+                                logger.debug(f"commit changes after running {check.name}")
+                                session.commit()
+                            if disposition.passed:
+                                checks_passed.add(check.name)
+                            if disposition.suppressed_failure_message:
+                                preview_failed_checks.append(disposition.suppressed_failure_message)
+                            if disposition.displayed:
+                                issues_displayed += 1
+                    else:
+                        logger.debug(f"skipping ignored check {check.name} for album {album.path}")
+            session.commit()
         return issues_displayed
 
     def get_required_disabled_checks(self) -> Mapping[str, Sequence[str]]:
@@ -105,7 +109,7 @@ class Checker:
                         required_disabled[dep] = [check.name]
         return required_disabled
 
-    def _run_check(self, check: Check, album: Album) -> CheckDisposition:
+    def _run_check(self, session: Session, check: Check, album: AlbumEntity) -> CheckDisposition:
         maybe_changed = False
         maybe_fixable = True
         passed = False
@@ -115,7 +119,7 @@ class Checker:
         while maybe_fixable and not passed and not quit:
             check_result = check.check(album)
             if check_result:
-                disposition = self._handle_check_result(check, check_result, album)
+                disposition = self._handle_check_result(session, check, check_result, album)
                 if disposition.suppressed_failure_message:
                     suppressed_failure_message = disposition.suppressed_failure_message
                 displayed |= disposition.displayed
@@ -123,20 +127,16 @@ class Checker:
                 quit = disposition.user_quit
 
                 if disposition.maybe_changed:
-                    reread = True  # probably could be False -> faster
-                    with Session(self.ctx.db) as session:
-                        (album_entity,) = session.execute(select(AlbumEntity).where(AlbumEntity.album_id == album.album_id)).tuples().one()
-                        (_, any_changes) = scanner.scan(self.ctx, session, iter([album_entity]), reread)
+                    path = album.path
+                    (_, any_changes) = scanner.scan(self.ctx, session, selector.load_album_entities(session, path=[path]), reread=True)
                     maybe_fixable = any_changes
-                    if self.ctx.db and album.album_id:
-                        album = operations.load_album(self.ctx.db, album.album_id, True)
                 else:
                     maybe_fixable = False
             else:
                 passed = True
-        return CheckDisposition(album, passed, maybe_changed, quit, displayed, suppressed_failure_message)
+        return CheckDisposition(passed, maybe_changed, quit, displayed, suppressed_failure_message)
 
-    def _handle_check_result(self, check: Check, check_result: CheckResult, album: Album) -> CheckDisposition:
+    def _handle_check_result(self, session: Session, check: Check, check_result: CheckResult, album: AlbumEntity) -> CheckDisposition:
         fixer = check_result.fixer
         displayed_any = False
         maybe_changed = False
@@ -158,7 +158,7 @@ class Checker:
         elif self._interactive or (fixer and self._fix):
             self.ctx.console.print()
             self.ctx.console.print(f'>> "{album_display_name(self.ctx, album)}"', highlight=False)
-            (maybe_changed, user_quit) = interact(self.ctx, check.name, check_result, album, self._show_ignore_option)
+            (maybe_changed, user_quit) = interact(self.ctx, session, check.name, check_result, album, self._show_ignore_option)
             displayed_any = True
         else:
             message = f'[bold]{check.name}[/bold] {escape(check_result.message)} : "{album_display_name(self.ctx, album)}"'
@@ -168,4 +168,4 @@ class Checker:
                 self.ctx.console.print(message, highlight=False)
                 displayed_any = True
 
-        return CheckDisposition(album, False, maybe_changed, user_quit, displayed_any, suppressed_failure_message)
+        return CheckDisposition(False, maybe_changed, user_quit, displayed_any, suppressed_failure_message)

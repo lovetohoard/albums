@@ -2,72 +2,138 @@ import os
 
 import pytest
 from rich.text import Text
+from sqlalchemy.orm import Session
 
 from albums.app import Context
 from albums.checks.checker import Checker
-from albums.database import connection, operations, selector
+from albums.database import connection, selector
+from albums.database.models import AlbumEntity, TrackEntity, TrackTagEntity
 from albums.library import scanner
-from albums.types import Album, BasicTag, Track
+from albums.tagger.types import BasicTag
 
 from .fixtures.create_library import create_library
 
 
 class TestChecker:
     def test_run_enabled_all_ok(self):
-        album = Album(
-            "foo" + os.sep,
-            [
-                Track("01 one.flac", {BasicTag.ARTIST: ["A"], BasicTag.ALBUM: ["Foo"], BasicTag.TRACKNUMBER: ["01"], BasicTag.TITLE: ["one"]}),
-                Track("02 two.flac", {BasicTag.ARTIST: ["A"], BasicTag.ALBUM: ["Foo"], BasicTag.TRACKNUMBER: ["02"], BasicTag.TITLE: ["two"]}),
-                Track("03 three.flac", {BasicTag.ARTIST: ["A"], BasicTag.ALBUM: ["Foo"], BasicTag.TRACKNUMBER: ["03"], BasicTag.TITLE: ["three"]}),
+        album = AlbumEntity(
+            path="foo" + os.sep,
+            tracks=[
+                TrackEntity(
+                    filename="01 one.flac",
+                    tags=[
+                        TrackTagEntity(tag=BasicTag.ARTIST, value="A"),
+                        TrackTagEntity(tag=BasicTag.ALBUM, value="Foo"),
+                        TrackTagEntity(tag=BasicTag.TRACKNUMBER, value="01"),
+                        TrackTagEntity(tag=BasicTag.TITLE, value="one"),
+                    ],
+                ),
+                TrackEntity(
+                    filename="02 two.flac",
+                    tags=[
+                        TrackTagEntity(tag=BasicTag.ARTIST, value="A"),
+                        TrackTagEntity(tag=BasicTag.ALBUM, value="Foo"),
+                        TrackTagEntity(tag=BasicTag.TRACKNUMBER, value="02"),
+                        TrackTagEntity(tag=BasicTag.TITLE, value="two"),
+                    ],
+                ),
+                TrackEntity(
+                    filename="03 three.flac",
+                    tags=[
+                        TrackTagEntity(tag=BasicTag.ARTIST, value="A"),
+                        TrackTagEntity(tag=BasicTag.ALBUM, value="Foo"),
+                        TrackTagEntity(tag=BasicTag.TRACKNUMBER, value="03"),
+                        TrackTagEntity(tag=BasicTag.TITLE, value="three"),
+                    ],
+                ),
             ],
         )
         ctx = Context()
         ctx.db = connection.open(connection.MEMORY)
         ctx.select_album_entities = lambda session: selector.load_album_entities(session)
         try:
-            operations.add(ctx.db, album)
+            with Session(ctx.db) as session:
+                session.add(album)
+                session.commit()
             showed_issues = Checker(ctx, automatic=False, preview=False, fix=False, interactive=False, show_ignore_option=False).run_enabled()
             assert showed_issues == 0
         finally:
             ctx.db.dispose()
 
     def test_run_enabled_automatic_dependent_check_ok(self):
-        album = Album(
-            "foo" + os.sep,
-            [Track("1-01 one.flac", {BasicTag.ARTIST: ["A"], BasicTag.ALBUM: ["Foo"], BasicTag.TRACKNUMBER: ["1-01"], BasicTag.TITLE: ["one"]})],
+        album = AlbumEntity(
+            path="foo" + os.sep,
+            tracks=[
+                TrackEntity(
+                    filename="1-01 one.flac",
+                    tags=[
+                        TrackTagEntity(tag=BasicTag.ARTIST, value="A"),
+                        TrackTagEntity(tag=BasicTag.ALBUM, value="Foo"),
+                        TrackTagEntity(tag=BasicTag.TRACKNUMBER, value="1-01"),
+                        TrackTagEntity(tag=BasicTag.TITLE, value="one"),
+                    ],
+                )
+            ],
         )
         ctx = Context()
         ctx.config.library = create_library("checker_automatic", [album])
-        ctx.db = connection.open(connection.MEMORY)
+        ctx.db = connection.open(connection.MEMORY, True)
         try:
-            ctx.select_album_entities = lambda session: selector.load_album_entities(session)
-            scanner.scan(ctx)
+            with Session(ctx.db) as session:
+                ctx.select_album_entities = lambda s: selector.load_album_entities(s)
+                scanner.scan(ctx, session)
+                session.commit()
+
             showed_issues = Checker(ctx, automatic=True, preview=False, fix=False, interactive=False, show_ignore_option=False).run_enabled()
 
             # there is only 1 issue "disc-in-tracknumber" and if "invalid-track-or-disc-number" check sees the FIXED album it will report no problem
             assert showed_issues == 1
 
-            album = next(ctx.select_albums(True))
-            assert album.tracks[0].tags[BasicTag.DISCNUMBER] == ("1",)
-            assert album.tracks[0].tags[BasicTag.TRACKNUMBER] == ("01",)
+            with Session(ctx.db) as session:
+                album = next(ctx.select_album_entities(session))
+                assert album.tracks[0].get(BasicTag.TRACKNUMBER) == ("01",)
+                assert album.tracks[0].get(BasicTag.DISCNUMBER) == ("1",)
         finally:
             ctx.db.dispose()
 
     def test_run_enabled_dependent_check_failures(self, mocker):
-        album = Album(
-            "foo" + os.sep,
-            [  # disc-in-track-number fails -> invalid-track-or-disc-number does not run -> other checks do not run
-                Track("1.flac", {BasicTag.ALBUM: ["Foo"], BasicTag.TRACKNUMBER: ["1-01"], BasicTag.TITLE: ["one"]}),
-                Track("2.flac", {BasicTag.ALBUM: ["Foo"], BasicTag.TRACKNUMBER: ["1-02"], BasicTag.TITLE: ["two"]}),
-                Track("3.flac", {BasicTag.ALBUM: ["Foo"], BasicTag.TRACKNUMBER: ["1-03"], BasicTag.TITLE: ["three"]}),
+        album = AlbumEntity(
+            path="foo" + os.sep,
+            tracks=[  # disc-in-track-number fails -> invalid-track-or-disc-number does not run -> other checks do not run
+                TrackEntity(
+                    filename="1.flac",
+                    tags=[
+                        TrackTagEntity(tag=BasicTag.ALBUM, value="Foo"),
+                        TrackTagEntity(tag=BasicTag.TRACKNUMBER, value="1-01"),
+                        TrackTagEntity(tag=BasicTag.TITLE, value="one"),
+                    ],
+                ),
+                TrackEntity(
+                    filename="2.flac",
+                    tags=[
+                        TrackTagEntity(tag=BasicTag.ALBUM, value="Foo"),
+                        TrackTagEntity(tag=BasicTag.TRACKNUMBER, value="1-02"),
+                        TrackTagEntity(tag=BasicTag.TITLE, value="two"),
+                    ],
+                ),
+                TrackEntity(
+                    filename="3.flac",
+                    tags=[
+                        TrackTagEntity(tag=BasicTag.ALBUM, value="Foo"),
+                        TrackTagEntity(tag=BasicTag.TRACKNUMBER, value="1-03"),
+                        TrackTagEntity(tag=BasicTag.TITLE, value="three"),
+                    ],
+                ),
             ],
         )
         ctx = Context()
         ctx.db = connection.open(connection.MEMORY)
         ctx.select_album_entities = lambda session: selector.load_album_entities(session)
         try:
-            operations.add(ctx.db, album)
+            with Session(ctx.db) as session:
+                session.add(album)
+                session.commit()
+
             print_spy = mocker.spy(ctx.console, "print")
             Checker(ctx, automatic=False, preview=False, fix=False, interactive=False, show_ignore_option=False).run_enabled()
             output = " ".join((Text.from_markup(call_args.args[0]).plain for call_args in print_spy.call_args_list))

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, List, Mapping, Optional, Sequence, Unpack
+from typing import Any, List, Mapping, Optional, Sequence, overload
 
 from sqlalchemy import REAL, Boolean, Column, Enum, ForeignKey, Index, Integer, LargeBinary, Table, Text
 from sqlalchemy.ext.associationproxy import AssociationProxy, association_proxy
@@ -8,8 +8,8 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, composite, mapped_column, re
 
 from ..configuration import SettingValueType
 from ..picture.info import PictureInfo
-from ..tagger.types import BasicTag, PictureType, StreamInfo
-from .orm_helpers import GetDefaultOption, IntEnumAsInt, LoadIssuesAsJson, LoadIssuesType, SerializableValueAsJson
+from ..tagger.types import BasicTag, Picture, PictureType, StreamInfo
+from .orm_helpers import NO_DEFAULT_VALUE_LIST_STR, IntEnumAsInt, LoadIssuesAsJson, LoadIssuesType, SerializableValueAsJson
 
 
 class Base(DeclarativeBase):
@@ -134,6 +134,9 @@ class PictureFileEntity(Base):
             "picture_info": self.picture_info.to_dict(),
         }
 
+    def to_picture(self) -> Picture:
+        return Picture(self.picture_info, PictureType.from_filename(self.filename), "")
+
     def __lt__(self, other: TrackEntity):
         return self.filename < other.filename
 
@@ -178,12 +181,16 @@ class TrackEntity(Base):
     def has(self, tag: BasicTag) -> bool:
         return any(t.tag == tag for t in self.tags)
 
-    def get(self, tag: BasicTag, **kwargs: Unpack[GetDefaultOption[Sequence[str]]]) -> Sequence[str]:
+    @overload
+    def get(self, tag: BasicTag, default: None) -> Sequence[str] | None: ...
+    @overload
+    def get(self, tag: BasicTag, default: Sequence[str] = NO_DEFAULT_VALUE_LIST_STR) -> Sequence[str]: ...
+    def get(self, tag: BasicTag, default: Sequence[str] | None = NO_DEFAULT_VALUE_LIST_STR) -> Sequence[str] | None:
         result = tuple(t.value for t in self.tags if t.tag == tag)
         if len(result) == 0:
-            if "default" in kwargs:
-                return kwargs["default"]
-            raise KeyError(f"{tag.value} is not in tags")
+            if default is NO_DEFAULT_VALUE_LIST_STR:
+                raise KeyError(f"{tag.value} is not in tags")
+            return default
         return result
 
     def __lt__(self, other: TrackEntity):
@@ -212,6 +219,9 @@ class TrackPictureEntity(Base):
 
     def to_dict(self) -> dict[str, Any]:
         return {"picture_type": PictureType(self.picture_type), "description": self.description, "picture_info": self.picture_info.to_dict()}
+
+    def to_picture(self) -> Picture:
+        return Picture(self.picture_info, self.picture_type, self.description or "")
 
     def __lt__(self, other: TrackPictureEntity):
         return self.embed_ix < other.embed_ix
