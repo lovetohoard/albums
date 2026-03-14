@@ -8,7 +8,7 @@ from ...tagger.types import BasicTag
 from ...types import Album, CheckResult, Fixer
 from ..base_check import Check
 from ..helpers import describe_track_number, get_tracks_by_disc, ordered_tracks
-from . import total_tags
+from ..tag_policy import Policy, check_policy
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +24,7 @@ class CheckDiscNumbering(Check):
 
     def init(self, check_config: dict[str, Any]):
         self.discs_in_separate_folders = check_config.get("discs_in_separate_folders", self.default_config["discs_in_separate_folders"])
-        self.disctotal_policy = total_tags.Policy.from_str(str(check_config.get("disctotal_policy", self.default_config["disctotal_policy"])))
+        self.disctotal_policy = Policy.from_str(str(check_config.get("disctotal_policy", self.default_config["disctotal_policy"])))
         self.remove_redundant_discnumber = bool(check_config.get("remove_redundant_discnumber", self.default_config["remove_redundant_discnumber"]))
         if self.remove_redundant_discnumber and self.discs_in_separate_folders:
             raise ValueError("disc-numbering check cannot have discs_in_separate_folders=True and remove_redundant_discnumber=True at the same time")
@@ -38,10 +38,9 @@ class CheckDiscNumbering(Check):
             return CheckResult("couldn't arrange tracks by disc - invalid-track-or-disc-number check must pass first")
         # now, all tracknumber/tracktotal/discnumber/disctotal tags should be single-valued and numeric
 
-        # apply disc total policy - will offer automatic fix (remove all disc totals) if policy is not "always"
-        option_free_text = True  # fix will allow manual entry - this is ignored if policy = "never"
-        disctotal_result = total_tags.check_policy(
-            self.ctx, self.tagger.get(album.path), album, self.disctotal_policy, BasicTag.DISCTOTAL, BasicTag.DISCNUMBER, option_free_text
+        single_value_for_album = self.disctotal_policy != Policy.NEVER
+        disctotal_result = check_policy(
+            self.ctx, self.tagger.get(album.path), album, self.disctotal_policy, BasicTag.DISCTOTAL, BasicTag.DISCNUMBER, single_value_for_album
         )
         if disctotal_result:
             # TODO if policy is "always" and some tags are missing, we could ignore it and automatically fix them instead

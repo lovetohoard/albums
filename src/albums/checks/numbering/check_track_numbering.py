@@ -11,7 +11,7 @@ from ...tagger.types import BasicTag
 from ...types import Album, CheckResult, Fixer, Track
 from ..base_check import Check
 from ..helpers import describe_track_number, get_tracks_by_disc, ordered_tracks, parse_filename
-from . import total_tags
+from ..tag_policy import Policy, check_policy
 
 logger = logging.getLogger(__name__)
 
@@ -97,7 +97,7 @@ class CheckTrackNumbering(Check):
             logger.warning(f'track-numbering.ignore_folders must be a list of folders, ignoring value "{ignore_folders}"')
             ignore_folders = []
         self.ignore_folders = list(str(folder) for folder in ignore_folders)
-        self.tracktotal_policy = total_tags.Policy.from_str(str(check_config.get("tracktotal_policy", self.default_config["tracktotal_policy"])))
+        self.tracktotal_policy = Policy.from_str(str(check_config.get("tracktotal_policy", self.default_config["tracktotal_policy"])))
 
     def check(self, album: Album):
         folder_str = Path(album.path).name
@@ -113,9 +113,10 @@ class CheckTrackNumbering(Check):
         # now, all tracknumber/tracktotal/discnumber/disctotal tags are guaranteed single-valued and numeric if present
 
         # apply track total policy - will offer automatic fix (remove all track totals) if policy is not "always"
-        one_track_total = len(tracks_by_disc) == 1  # fix will allow manual entry if there is only one disc
-        tracktotal_result = total_tags.check_policy(
-            self.ctx, self.tagger.get(album.path), album, self.tracktotal_policy, BasicTag.TRACKTOTAL, BasicTag.TRACKNUMBER, one_track_total
+        single_track_total = len(tracks_by_disc) == 1  # fix will allow manual entry if there is only one disc
+        single_value_for_album = self.tracktotal_policy != Policy.NEVER and single_track_total
+        tracktotal_result = check_policy(
+            self.ctx, self.tagger.get(album.path), album, self.tracktotal_policy, BasicTag.TRACKTOTAL, BasicTag.TRACKNUMBER, single_value_for_album
         )
         if tracktotal_result:
             # TODO if policy is "always" and some tags are missing, we could ignore it and automatically fix them instead

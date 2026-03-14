@@ -173,10 +173,9 @@ Rules:
 
     Requires the `invalid-track-or-disc-number` check to pass first.
 
-**Automatic fix** for disc total policy: If the disc total policy is
-"consistent" but some tracks are missing disc total, remove it from all tracks.
-If the policy is "never", always remove the tag. (There is currently no
-automatic fix if the policy is "always".)
+**Automatic fix** for disc total policy: If the policy is "never", always remove
+the tag. If the policy is "always", and a consistent total is set on some
+tracks, set the same total on the others.
 
 <!-- pyml disable line-length -->
 
@@ -225,10 +224,9 @@ The rules are:
 from some tracks but all track numbers can be guessed from the filename,
 recreate track number tags from filenames.
 
-**Automatic fix** for track total policy: If the track total policy is
-"consistent" but some tracks are missing track total, remove it from all tracks.
-If the policy is "never", always remove the tag. (There is currently no
-automatic fix if the policy is "always".)
+**Automatic fix** for track total policy: If the policy is "never", always
+remove the tag. If the policy is "always", and a consistent total is set on some
+tracks, set the same total on the others.
 
 <!-- pyml disable line-length -->
 
@@ -400,6 +398,26 @@ the whole filename except for the extension.
 
 **Automatic fix**: If every tag that has a missing title also has a filename
 from which a title can be guessed, fill in all empty titles.
+
+### genre-present
+
+This check applies a user-defined policy for genre tags. By default, if genre is
+present on any track, the same genre must be present on all tracks in the album.
+The presence policy options are:
+
+- **"consistent"**: either all tracks have genre, or none do
+- **"always"**: all tracks should have genre
+- **"never"**: genre should be removed
+
+<!-- pyml disable line-length -->
+
+| Option = default                   | Description                                                  |
+| ---------------------------------- | ------------------------------------------------------------ |
+| `presence` = `"consistent"`        | Set the tag presence policy for genre                        |
+| `per_track` = **false**            | If **true** genre may be different on each track in an album |
+| `select_genres` = `["Blues", ...]` | List of genre options to display - edit to suit preferences  |
+
+<!-- pyml enable line-length -->
 
 ## Pictures
 
