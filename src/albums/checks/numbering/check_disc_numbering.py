@@ -136,11 +136,11 @@ class CheckDiscNumbering(Check):
         for track in sorted(album.tracks):
             path = self.ctx.config.library / album.path / track.filename
             if value is None and track.has(BasicTag.DISCTOTAL):
-                self.ctx.console.print(f"removing disctotal from {track.filename}")
+                self.ctx.console.print(f"removing disctotal from {escape(track.filename)}", highlight=False)
                 self.tagger.get(album.path).set_basic_tags(path, [(BasicTag.DISCTOTAL, None)])
                 changed = True
             if value is not None and (not track.has(BasicTag.DISCTOTAL) or int(track.get(BasicTag.DISCTOTAL)[0]) != int(value)):
-                self.ctx.console.print(f"setting disctotal on {track.filename}")
+                self.ctx.console.print(f"setting disctotal on {escape(track.filename)}", highlight=False)
                 self.tagger.get(album.path).set_basic_tags(path, [(BasicTag.DISCTOTAL, value)])
                 changed = True
         return changed

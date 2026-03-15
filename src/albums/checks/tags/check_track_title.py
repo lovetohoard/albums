@@ -61,7 +61,7 @@ class CheckTrackTitle(Check):
             file = self.ctx.config.library / album.path / track.filename
             new_title = self._proposed_title(track)
             if new_title:
-                self.ctx.console.print(f"setting title on {track.filename}")
+                self.ctx.console.print(f"setting title on {escape(track.filename)}", highlight=False)
                 self.tagger.get(album.path).set_basic_tags(file, [(BasicTag.TITLE, new_title)])
                 changed = True
         return changed

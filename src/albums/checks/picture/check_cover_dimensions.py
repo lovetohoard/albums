@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any, Callable, Dict, List, Tuple
 
 from PIL import Image
+from rich.markup import escape
 
 from ...interactive.image_table import render_image_table
 from ...picture.format import IMAGE_MODE_BPP, MIME_PILLOW_FORMAT
@@ -162,7 +163,7 @@ class CheckCoverDimensions(Check):
 
         if original_path and source_filename:
             if new_path != original_path:
-                self.ctx.console.print(f"Deleting {source_filename}")
+                self.ctx.console.print(f"Deleting {escape(source_filename)}", highlight=False)
                 unlink(original_path)
             source_file = next(file for file in album.picture_files if file.filename == source_filename)
             album.picture_files.remove(source_file)

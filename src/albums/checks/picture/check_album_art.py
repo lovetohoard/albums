@@ -4,6 +4,7 @@ from collections import defaultdict
 from typing import Any, Mapping
 
 import humanize
+from rich.markup import escape
 
 from ...checks.helpers import FRONT_COVER_FILENAME
 from ...interactive.image_table import render_image_table
@@ -77,14 +78,16 @@ class CheckAlbumArt(Check):
             while (new_file := (self.ctx.config.library / album.path / f"{stem}{f'{num}' if num else ''}{suffix}")) and new_file.exists():
                 num += 1
 
-            self.ctx.console.print(f"Extracting {pic.type.name} {pic.picture_info.mime_type} from {filename} to {new_file.name}")
+            self.ctx.console.print(
+                f"Extracting {pic.type.name} {pic.picture_info.mime_type} from {escape(filename)} to {escape(new_file.name)}", highlight=False
+            )
             with tagger.open(filename) as tags:
                 image_data = tags.get_image_data(pic)
             with open(new_file, "wb") as f:
                 f.write(image_data)
             for filename in refs:
                 with tagger.open(filename) as tags:
-                    self.ctx.console.print(f"Removing {pic.type.name} {pic.picture_info.mime_type} from {filename}")
+                    self.ctx.console.print(f"Removing {pic.type.name} {pic.picture_info.mime_type} from {escape(filename)}", highlight=False)
                     tags.remove_picture(pic)
 
         return True

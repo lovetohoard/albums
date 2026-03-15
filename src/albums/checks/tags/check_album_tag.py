@@ -84,7 +84,7 @@ class CheckAlbumTag(Check):
         for track in sorted(album.tracks):
             file = self.ctx.config.library / album.path / track.filename
             if track.get(BasicTag.ALBUM, default=[]) != (option,):
-                self.ctx.console.print(f"setting album on {track.filename}")
+                self.ctx.console.print(f"setting album on {escape(track.filename)}", highlight=False)
                 self.tagger.get(album.path).set_basic_tags(file, [(BasicTag.ALBUM, option)])
                 changed = True
         return changed

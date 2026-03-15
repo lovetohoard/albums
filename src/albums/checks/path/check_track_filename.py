@@ -5,6 +5,7 @@ from typing import Any, Literal, Sequence
 
 from pathvalidate import sanitize_filename
 from rich.console import RenderableType
+from rich.markup import escape
 
 from ...tagger.folder import Cap
 from ...tagger.types import BasicTag
@@ -52,7 +53,7 @@ class CheckTrackFilename(Check):
         tracknum = track.get(BasicTag.TRACKNUMBER, default=["[bold italic]none[/bold italic]"])[0]
         new_filename = self._generate_filename(album, track)
         return [
-            track.filename,
+            escape(track.filename),
             discnum,
             tracknum,
             title_tags,
@@ -118,12 +119,12 @@ class CheckTrackFilename(Check):
                     num += 1
                 original_filename = track.filename
                 track.filename = temp.name
-                self.ctx.console.print(f"Temporarily renaming {original_filename} to {track.filename}")
+                self.ctx.console.print(f"Temporarily renaming {escape(original_filename)} to {escape(track.filename)}", highlight=False)
                 rename(album_path / original_filename, album_path / track.filename)
 
         for ix, track in enumerate(tracks_to_rename):
             new_filename = new_filenames[ix]
-            self.ctx.console.print(f"Renaming {track.filename} to {new_filename}")
+            self.ctx.console.print(f"Renaming {escape(track.filename)} to {escape(new_filename)}", highlight=False)
             rename(album_path / track.filename, album_path / new_filename)
             track.filename = new_filename
 

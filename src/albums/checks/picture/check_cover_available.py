@@ -82,7 +82,7 @@ class CheckCoverAvailable(Check):
         if file_sources:
             path = self.ctx.config.library / album.path / file_sources[0]
             new_filename = f"{FRONT_COVER_FILENAME}{path.suffix}"
-            self.ctx.console.print(f"Renaming {file_sources[0]} to {new_filename}")
+            self.ctx.console.print(f"Renaming {escape(file_sources[0])} to {escape(new_filename)}", highlight=False)
             rename(path, self.ctx.config.library / album.path / new_filename)
         else:
             filename = sources[pic][0]
@@ -90,7 +90,7 @@ class CheckCoverAvailable(Check):
                 image_data = tags.get_image_data(pic)
             suffix = mimetypes.guess_extension(pic.picture_info.mime_type)
             new_filename = f"{FRONT_COVER_FILENAME}{suffix}"
-            self.ctx.console.print(f"Creating {len(image_data)} byte {pic.picture_info.mime_type} file {new_filename}")
+            self.ctx.console.print(f"Creating {len(image_data)} byte {pic.picture_info.mime_type} file {escape(new_filename)}", highlight=False)
             new_path = self.ctx.config.library / album.path / new_filename
             if new_path.exists():
                 self.ctx.console.print(f"Error: the file {escape(str(new_path))} already exists (scan again)")

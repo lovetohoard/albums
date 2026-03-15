@@ -83,7 +83,7 @@ class CheckSingleValueTags(Check):
                     new_values.append((tag, unique_values))
                     changed = True
             if new_values:
-                self.ctx.console.print(f"setting {' and '.join(list(name for (name, _) in new_values))} on {track.filename}")
+                self.ctx.console.print(f"setting {' and '.join(list(name for (name, _) in new_values))} on {escape(track.filename)}", highlight=False)
                 self.tagger.get(album.path).set_basic_tags(file, new_values)
                 changed = True
 

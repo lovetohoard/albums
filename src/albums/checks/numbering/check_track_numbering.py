@@ -202,6 +202,6 @@ class CheckTrackNumbering(Check):
             if track.filename in new_tracknumbers:
                 new_tracknumber = new_tracknumbers[track.filename]
                 path = self.ctx.config.library / album.path / track.filename
-                self.ctx.console.print(f"setting track number {new_tracknumber} on {track.filename}")
+                self.ctx.console.print(f"setting track number {new_tracknumber} on {escape(track.filename)}", highlight=False)
                 self.tagger.get(album.path).set_basic_tags(path, [(BasicTag.TRACKNUMBER, new_tracknumber)])
         return True

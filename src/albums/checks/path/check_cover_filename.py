@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Any
 
 from PIL import Image
+from rich.markup import escape
 
 from ...library.folder import read_binary_file
 from ...tagger.types import PictureType
@@ -98,10 +99,10 @@ class CheckCoverFilename(Check):
                 num += 1
             self.ctx.console.print(f"Renaming {cover_file} to {temp.name}")
             rename(album_path / cover_file, temp)
-            self.ctx.console.print(f"Renaming {temp.name} to {new_filename}")
+            self.ctx.console.print(f"Renaming {escape(temp.name)} to {escape(new_filename)}", highlight=False)
             rename(temp, album_path / new_filename)
         else:
-            self.ctx.console.print(f"Renaming {cover_file} to {new_filename}")
+            self.ctx.console.print(f"Renaming {escape(cover_file)} to {escape(new_filename)}", highlight=False)
             rename(album_path / cover_file, album_path / new_filename)
         file.filename = new_filename
         return True

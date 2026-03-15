@@ -142,13 +142,15 @@ class Checker:
         user_quit = False
         suppressed_failure_message = None
         if self._preview and fixer and fixer.option_automatic_index is not None:
-            self.ctx.console.print(f'[bold]preview automatic fix {check.name}:[/bold] "{album_display_name(self.ctx, album)}"', highlight=False)
+            self.ctx.console.print(
+                f'[bold]preview automatic fix {check.name}:[/bold] [bold cyan]"{album_display_name(self.ctx, album)}"[/bold cyan]', highlight=False
+            )
             self.ctx.console.print(f"    {escape(check_result.message)}", highlight=False)
             self.ctx.console.print(f"    {fixer.prompt}: {fixer.options[fixer.option_automatic_index]}", highlight=False)
             displayed_any = True
         elif self._automatic and fixer and fixer.option_automatic_index is not None:
             self.ctx.console.print(
-                f'[bold]automatically fixing {check.name}:[/bold] "{album_display_name(self.ctx, album)}" - {escape(check_result.message)}',
+                f'[bold]automatically fixing {check.name}:[/bold] [bold cyan]"{album_display_name(self.ctx, album)}"[/bold cyan] - [bold yellow]{escape(check_result.message)}[/bold yellow]',
                 highlight=False,
             )
             self.ctx.console.print(f"    {fixer.prompt}: {fixer.options[fixer.option_automatic_index]}", highlight=False)
@@ -156,11 +158,11 @@ class Checker:
             displayed_any = True
         elif self._interactive or (fixer and self._fix):
             self.ctx.console.print()
-            self.ctx.console.print(f'>> "{album_display_name(self.ctx, album)}"', highlight=False)
+            self.ctx.console.print(f'>> [bold cyan]"{album_display_name(self.ctx, album)}"[/bold cyan]', highlight=False)
             (maybe_changed, user_quit) = interact(self.ctx, session, check.name, check_result, album, self._show_ignore_option)
             displayed_any = True
         else:
-            message = f'[bold]{check.name}[/bold] {escape(check_result.message)} : "{album_display_name(self.ctx, album)}"'
+            message = f'[bold]{check.name}[/bold] [bold yellow]{escape(check_result.message)}[/bold yellow] : [bold cyan]"{album_display_name(self.ctx, album)}"[/bold cyan]'
             if self._preview:
                 suppressed_failure_message = message
             else:

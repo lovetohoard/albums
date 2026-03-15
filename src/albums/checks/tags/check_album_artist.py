@@ -124,18 +124,18 @@ class CheckAlbumArtist(Check):
             file = self.ctx.config.library / album.path / track.filename
             if album_artist_value == OPTION_REMOVE_ALBUM_ARTIST:
                 if track.has(BasicTag.ALBUMARTIST):
-                    self.ctx.console.print(f"removing albumartist from {track.filename}", markup=False)
+                    self.ctx.console.print(f"removing albumartist from {escape(track.filename)}", highlight=False)
                     self.tagger.get(album.path).set_basic_tags(file, [(BasicTag.ALBUMARTIST, None)])
                     changed = True
                 # else nothing to remove
             elif album_artist_value == OPTION_COPY_ALBUM_ARTIST_TO_ARTIST:
                 if track.has(BasicTag.ALBUMARTIST):
-                    self.ctx.console.print(f"copying albumartist to artist in {track.filename}", markup=False)
+                    self.ctx.console.print(f"copying albumartist to artist in {escape(track.filename)}", highlight=False)
                     albumartist = track.get(BasicTag.ALBUMARTIST)[0]
                     self.tagger.get(album.path).set_basic_tags(file, [(BasicTag.ARTIST, albumartist)])
                     changed = True
             elif track.get(BasicTag.ALBUMARTIST, default=[]) != [album_artist_value]:
-                self.ctx.console.print(f"setting albumartist on {track.filename}", markup=False)
+                self.ctx.console.print(f"setting albumartist on {escape(track.filename)}", highlight=False)
                 self.tagger.get(album.path).set_basic_tags(file, [(BasicTag.ALBUMARTIST, album_artist_value)])
                 changed = True
             # else nothing to set

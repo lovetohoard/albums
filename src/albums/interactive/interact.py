@@ -64,11 +64,12 @@ def interact(ctx: Context, session: Session, check_name: str, check_result: Chec
                 table.add_row(*row)
             ctx.console.print(table)
 
-        ctx.console.print(f"[bold]{check_name}[/bold]: {escape(check_result.message)}")
+        ctx.console.print(f"[bold]{check_name}[/bold]: [bold yellow]{escape(check_result.message)}[/bold yellow]", highlight=False)
 
         prompt_text = fixer.prompt if fixer else "select an option"
         default_option_index = fixer.option_automatic_index if fixer and (fixer.option_automatic_index is not None) else do_nothing_index
         option_index = _choose_from_menu(prompt_text, options, default_option_index)
+        ctx.console.print()
 
         if option_index is None or options[option_index] in [OPTION_IGNORE_CHECK, OPTION_DO_NOTHING, OPTION_RUN_TAGGER, OPTION_OPEN_FOLDER]:
             # these options do not use the fixer (if one was provided)
