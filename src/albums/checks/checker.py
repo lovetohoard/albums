@@ -64,6 +64,7 @@ class Checker:
         issues_displayed = 0
         with Session(self.ctx.db) as session:
             for album in self.ctx.select_album_entities(session):
+                logger.info(f"checking album: {album.path}")
                 checks_passed: set[str] = set()
                 preview_failed_checks = []
                 for check in check_instances:
