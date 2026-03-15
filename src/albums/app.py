@@ -25,6 +25,7 @@ class Context(dict[Any, Any]):  # this is a dict because it's required to be by 
     config: Configuration
     verbose: int = 0
     is_persistent = True
+    prescanned = False
 
     def __init__(self, *args, **kwargs):  # pyright: ignore[reportMissingParameterType, reportUnknownParameterType]
         super(Context, self).__init__(*args, **kwargs)

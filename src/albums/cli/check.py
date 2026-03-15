@@ -21,7 +21,7 @@ from .scan import scan
 @pass_context
 def check(ctx: Context, default: bool, automatic: bool, preview: bool, fix: bool, interactive: bool, checks: list[str]):
     require_library(ctx)
-    if ctx.config.rescan == RescanOption.AUTO and ctx.click_ctx:
+    if ctx.config.rescan == RescanOption.AUTO and ctx.click_ctx and ctx.is_persistent:
         ctx.click_ctx.invoke(scan)
 
     if default:

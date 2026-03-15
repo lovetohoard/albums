@@ -94,7 +94,7 @@ def setup(
         enter_folder_context(app_context, dir)
     # else there is definitely a db
 
-    return dir or new_library_path is not None or app_context.config.rescan == RescanOption.ALWAYS
+    return bool(dir) or new_library_path is not None or app_context.config.rescan == RescanOption.ALWAYS
 
 
 def enter_folder_context(ctx: Context, folder: str):

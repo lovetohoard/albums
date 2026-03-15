@@ -57,6 +57,7 @@ def albums_group(
 
     if initial_scan:
         ctx.invoke(scan)
+        app_context.prescanned = True
 
 
 albums_group.add_command(check)

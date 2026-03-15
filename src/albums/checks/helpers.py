@@ -56,7 +56,7 @@ def ordered_tracks(album: Album):
         else:
             return sorted(album.tracks, key=lambda t: t.get(BasicTag.TRACKNUMBER)[0])
     else:  # default album sort is by filename
-        return album.tracks
+        return sorted(album.tracks)
 
 
 def describe_track_number(track: Track):
