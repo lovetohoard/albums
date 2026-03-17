@@ -44,7 +44,8 @@ jobs:
           echo "TMP=D:\temp" >> $env:GITHUB_ENV
       - name: Install dependencies
         run: |
-          which poetry
+          poetry self add poetry-dynamic-versioning
+          poetry self add poetry-pyinstaller-plugin
           poetry install
         shell: bash
       - name: Build executable
