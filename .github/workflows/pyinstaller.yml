@@ -42,9 +42,9 @@ jobs:
           echo "TMP=D:\temp" >> $env:GITHUB_ENV
       - name: Install dependencies
         run: |
-          echo "using temp directory $env:TEMP"
           C:\Users\runneradmin\.local\bin\poetry config virtualenvs.in-project true
           C:\Users\runneradmin\.local\bin\poetry install
+        working-directory: D:\
       - name: Build executable
         run: C:\Users\runneradmin\.local\bin\poetry build
       - name: Upload pyinstaller artifact
