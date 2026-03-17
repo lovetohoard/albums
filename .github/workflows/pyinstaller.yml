@@ -5,27 +5,27 @@ on:
       - "v*"
   workflow_dispatch:
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v5
-        with:
-          fetch-depth: 0
-      - uses: actions/setup-python@v5
-        with:
-          python-version: 3.14
-      - uses: snok/install-poetry@v1
-        with:
-          virtualenvs-in-project: true
-      - name: Install dependencies
-        run: make install
-      - name: Build executable
-        run: make package && ls -l dist && ls -l dist/pyinstaller
-      - name: Upload package artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: albums-pyinstaller-linux
-          path: dist/pyinstaller/
+  # build:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v5
+  #       with:
+  #         fetch-depth: 0
+  #     - uses: actions/setup-python@v5
+  #       with:
+  #         python-version: 3.14
+  #     - uses: snok/install-poetry@v1
+  #       with:
+  #         virtualenvs-in-project: true
+  #     - name: Install dependencies
+  #       run: make install
+  #     - name: Build executable
+  #       run: make package && ls -l dist && ls -l dist/pyinstaller
+  #     - name: Upload package artifact
+  #       uses: actions/upload-artifact@v4
+  #       with:
+  #         name: albums-pyinstaller-linux
+  #         path: dist/pyinstaller/
 
   build-win:
     runs-on: windows-latest
@@ -37,11 +37,11 @@ jobs:
         with:
           python-version: 3.14
       - uses: snok/install-poetry@v1
-      - name: temp dir on D drive
-        run: |
-          mkdir "D:\temp"
-          echo "TEMP=D:\temp" >> $env:GITHUB_ENV
-          echo "TMP=D:\temp" >> $env:GITHUB_ENV
+      # - name: temp dir on D drive
+      #   run: |
+      #     mkdir "D:\temp"
+      #     echo "TEMP=D:\temp" >> $env:GITHUB_ENV
+      #     echo "TMP=D:\temp" >> $env:GITHUB_ENV
       - name: Install dependencies
         run: |
           poetry self add poetry-dynamic-versioning
@@ -51,8 +51,8 @@ jobs:
       - name: Build executable
         run: poetry build
         shell: bash
-      - name: Upload pyinstaller artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: albums-pyinstaller-win
-          path: dist/pyinstaller/
+      # - name: Upload pyinstaller artifact
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: albums-pyinstaller-win
+      #     path: dist/pyinstaller/
