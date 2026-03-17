@@ -35,8 +35,14 @@ jobs:
         with:
           python-version: 3.14
       - uses: snok/install-poetry@v1
+      - name: temp dir on D drive
+        run: |
+          mkdir "D:\temp"
+          echo "TEMP=D:\temp" >> $env:GITHUB_ENV
+          echo "TMP=D:\temp" >> $env:GITHUB_ENV
       - name: Install dependencies
         run: |
+          echo "using temp directory $env:TEMP"
           C:\Users\runneradmin\.local\bin\poetry config virtualenvs.in-project true
           C:\Users\runneradmin\.local\bin\poetry install
       - name: Build executable
