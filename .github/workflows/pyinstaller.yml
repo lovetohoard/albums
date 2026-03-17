@@ -56,7 +56,6 @@ jobs:
 
   release:
     needs: [build-linux, build-win]
-    name: Create Binary Release
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -74,18 +73,23 @@ jobs:
         with:
           name: albums-pyinstaller-win
           path: albums_win_64/
+      - name: Get version
+        id: get-version
+        run: |
+          chmod a+x albums_linux_64/albums
+          echo "ALBUMS_VERSION=$(albums_linux_64/albums --version | awk -F ' ' '{ print $3 }')" >> "$GITHUB_OUTPUT"
       - name: Create archives
         run: |
-          zip albums_win_64.zip albums_win_64
-          zip albums_linux_64.zip albums_linux_64
+          zip -r albums_win_64.zip albums_win_64
+          zip -r albums_linux_64.zip albums_linux_64
       - name: Create release
         id: create_release
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
+          tag_name: ${{ steps.get-version.outputs.ALBUMS_VERSION }}
+          release_name: Release ${{ steps.get-version.outputs.ALBUMS_VERSION }}
           draft: true
           prerelease: false
       - name: Upload albums_win_64.zip

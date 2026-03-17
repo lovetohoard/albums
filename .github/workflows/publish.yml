@@ -24,7 +24,9 @@ jobs:
           TERM: "dumb"
         run: make test
       - name: Create package
-        run: make package
+        run: |
+          make package
+          rm -rf dist/pyinstaller/
       - name: Upload package artifact
         uses: actions/upload-artifact@v4
         with:
