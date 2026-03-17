@@ -36,9 +36,9 @@ jobs:
           python-version: 3.14
       - uses: snok/install-poetry@v1
       - name: Install dependencies
-        run: poetry install
+        run: C:\Users\runneradmin\.local\bin\poetry install
       - name: Build executable
-        run: poetry build
+        run: C:\Users\runneradmin\.local\bin\poetry build
       - name: Upload pyinstaller artifact
         uses: actions/upload-artifact@v4
         with:
