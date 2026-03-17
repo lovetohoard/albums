@@ -36,7 +36,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: 3.14
-      - uses: snok/install-poetry@v1
+      - uses: abatilo/actions-poetry@v4
       # - name: temp dir on D drive
       #   run: |
       #     mkdir "D:\temp"
