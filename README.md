@@ -11,7 +11,8 @@ Manage a library of music: validate and fix tags and metadata, rename files,
 adjust and embed album art, clean up and import albums, and sync parts of the
 library to digital audio players or portable storage
 
-- [Read the documentation here](https://4levity.github.io/albums/)
+- [Read the documentation](https://4levity.github.io/albums/)
+- [Watch a video about how to use albums](https://www.youtube.com/watch?v=B5tBG_GaG7A)
 
 ## Overview
 

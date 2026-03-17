@@ -26,6 +26,9 @@ This documentation is for `albums` version **%%version_placeholder%%**.
 [self-contained binary release from GitHub](https://github.com/4levity/albums/releases).
 Extract the contents to a folder and add that folder to your PATH.
 
+You can watch this
+[video about how to use albums](https://www.youtube.com/watch?v=B5tBG_GaG7A).
+
 Each album (soundtrack, mixtape...) is expected to be in a folder, or `albums`
 won't be helpful.
 
