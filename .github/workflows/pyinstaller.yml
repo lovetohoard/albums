@@ -58,6 +58,8 @@ jobs:
     needs: [build-linux, build-win]
     name: Create Binary Release
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - run: |
           mkdir albums_win_64
