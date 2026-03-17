@@ -12,6 +12,7 @@ uv.lock
 /htmlcov
 /site
 /docs/database_diagram.png
+/build
 
 # application/misc
 *.db
