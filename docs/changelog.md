@@ -4,6 +4,8 @@ icon: lucide/scroll-text
 
 # Changelog
 
+v0.9.2 - added binary release (pyinstaller) for 64-bit Linux and Windows
+
 v0.9.1 - fix double-scanning and handle markdown characters in filenames
 
 v0.9.0 - public beta
