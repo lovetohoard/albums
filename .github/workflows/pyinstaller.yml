@@ -15,6 +15,8 @@ jobs:
         with:
           python-version: 3.14
       - uses: snok/install-poetry@v1
+        with:
+          virtualenvs-in-project: true
       - name: Install dependencies
         run: make install
       - name: Build executable
@@ -41,11 +43,11 @@ jobs:
           echo "TEMP=D:\temp" >> $env:GITHUB_ENV
           echo "TMP=D:\temp" >> $env:GITHUB_ENV
       - name: Install dependencies
-        run: |
-          C:\Users\runneradmin\.local\bin\poetry config virtualenvs.in-project true
-          C:\Users\runneradmin\.local\bin\poetry install
+        run: poetry install
+        shell: bash
       - name: Build executable
-        run: C:\Users\runneradmin\.local\bin\poetry build
+        run: poetry build
+        shell: bash
       - name: Upload pyinstaller artifact
         uses: actions/upload-artifact@v4
         with:
