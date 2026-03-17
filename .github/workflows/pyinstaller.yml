@@ -36,7 +36,9 @@ jobs:
           python-version: 3.14
       - uses: snok/install-poetry@v1
       - name: Install dependencies
-        run: C:\Users\runneradmin\.local\bin\poetry install
+        run: |
+          C:\Users\runneradmin\.local\bin\poetry config virtualenvs.in-project true
+          C:\Users\runneradmin\.local\bin\poetry install
       - name: Build executable
         run: C:\Users\runneradmin\.local\bin\poetry build
       - name: Upload pyinstaller artifact
