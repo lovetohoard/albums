@@ -1,7 +1,6 @@
 import glob
 import itertools
 import logging
-import mimetypes
 import time
 from collections import defaultdict
 from enum import Enum, auto
@@ -14,6 +13,8 @@ from rich.markup import escape
 from rich.progress import Progress
 from sqlalchemy import delete, desc, select
 from sqlalchemy.orm import Session
+
+from albums.picture.format import format_to_mime_type
 
 from ..app import SCANNER_VERSION, Context
 from ..picture.scan import PictureScannerCache
@@ -211,7 +212,7 @@ def _scan_picture_file(tagger: AlbumTagger, filename: str, stat: Ministat):
         # Note: recording images that are valid but lack metadata would cause issues with detecting duplicates and assigning cover art
         return None
 
-    expect_mime_type, _ = mimetypes.guess_type(filename)
+    expect_mime_type = format_to_mime_type(Path(filename).suffix.replace(".", ""))
     picture_info = tagger.get_picture_scanner().scan(read_binary_file(tagger.path() / filename), expect_mime_type)
     return PictureFile(filename=filename, modify_timestamp=stat.modify_timestamp, cover_source=False, picture_info=picture_info)
 

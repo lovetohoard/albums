@@ -10,7 +10,7 @@ from PIL import Image
 from rich.markup import escape
 
 from ...interactive.image_table import render_image_table
-from ...picture.format import IMAGE_MODE_BPP, MIME_PILLOW_FORMAT
+from ...picture.format import IMAGE_MODE_BPP, MIME_PILLOW_FORMAT, format_to_mime_type
 from ...picture.info import PictureInfo
 from ...tagger.types import Picture, PictureType
 from ...types import Album, CheckResult, Fixer, PictureFile
@@ -219,7 +219,7 @@ class CheckCoverDimensions(Check):
             raise ValueError("image was already square")
 
         if self.create_mime_type == "" and image.format:
-            mime_type, _ = mimetypes.guess_type(f"_.{image.format}")
+            mime_type = format_to_mime_type(image.format)
         else:
             mime_type = self.create_mime_type
         if not mime_type:

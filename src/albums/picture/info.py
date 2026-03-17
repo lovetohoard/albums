@@ -6,7 +6,7 @@ from typing import Tuple
 
 from PIL import Image
 
-from .format import IMAGE_MODE_BPP
+from .format import IMAGE_MODE_BPP, format_to_mime_type
 
 # calling mimetimes.init early prevents mimetypes.guess_type(".pcx") from failing with certain test run ordering
 # and specifying files=[] may avoid OS-specific bugs:
@@ -40,7 +40,7 @@ def get_picture_info(image_data: bytes, file_hash: bytes) -> PictureInfo:
 
     mime_type: str | None = None
     if image.format:
-        mime_type, _ = mimetypes.guess_type(f"_.{image.format}")
+        mime_type = format_to_mime_type(image.format)
 
     return PictureInfo(
         mime_type if mime_type else "",

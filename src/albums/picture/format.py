@@ -1,3 +1,5 @@
+import mimetypes
+
 IMAGE_MODE_BPP = {
     "1": 1,
     "CMYK": 32,
@@ -22,5 +24,12 @@ MIME_PILLOW_FORMAT = {
     "image/webp": "WEBP",
 }
 
+PILLOW_FORMAT_MIME = dict((pillow, mime) for mime, pillow in MIME_PILLOW_FORMAT.items())
+
 # Can add any extension if format is autodetected by Pillow and ".<FORMAT>" is a file extension supported by mimetypes.guess_type
 SUPPORTED_IMAGE_SUFFIXES = frozenset({".bmp", ".gif", ".jpeg", ".jpg", ".pcx", ".png", ".tif", ".tiff", ".webp"})
+
+
+def format_to_mime_type(image_format: str) -> str:
+    mime_type, _ = mimetypes.guess_type(f"_.{image_format}")
+    return mime_type or PILLOW_FORMAT_MIME[str.upper(image_format)]

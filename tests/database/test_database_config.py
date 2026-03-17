@@ -96,14 +96,14 @@ class TestDatabaseConfig:
         try:
             save(db, Configuration({"cover-filename": {"enabled": True, "filename": "cover.*", "jpeg_quality": 90}}, library=Path("/path/to")))
             loaded = load(db)
-            assert str(loaded.library) == "/path/to"
+            assert loaded.library == Path("/path/to")
             assert loaded.checks["cover-filename"]["enabled"]
             assert loaded.checks["cover-filename"]["filename"] == "cover.*"
             assert loaded.checks["cover-filename"]["jpeg_quality"] == 90
 
             save(db, Configuration({"cover-filename": {"enabled": False, "filename": "cover.jpg", "jpeg_quality": 95}}, library=Path("/new")))
             loaded = load(db)
-            assert str(loaded.library) == "/new"
+            assert loaded.library == Path("/new")
             assert not loaded.checks["cover-filename"]["enabled"]
             assert loaded.checks["cover-filename"]["filename"] == "cover.jpg"
             assert loaded.checks["cover-filename"]["jpeg_quality"] == 95
