@@ -44,7 +44,6 @@ jobs:
         run: |
           C:\Users\runneradmin\.local\bin\poetry config virtualenvs.in-project true
           C:\Users\runneradmin\.local\bin\poetry install
-        working-directory: D:\
       - name: Build executable
         run: C:\Users\runneradmin\.local\bin\poetry build
       - name: Upload pyinstaller artifact
