@@ -4,8 +4,9 @@ on:
     tags:
       - "v*"
   workflow_dispatch:
+
 jobs:
-  build:
+  build-linux:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -13,10 +14,11 @@ jobs:
           fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
-          python-version: 3.14
+          python-version: 3.12
       - uses: abatilo/actions-poetry@v4
         with:
-          virtualenvs-in-project: true
+          poetry-version: 2.3.2
+          poetry-plugins: poetry-dynamic-versioning poetry-pyinstaller-plugin
       - name: Install dependencies
         run: make install
       - name: Build executable
@@ -25,7 +27,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: albums-pyinstaller-linux
-          path: dist/pyinstaller/
+          path: dist/pyinstaller/manylinux_2_39_x86_64/albums/
 
   build-win:
     runs-on: windows-latest
@@ -51,3 +53,54 @@ jobs:
         with:
           name: albums-pyinstaller-win
           path: dist/pyinstaller/win_amd64/albums/
+
+  release:
+    needs: [build-linux, build-win]
+    name: Create Binary Release
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          mkdir albums_win_64
+          mkdir albums_linux_64
+      - name: Download Linux executable
+        uses: actions/download-artifact@v4
+        with:
+          name: albums-pyinstaller-linux
+          path: albums_linux_64/
+      - name: Download Windows executable
+        uses: actions/download-artifact@v4
+        with:
+          name: albums-pyinstaller-win
+          path: albums_win_64/
+      - name: Create archives
+        run: |
+          zip albums_win_64.zip albums_win_64
+          zip albums_linux_64.zip albums_linux_64
+      - name: Create release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: true
+          prerelease: false
+      - name: Upload albums_win_64.zip
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./albums_win_64.zip
+          asset_name: albums_win_64.zip
+          asset_content_type: application/zip
+      - name: Upload albums_linux_64.zip
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./albums_linux_64.zip
+          asset_name: albums_linux_64.zip
+          asset_content_type: application/zip
