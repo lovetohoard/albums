@@ -59,7 +59,9 @@ More formats and tag comprehension will likely be added if requested.
 
 ## System Requirements
 
-Requires Python 3.12+. Primarily tested on Linux and Windows. Should work on
-almost any 64-bit x86 or ARM system with Linux, macOS or Windows. (32-bit and
-wider OS support possible by dropping `scikit-image` library used for measuring
-image similarity.)
+Installation via pipx requires Python 3.12+ and should work on almost any 64-bit
+x86 or ARM system with Linux, macOS or Windows.
+
+Binary releases for 64-bit Linux or Windows do not have any Python requirement.
+
+Albums is primarily tested on Linux and Windows.
