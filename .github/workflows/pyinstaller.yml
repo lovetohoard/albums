@@ -60,7 +60,8 @@ jobs:
     permissions:
       contents: write
     steps:
-      - run: |
+      - name: Prepare folders
+        run: |
           mkdir albums_win_x86_64
           mkdir albums_linux_x86_64
       - name: Download Linux executable

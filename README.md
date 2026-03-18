@@ -33,20 +33,22 @@ a digital audio player. It can also perform the sync.
 
 Use them all, you don't have to decide. If you have missing metadata or
 unidentified recordings and you want to use online databases to fill in the
-blanks, [MusicBrainz Picard](https://picard.musicbrainz.org/) is good for that.
-For editing tags with some fancy features and automation,
+blanks, [Beets](https://beets.io/) does that, and has some command line and
+library management features similar to `albums`.
+[MusicBrainz Picard](https://picard.musicbrainz.org/) does too. For manually
+editing tags in a GUI with some fancy features and automation,
 [puddletag](https://docs.puddletag.net/#) and
 [MP3TAG](https://www.mp3tag.de/en/index.html) (proprietary but no cost for
 Windows version) are nice, while [EasyTAG](https://wiki.gnome.org/Apps/EasyTAG)
 is simple and quick.
 
-The purpose of `albums` is finding and fixing metadata problems, resolving
-inconsistencies and applying your preferred policies so that standard tags,
-cover art, filenames are just right. `albums` has many individually configured
-"checks" to find and sometimes automatically fix problems. You can review each
-change, or only the ones that require a choice. The documentation describes what
-each check does. `albums` can also help clean up and import new albums into your
-library and keep digital audio players synced.
+`albums` is a little different. It works offline without external databases. It
+uses a series of independent, configurable checks and automated fixes for basic
+tags, cover art and filenames. You can review every change, or only the ones
+that require your choice. It also reports on some problems it can't fix, like
+missing tracks on an album. `albums` can help clean up and import new albums
+into your library and keep digital audio players synced. Its CLI plus JSON and
+SQL interfaces may enable some automation.
 
 ## Supported Media
 
