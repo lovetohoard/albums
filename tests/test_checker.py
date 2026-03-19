@@ -40,7 +40,9 @@ class TestChecker:
             with Session(ctx.db) as session:
                 session.add(album)
                 session.commit()
-            showed_issues = Checker(ctx, automatic=False, preview=False, fix=False, interactive=False, show_ignore_option=False).run_enabled()
+                showed_issues = Checker(ctx, automatic=False, preview=False, fix=False, interactive=False, show_ignore_option=False).run_enabled(
+                    session
+                )
             assert showed_issues == 0
         finally:
             ctx.db.dispose()
@@ -64,7 +66,9 @@ class TestChecker:
                 scanner.scan(ctx, session)
                 session.commit()
 
-            showed_issues = Checker(ctx, automatic=True, preview=False, fix=False, interactive=False, show_ignore_option=False).run_enabled()
+                showed_issues = Checker(ctx, automatic=True, preview=False, fix=False, interactive=False, show_ignore_option=False).run_enabled(
+                    session
+                )
 
             # there is only 1 issue "disc-in-tracknumber" and if "invalid-track-or-disc-number" check sees the FIXED album it will report no problem
             assert showed_issues == 1
@@ -93,8 +97,9 @@ class TestChecker:
                 session.add(album)
                 session.commit()
 
-            print_spy = mocker.spy(ctx.console, "print")
-            Checker(ctx, automatic=False, preview=False, fix=False, interactive=False, show_ignore_option=False).run_enabled()
+                print_spy = mocker.spy(ctx.console, "print")
+                Checker(ctx, automatic=False, preview=False, fix=False, interactive=False, show_ignore_option=False).run_enabled(session)
+
             output = " ".join((Text.from_markup(call_args.args[0]).plain for call_args in print_spy.call_args_list))
             assert f'track numbers formatted as number-dash-number, probably discnumber and tracknumber : "foo{os.sep}"' in output
             assert f'dependency not met for check invalid-track-or-disc-number on "foo{os.sep}": disc-in-track-number must pass first' in output
@@ -108,8 +113,13 @@ class TestChecker:
         checks["invalid-track-or-disc-number"] = {"enabled": False}
         ctx.config.checks = checks
         print_spy = mocker.spy(ctx.console, "print")
-        with pytest.raises(SystemExit):
-            Checker(ctx, automatic=False, preview=False, fix=False, interactive=False, show_ignore_option=False).run_enabled()
+        ctx.db = connection.open(connection.MEMORY)
+        try:
+            with Session(ctx.db) as session:
+                with pytest.raises(SystemExit):
+                    Checker(ctx, automatic=False, preview=False, fix=False, interactive=False, show_ignore_option=False).run_enabled(session)
+        finally:
+            ctx.db.dispose()
         output = " ".join((Text.from_markup(call_args.args[0]).plain for call_args in print_spy.call_args_list))
         assert "Configuration error" in output
         assert "invalid-track-or-disc-number required by" in output

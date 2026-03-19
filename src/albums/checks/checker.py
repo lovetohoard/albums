@@ -47,7 +47,7 @@ class Checker:
         self._interactive = interactive
         self._show_ignore_option = show_ignore_option
 
-    def run_enabled(self) -> int:
+    def run_enabled(self, session: Session) -> int:
         need_checks = self.get_required_disabled_checks()
         if need_checks:
             self.ctx.console.print("[bold red]Configuration error: some enabled checks depend on checks that are disabled:[/bold red]")
@@ -62,37 +62,37 @@ class Checker:
         check_instances = [check(self.ctx, tagger) for check in ALL_CHECKS if self.ctx.config.checks[check.name]["enabled"]]
 
         issues_displayed = 0
-        with Session(self.ctx.db) as session:
-            for album in self.ctx.select_album_entities(session):
-                logger.info(f"checking album: {album.path}")
-                checks_passed: set[str] = set()
-                preview_failed_checks = []
-                for check in check_instances:
-                    if check.name not in album.ignore_checks:
-                        missing_dependent_checks = check.must_pass_checks - checks_passed
-                        if missing_dependent_checks:
-                            for message in preview_failed_checks:
-                                self.ctx.console.print(message, highlight=False)
-                            preview_failed_checks = []
-                            self.ctx.console.print(
-                                f'[bold]dependency not met for check {check.name}[/bold] on "{album_display_name(self.ctx, album)}": {" and ".join(missing_dependent_checks)} must pass first',
-                                highlight=False,
-                            )
-                            issues_displayed += 1
-                        else:
-                            disposition = self._run_check(session, check, album)
-                            if disposition.maybe_changed:
-                                logger.debug(f"commit changes after running {check.name}")
-                                session.commit()
-                            if disposition.passed:
-                                checks_passed.add(check.name)
-                            if disposition.suppressed_failure_message:
-                                preview_failed_checks.append(disposition.suppressed_failure_message)
-                            if disposition.displayed:
-                                issues_displayed += 1
+
+        for album in self.ctx.select_album_entities(session):
+            logger.info(f"checking album: {album.path}")
+            checks_passed: set[str] = set()
+            preview_failed_checks = []
+            for check in check_instances:
+                if check.name not in album.ignore_checks:
+                    missing_dependent_checks = check.must_pass_checks - checks_passed
+                    if missing_dependent_checks:
+                        for message in preview_failed_checks:
+                            self.ctx.console.print(message, highlight=False)
+                        preview_failed_checks = []
+                        self.ctx.console.print(
+                            f'[bold]dependency not met for check {check.name}[/bold] on "{album_display_name(self.ctx, album)}": {" and ".join(missing_dependent_checks)} must pass first',
+                            highlight=False,
+                        )
+                        issues_displayed += 1
                     else:
-                        logger.debug(f"skipping ignored check {check.name} for album {album.path}")
-            session.commit()
+                        disposition = self._run_check(session, check, album)
+                        if disposition.maybe_changed:
+                            logger.debug(f"commit changes after running {check.name}")
+                            session.commit()
+                        if disposition.passed:
+                            checks_passed.add(check.name)
+                        if disposition.suppressed_failure_message:
+                            preview_failed_checks.append(disposition.suppressed_failure_message)
+                        if disposition.displayed:
+                            issues_displayed += 1
+                else:
+                    logger.debug(f"skipping ignored check {check.name} for album {album.path}")
+        session.commit()
         return issues_displayed
 
     def get_required_disabled_checks(self) -> Mapping[str, Sequence[str]]:

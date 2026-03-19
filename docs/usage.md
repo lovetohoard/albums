@@ -45,10 +45,9 @@ for example `albums -rp Freezepop add DAP`. Review the collection with
 `albums --collection DAP list`. To copy/sync it to an SD card, see
 [Synchronize](./sync.md).
 
-You can scan a new album for tag/picture/filename/etc issues, fix them all
-interactively, then add the album to your library with one command. For example:
-`albums import "temp/new album 1"`. Currently this only works with a single
-album at a time.
+You can search a folder for new albums, check them for tag/picture/filename/etc
+issues, fix everything interactively, then add the albums to your library with
+one command. For example: `albums import ./Downloads`.
 
 To set up `albums` configuration options interactively, run `albums config`. See
 `albums config --help` for other ways to configure.
@@ -72,6 +71,7 @@ there are some global settings:
 | `default_import_path`         | `"$artist/$album"`                           | Import: default path for new albums in library    |
 | `default_import_path_various` | `"Compilations/$album"`                      | Import: default path for new compilation albums   |
 | `more_import_paths`           | `"$A1/$artist/$album", "Soundtracks/$album"` | Import: other selectable paths for new albums     |
+| `import_scan_max_paths`       | **250**                                      | Import: maximum number of paths to import at once |
 | `id3v1`                       | `"UPDATE"`                                   | Policy for ID3 version 1 tags                     |
 
 !!!note

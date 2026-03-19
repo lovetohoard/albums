@@ -42,6 +42,7 @@ class RescanOption(StrEnum):
 DEFAULT_IMPORT_PATH = Template("$artist/$album")
 DEFAULT_IMPORT_PATH_VARIOUS = Template("Compilations/$album")
 DEFAULT_MORE_IMPORT_PATHS = (Template("$A1/$artist/$album"), Template("Soundtracks/$album"))
+DEFAULT_IMPORT_SCAN_MAX_PATHS = 250
 
 
 def default_checks_config() -> Mapping[str, CheckConfiguration]:
@@ -63,6 +64,7 @@ class Configuration:
     default_import_path: Template = DEFAULT_IMPORT_PATH
     default_import_path_various: Template = DEFAULT_IMPORT_PATH_VARIOUS
     more_import_paths: Sequence[Template] = DEFAULT_MORE_IMPORT_PATHS
+    import_scan_max_paths: int = DEFAULT_IMPORT_SCAN_MAX_PATHS
     library: Path = Path(".")
     open_folder_command: str = ""
     path_compatibility: PathCompatibilityOption = PathCompatibilityOption.UNIVERSAL
@@ -77,6 +79,7 @@ class Configuration:
             "settings.default_import_path": self.default_import_path.template,
             "settings.default_import_path_various": self.default_import_path_various.template,
             "settings.more_import_paths": [path_T.template for path_T in self.more_import_paths],
+            "settings.import_scan_max_paths": self.import_scan_max_paths,
             "settings.library": str(self.library),
             "settings.open_folder_command": self.open_folder_command,
             "settings.path_compatibility": self.path_compatibility.value,
@@ -121,6 +124,12 @@ class Configuration:
                     else:
                         logger.warning(f"ignoring {k}={str(value)}, not a list of strings - using default {json.dumps(config.more_import_paths)}")
                         ignored_values = True
+                elif name == "import_scan_max_paths":
+                    max_paths = str(value)
+                    if str.isdecimal(max_paths):
+                        config.import_scan_max_paths = int(max_paths)
+                    else:
+                        logger.warning(f"ignoring {k}={max_paths}, not a number - using default {config.import_scan_max_paths}")
                 elif name == "library":
                     config.library = Path(str(value))
                 elif name == "open_folder_command":

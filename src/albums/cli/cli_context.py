@@ -76,10 +76,13 @@ def setup(
     app_context.is_filtered = bool(matchers_list)
     matchers: defaultdict[str, list[str]] = defaultdict(list)
     matchers = reduce(lambda acc, kv: acc[kv[0]].append(kv[1]) or acc, matchers_list, matchers)
+    app_context.select_album_entities = lambda session: selector.load_album_entities(session, regex=regex, **matchers)
     if dir:
         if "path" in matchers:
             del matchers["path"]
         enter_folder_context(app_context, dir)
+        # create selector for folder context
+        app_context.select_album_entities = lambda session: selector.load_album_entities(session)
     elif not has_database:
         # it's simpler to always give app_context a database than to allow it to be Engine | None
         app_context.console.print(
@@ -88,11 +91,10 @@ def setup(
         app_context.is_persistent = False
         app_context.db = connection.open(connection.MEMORY, echo=False)
         ctx.call_on_close(lambda: app_context.db.dispose())
-    app_context.select_album_entities = lambda session: selector.load_album_entities(session, regex=regex, **matchers)
     return bool(dir) or app_context.config.rescan == RescanOption.ALWAYS
 
 
-def enter_folder_context(ctx: Context, folder: str):
+def enter_folder_context(ctx: Context, folder: str) -> Context:
     if ctx.parent:
         raise RuntimeError("enter_folder_context called on subcontext")
     parent = copy(ctx)
@@ -109,6 +111,7 @@ def enter_folder_context(ctx: Context, folder: str):
         ctx.click_ctx.call_on_close(lambda: ctx.db.dispose())
     ctx.is_filtered = False
     ctx.is_persistent = False
+    return parent
 
 
 def _get_albums_db_path(db_file: str | None):

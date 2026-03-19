@@ -1,4 +1,5 @@
 import rich_click as click
+from sqlalchemy.orm import Session
 
 from ..app import Context
 from ..checks.all import ALL_CHECK_NAMES
@@ -46,7 +47,8 @@ def check(ctx: Context, default: bool, automatic: bool, preview: bool, fix: bool
                     f"automatically enabling check [italic]{dep}[/italic] required by {' and '.join(f'[italic]{check}[/italic]' for check in required_by)}"
                 )
                 ctx.config.checks[dep]["enabled"] = True
+    with Session(ctx.db) as session:
+        issues_displayed = checker.run_enabled(session)
 
-    issues_displayed = checker.run_enabled()
     if issues_displayed == 0:
         ctx.console.print("no issues")

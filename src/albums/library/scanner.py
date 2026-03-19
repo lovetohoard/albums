@@ -36,7 +36,13 @@ class AlbumScanResult(Enum):
 logger = logging.getLogger(__name__)
 
 
-def scan(ctx: Context, session: Session | None = None, scan_albums: Iterator[Album] | None = None, reread: bool = False) -> tuple[int, bool]:
+def scan(
+    ctx: Context,
+    session: Session | None = None,
+    scan_albums: Iterator[Album] | None = None,
+    reread: bool = False,
+    check_first_full_scan_path_count: Callable[[Context, int], None] = lambda _ctx, _: None,
+) -> tuple[int, bool]:
     if session is None:
         with Session(ctx.db) as session:
             (albums_total, any_changes) = scan(ctx, session, scan_albums, reread)
@@ -61,6 +67,7 @@ def scan(ctx: Context, session: Session | None = None, scan_albums: Iterator[Alb
                 path_list = glob.glob("**/", root_dir=ctx.config.library, recursive=True)
             paths = iter(path_list)
             expected_path_count = len(path_list)
+            check_first_full_scan_path_count(ctx, expected_path_count)
         paths = itertools.chain(["."], paths)
 
     def do_scan(update_progress: Callable[[], None] = lambda: None):

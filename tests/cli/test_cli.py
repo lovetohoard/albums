@@ -237,20 +237,31 @@ class TestCli:
         self.run(["scan"], init=True)
         result = self.run(["list"])
         assert "baz" not in result.output
+        assert "foobar" not in result.output
 
-        new_album = Album(
-            path="baz" + os.sep,
-            tracks=[Track(filename="1.flac", tag={BasicTag.TITLE: "1", BasicTag.TRACKNUMBER: "01", BasicTag.ALBUM: "baz", BasicTag.ARTIST: "baz"})],
-        )
-        src = create_library("cli_import", [new_album])
+        new_albums = [
+            Album(
+                path="foobar" + os.sep,
+                tracks=[
+                    Track(filename="01.flac", tag={BasicTag.TITLE: "1", BasicTag.TRACKNUMBER: "01", BasicTag.ALBUM: "foobar", BasicTag.ARTIST: "baz"})
+                ],
+            ),
+            Album(
+                path="baz" + os.sep,
+                tracks=[
+                    Track(filename="1.flac", tag={BasicTag.TITLE: "1", BasicTag.TRACKNUMBER: "01", BasicTag.ALBUM: "baz", BasicTag.ARTIST: "baz"})
+                ],
+            ),
+        ]
+        src = create_library("cli_import", new_albums)
         result = self.run(["-v", "import", "--automatic", str(src)])
         assert result.exit_code == 0
         assert "automatically fixing track-filename" in result.output
         assert "Copying 1 file" in result.output
 
-        self.run(["scan"])
         result = self.run(["list"])
         assert "baz" in result.output
+        assert "foobar" in result.output
 
     def test_sql(self):
         self.run(["scan"], init=True)
