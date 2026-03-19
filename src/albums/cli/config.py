@@ -11,10 +11,11 @@ from ..interactive.configurator import interactive_config, set_library
 from .cli_context import pass_context, require_persistent_context
 
 
-@click.command(help="reconfigure albums", epilog="use `albums config` with no options for interactive configuration")
+@click.command(help="reconfigure albums", epilog="use `albums config` with no options for interactive configuration", add_help_option=False)
 @click.option("--show", "-s", is_flag=True, help="show the current configuration")
 @click.argument("name", required=False)
 @click.argument("value", required=False)
+@click.help_option("--help", "-h", help="show this message and exit")
 @pass_context
 def config(ctx: Context, show: bool, name: str, value: str):
     require_persistent_context(ctx, "config")

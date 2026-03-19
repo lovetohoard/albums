@@ -11,8 +11,9 @@ from ..checks.helpers import album_display_name
 from .cli_context import pass_context
 
 
-@click.command("list", help="print matching albums")
+@click.command("list", help="print matching albums", add_help_option=False)
 @click.option("--json", "-j", is_flag=True, help="output all stored details in JSON")
+@click.help_option("--help", "-h", help="show this message and exit")
 @pass_context
 def list_albums(ctx: Context, json: bool):
     total_size = 0

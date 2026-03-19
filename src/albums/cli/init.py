@@ -11,8 +11,9 @@ from ..library import scanner
 from .cli_context import PLATFORM_DIRS, pass_context
 
 
-@click.command(help="initialize albums database")
+@click.command(help="initialize albums database", add_help_option=False)
 @click.argument("library-path", required=False)
+@click.help_option("--help", "-h", help="show this message and exit")
 @pass_context
 def init(ctx: Context, library_path: str | None):
     if ctx.db_path.exists():

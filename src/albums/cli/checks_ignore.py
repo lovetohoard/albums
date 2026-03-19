@@ -8,9 +8,10 @@ from ..checks.helpers import album_display_name
 from .cli_context import pass_context, require_persistent_context
 
 
-@click.command("ignore", help="ignore certain checks for specified albums")
+@click.command("ignore", help="ignore certain checks for specified albums", add_help_option=False)
 @click.option("--force", "-f", is_flag=True, help="always skip confirmation")
 @click.argument("check_names", nargs=-1)
+@click.help_option("--help", "-h", help="show this message and exit")
 @pass_context
 def checks_ignore(ctx: Context, force: bool, check_names: list[str]):
     require_persistent_context(ctx, "ignore")

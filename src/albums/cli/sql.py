@@ -11,9 +11,10 @@ from ..app import Context
 from .cli_context import pass_context
 
 
-@click.command(help="run a SQL command against albums db")
+@click.command(help="run a SQL command against albums db", add_help_option=False)
 @click.argument("sql-command", required=True)
 @click.option("--json", "-j", is_flag=True, help="output result as JSON object")
+@click.help_option("--help", "-h", help="show this message and exit")
 @pass_context
 def sql(ctx: Context, sql_command: str, json: bool):
     try:

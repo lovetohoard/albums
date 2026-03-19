@@ -11,10 +11,11 @@ from .cli_context import pass_context, require_database, require_library, requir
 logger = logging.getLogger(__name__)
 
 
-@click.command("sync", help="sync selected albums with destination")
+@click.command("sync", help="sync selected albums with destination", add_help_option=False)
 @click.argument("destination")
 @click.option("--delete", is_flag=True, help="delete unrecognized paths in destination")
 @click.option("--force", is_flag=True, help="skip confirmation when deleting files")
+@click.help_option("--help", "-h", help="show this message and exit")
 @pass_context
 def sync(ctx: Context, destination: str, delete: bool, force: bool):
     require_persistent_context(ctx, "sync")

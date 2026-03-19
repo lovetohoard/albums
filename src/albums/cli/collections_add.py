@@ -8,8 +8,9 @@ from ..types import AlbumCollectionAssociation, CollectionEntity
 from .cli_context import pass_context, require_persistent_context
 
 
-@click.command("add", help="add selected albums to collections")
+@click.command("add", help="add selected albums to collections", add_help_option=False)
 @click.argument("collection_names", nargs=-1)
+@click.help_option("--help", "-h", help="show this message and exit")
 @pass_context
 def collections_add(ctx: Context, collection_names: list[str]):
     require_persistent_context(ctx, "add")

@@ -12,6 +12,7 @@ from .cli_context import pass_context, require_library
 @click.command(
     help="report and sometimes fix issues in selected albums",
     epilog=f"If CHECKS are provided, only those checks and their dependencies will be enabled. Valid CHECKS are: {', '.join(sorted(ALL_CHECK_NAMES))}",
+    add_help_option=False,
 )
 @click.option("--default", is_flag=True, help="use default settings for all checks, including whether they are enabled")
 @click.option("--automatic", "-a", is_flag=True, help="if there is an automatic fix, do it WITHOUT ASKING")
@@ -19,6 +20,7 @@ from .cli_context import pass_context, require_library
 @click.option("--fix", "-f", is_flag=True, help="prompt when there is a selectable fix available")
 @click.option("--interactive", "-i", is_flag=True, help="ask what to do even if the only options are manual (implies -f)")
 @click.argument("checks", nargs=-1)
+@click.help_option("--help", "-h", help="show this message and exit")
 @pass_context
 def check(ctx: Context, default: bool, automatic: bool, preview: bool, fix: bool, interactive: bool, checks: list[str]):
     require_library(ctx, "check")

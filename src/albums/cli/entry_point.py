@@ -23,7 +23,7 @@ from .sync import sync
 rich.traceback.install(show_locals=True, locals_max_string=150, locals_max_length=10)
 
 
-@click.group(epilog=f"if --db-file is not specified, albums will use {DEFAULT_DB_LOCATION}")
+@click.group(epilog=f"if --db-file is not specified, albums will use {DEFAULT_DB_LOCATION}", add_help_option=False)
 @click.option("--match", "-m", "matchers", metavar="K=V", multiple=True, help="filter key=value like -m path=Soundtracks/ or -m tag=artist:Foo")
 @click.option("--regex", "-r", is_flag=True, help="enable regex and partial matches")
 @click.option("--collection", "-c", "collections", metavar="NAME", multiple=True, help="match collection name (same as -m collection=...)")
@@ -31,7 +31,8 @@ rich.traceback.install(show_locals=True, locals_max_string=150, locals_max_lengt
 @click.option("--dir", "-d", metavar="PATH", help="operate on a directory outside of the library")
 @click.option("--db-file", metavar="PATH", help="specify path to albums.db (advanced)")
 @click.option("--verbose", "-v", type=InvisibleCountParam(), count=True, help="enable verbose logging (-vv for more)")
-@click.version_option(version=albums.__version__, message="%(prog)s version %(version)s")
+@click.help_option("--help", "-h", help="show this message and exit")
+@click.version_option(version=albums.__version__, message="%(prog)s version %(version)s", help="show the version number and exit")
 @pass_context  # order of these decorators matters
 @click.pass_context
 def albums_group(
