@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 
 from ..app import Context
 from ..checks.helpers import album_display_name
-from .cli_context import pass_context
+from .cli_context import pass_context, require_real_context
 
 
 @click.command("list", help="print matching albums", add_help_option=False)
@@ -16,6 +16,7 @@ from .cli_context import pass_context
 @click.help_option("--help", "-h", help="show this message and exit")
 @pass_context
 def list_albums(ctx: Context, json: bool):
+    require_real_context(ctx)
     total_size = 0
     total_length = 0
     table = Table("path in library", "tracks", "length", "size")

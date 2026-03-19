@@ -8,7 +8,7 @@ from ..app import Context
 from ..config import RescanOption
 from ..database import db_config
 from ..interactive.configurator import interactive_config, set_library
-from .cli_context import pass_context, require_persistent_context
+from .cli_context import pass_context, require_configured, require_persistent_context
 
 
 @click.command(help="reconfigure albums", epilog="use `albums config` with no options for interactive configuration", add_help_option=False)
@@ -18,7 +18,8 @@ from .cli_context import pass_context, require_persistent_context
 @click.help_option("--help", "-h", help="show this message and exit")
 @pass_context
 def config(ctx: Context, show: bool, name: str, value: str):
-    require_persistent_context(ctx, "config")
+    require_configured(ctx)
+    require_persistent_context(ctx)
     if name and not value:
         ctx.console.print("error: must specify both name and value, or neither")
         raise SystemExit(1)

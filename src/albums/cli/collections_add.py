@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from ..app import Context
 from ..checks.helpers import album_display_name
 from ..types import AlbumCollectionAssociation, CollectionEntity
-from .cli_context import pass_context, require_persistent_context
+from .cli_context import pass_context, require_configured, require_persistent_context
 
 
 @click.command("add", help="add selected albums to collections", add_help_option=False)
@@ -13,7 +13,8 @@ from .cli_context import pass_context, require_persistent_context
 @click.help_option("--help", "-h", help="show this message and exit")
 @pass_context
 def collections_add(ctx: Context, collection_names: list[str]):
-    require_persistent_context(ctx, "add")
+    require_configured(ctx)
+    require_persistent_context(ctx)
     with Session(ctx.db) as session:
         for album in ctx.select_album_entities(session):
             for target_collection in collection_names:

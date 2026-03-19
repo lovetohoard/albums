@@ -8,7 +8,7 @@ from sqlalchemy import text
 from sqlalchemy.exc import OperationalError
 
 from ..app import Context
-from .cli_context import pass_context
+from .cli_context import pass_context, require_real_context
 
 
 @click.command(help="run a SQL command against albums db", add_help_option=False)
@@ -17,6 +17,7 @@ from .cli_context import pass_context
 @click.help_option("--help", "-h", help="show this message and exit")
 @pass_context
 def sql(ctx: Context, sql_command: str, json: bool):
+    require_real_context(ctx)
     try:
         with ctx.db.begin() as connection:
             cursor = connection.execute(text(sql_command))

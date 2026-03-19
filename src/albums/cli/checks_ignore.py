@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from ..app import Context
 from ..checks.all import ALL_CHECK_NAMES
 from ..checks.helpers import album_display_name
-from .cli_context import pass_context, require_persistent_context
+from .cli_context import pass_context, require_configured, require_persistent_context
 
 
 @click.command("ignore", help="ignore certain checks for specified albums", add_help_option=False)
@@ -14,7 +14,8 @@ from .cli_context import pass_context, require_persistent_context
 @click.help_option("--help", "-h", help="show this message and exit")
 @pass_context
 def checks_ignore(ctx: Context, force: bool, check_names: list[str]):
-    require_persistent_context(ctx, "ignore")
+    require_configured(ctx)
+    require_persistent_context(ctx)
     with Session(ctx.db) as session:
         for album in ctx.select_album_entities(session):
             changed = False

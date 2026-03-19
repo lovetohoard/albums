@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from ..app import Context
 from ..library import scanner
-from .cli_context import pass_context, require_database, require_library
+from .cli_context import pass_context, require_configured, require_library
 
 logger = logging.getLogger(__name__)
 
@@ -15,8 +15,8 @@ logger = logging.getLogger(__name__)
 @click.help_option("--help", "-h", help="show this message and exit")
 @pass_context
 def scan(ctx: Context, reread: bool):
-    require_library(ctx, "scan")
-    require_database(ctx, "scan")
+    require_configured(ctx)
+    require_library(ctx)
     if ctx.prescanned:
         logger.debug("scan already done, not scanning again")
         return

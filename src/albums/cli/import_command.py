@@ -12,7 +12,7 @@ from ..checks.checker import Checker
 from ..library import scanner
 from ..library.import_album import import_album, make_library_paths
 from ..library.scanner import scan
-from .cli_context import enter_folder_context, pass_context, require_database, require_library, require_persistent_context
+from .cli_context import enter_folder_context, pass_context, require_configured, require_library, require_persistent_context
 
 
 @click.command("import", help="check albums, copy each to library after it passes", add_help_option=False)
@@ -23,9 +23,9 @@ from .cli_context import enter_folder_context, pass_context, require_database, r
 @click.help_option("--help", "-h", help="show this message and exit")
 @pass_context
 def import_command(ctx: Context, extra: bool, recursive: bool, automatic: bool, scan_folder: str):
-    require_persistent_context(ctx, "import")
-    require_database(ctx, "import")
-    require_library(ctx, "import")
+    require_configured(ctx)
+    require_persistent_context(ctx)
+    require_library(ctx)
     library = ctx.config.library
     parent_context = enter_folder_context(ctx, scan_folder)
     (albums_total, _) = scan(ctx, check_first_full_scan_path_count=_check_path_count)

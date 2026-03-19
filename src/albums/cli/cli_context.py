@@ -25,21 +25,27 @@ PLATFORM_DIRS = PlatformDirs("albums", "4levity")
 DEFAULT_DB_LOCATION = str(PLATFORM_DIRS.user_config_path / "albums.db")
 
 
-def require_database(ctx: Context, command: str) -> None:
+def require_configured(ctx: Context) -> None:
     if not ctx.db_path.is_file():
-        ctx.console.print(f"[bold]{command}[/bold] requires a database")
+        ctx.console.print("This command requires albums to be configured - run [bold]albums init[/bold] to continue")
         raise SystemExit(1)
 
 
-def require_library(ctx: Context, command: str) -> None:
+def require_library(ctx: Context) -> None:
     if not ctx.config.library.is_dir():
-        logger.error(f"directory does not exist: {str(ctx.config.library)}")
+        logger.error(f"Library directory does not exist: {str(ctx.config.library)}")
         raise SystemExit(1)
 
 
-def require_persistent_context(ctx: Context, command: str) -> None:
+def require_persistent_context(ctx: Context) -> None:
     if not ctx.is_persistent:
-        ctx.console.print(f"[bold]{command}[/bold] requires a persistent library, and cannot be used with the [bold]--dir[/bold] option.")
+        ctx.console.print("This command cannot be used with the [bold]--dir[/bold] option")
+        raise SystemExit(1)
+
+
+def require_real_context(ctx: Context) -> None:
+    if not ctx.is_persistent and ctx.parent is None:
+        ctx.console.print("This command requires specifying a folder with [bold]--dir[/bold] or setting up a library with [bold]albums init[/bold]")
         raise SystemExit(1)
 
 
@@ -85,9 +91,6 @@ def setup(
         app_context.select_album_entities = lambda session: selector.load_album_entities(session)
     elif not has_database:
         # it's simpler to always give app_context a database than to allow it to be Engine | None
-        app_context.console.print(
-            "albums is not configured yet, and the [bold]--dir[/bold] was not specified. Run [bold]albums init[/bold] to remove this message."
-        )
         app_context.is_persistent = False
         app_context.db = connection.open(connection.MEMORY, echo=False)
         ctx.call_on_close(lambda: app_context.db.dispose())

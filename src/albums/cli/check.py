@@ -6,7 +6,7 @@ from ..checks.all import ALL_CHECK_NAMES
 from ..checks.checker import Checker
 from ..config import RescanOption, default_checks_config
 from ..library.scanner import scan
-from .cli_context import pass_context, require_library
+from .cli_context import pass_context, require_library, require_real_context
 
 
 @click.command(
@@ -23,7 +23,8 @@ from .cli_context import pass_context, require_library
 @click.help_option("--help", "-h", help="show this message and exit")
 @pass_context
 def check(ctx: Context, default: bool, automatic: bool, preview: bool, fix: bool, interactive: bool, checks: list[str]):
-    require_library(ctx, "check")
+    require_real_context(ctx)
+    require_library(ctx)
     if ctx.config.rescan == RescanOption.AUTO and ctx.is_persistent:
         scan(ctx)
 
