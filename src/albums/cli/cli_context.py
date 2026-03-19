@@ -1,6 +1,5 @@
 import logging
 import os
-import shutil
 from collections import defaultdict
 from copy import copy
 from functools import reduce
@@ -71,13 +70,6 @@ def setup(
         has_database = False
         if not dir:
             logger.info("the --dir option is not specified and albums database is not found")
-
-    if app_context.config.tagger:
-        if not shutil.which(app_context.config.tagger):
-            logger.warning(f'configuration specifies a tagger program "{app_context.config.tagger}" but it does not seem to be on the path')
-    elif shutil.which("easytag"):  # could look for others too
-        logger.debug("no external tagger configured - found easytag, using it")
-        app_context.config.tagger = "easytag"
 
     app_context.is_filtered = bool(matchers_list)
     matchers: defaultdict[str, list[str]] = defaultdict(list)

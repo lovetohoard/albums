@@ -1,9 +1,10 @@
 import logging
 import os
 import platform
+import shutil
 import subprocess
 from pathlib import Path
-from typing import Tuple
+from typing import Sequence, Tuple
 
 from prompt_toolkit import shortcuts
 from rich.markup import escape
@@ -38,7 +39,7 @@ def interact(ctx: Context, session: Session, check_name: str, check_result: Chec
     maybe_changed = False
     user_quit = False  # user explicitly quit this checkRenderableType
 
-    OPTION_RUN_TAGGER = f">> Edit tags with {ctx.config.tagger}"
+    OPTION_RUN_TAGGER = f">> Edit tags with {ctx.config.tagger or 'external tagger'}"
 
     options: list[str] = []
     if fixer:
@@ -49,9 +50,9 @@ def interact(ctx: Context, session: Session, check_name: str, check_result: Chec
         options.append(OPTION_IGNORE_CHECK)
     do_nothing_index = len(options)
     options.append(OPTION_DO_NOTHING)
-    if ctx.config.tagger:
+    if ctx.config.tagger or _in_gui():  # all default taggers require windowing session, don't assume user option does
         options.append(OPTION_RUN_TAGGER)
-    options.append(OPTION_OPEN_FOLDER)
+    options.append(OPTION_OPEN_FOLDER)  # works without GUI if nnn or mc installed
 
     album_path = ctx.config.library / album.path
 
@@ -75,8 +76,7 @@ def interact(ctx: Context, session: Session, check_name: str, check_result: Chec
             # these options do not use the fixer (if one was provided)
             choice = options[option_index] if option_index is not None else None
             if choice == OPTION_RUN_TAGGER:
-                ctx.console.print(f"Launching {ctx.config.tagger} {str(album_path)}", markup=False)
-                subprocess.Popen([ctx.config.tagger, str(album_path)])
+                _run_tagger(ctx, album_path)
                 while not shortcuts.confirm("Done making changes in external program?"):
                     pass
                 maybe_changed |= True
@@ -85,12 +85,11 @@ def interact(ctx: Context, session: Session, check_name: str, check_result: Chec
                 done = True
                 user_quit = True
             elif choice == OPTION_IGNORE_CHECK:
-                done = prompt_ignore_checks(ctx, album.album_id, check_name) if album.album_id is not None else False
+                done = _prompt_ignore_checks(session, album.album_id, check_name) if album.album_id is not None else False
                 maybe_changed |= done
                 user_quit = done
             elif choice == OPTION_OPEN_FOLDER:
-                ctx.console.print(f"Opening folder {str(album_path)}", markup=False)
-                os_open_folder(ctx, album_path)
+                _open_folder(ctx, album_path)
                 ctx.console.print()
                 while not shortcuts.confirm("Done making changes in external program?"):
                     pass
@@ -116,27 +115,59 @@ def interact(ctx: Context, session: Session, check_name: str, check_result: Chec
     return (maybe_changed, user_quit)
 
 
-def prompt_ignore_checks(ctx: Context, album_id: int, check_name: str):
-    with Session(ctx.db) as session:
-        album = session.execute(select(Album).where(Album.album_id == album_id)).tuples().one()[0]
-        if check_name in album.ignore_checks:
-            logger.error(f'did not expect "{check_name}" to already be ignored for {album.path}')
-        elif shortcuts.confirm(f'Do you want to ignore the check "{check_name}" for this album?'):
-            album.ignore_checks.append(check_name)
-            session.commit()
-            return True
-        return False
+def _prompt_ignore_checks(session: Session, album_id: int, check_name: str):
+    album = session.execute(select(Album).where(Album.album_id == album_id)).tuples().one()[0]
+    if check_name in album.ignore_checks:
+        logger.error(f'did not expect "{check_name}" to already be ignored for {album.path}')
+    elif shortcuts.confirm(f'Do you want to ignore the check "{check_name}" for this album?'):
+        album.ignore_checks.append(check_name)
+        session.commit()
+        return True
+    return False
 
 
-def os_open_folder(ctx: Context, path: Path):
-    open_folder_command = ctx.config.open_folder_command
-    if not open_folder_command and platform.system() == "Windows":
-        # type warnings because startfile only exists on Windows
-        os.startfile(path)  # pyright: ignore[reportAttributeAccessIssue, reportUnknownMemberType]
-    elif not open_folder_command and platform.system() == "Darwin":
-        subprocess.Popen(["open", path])
+def _open_folder(ctx: Context, path: Path):
+    ctx.console.print(f"Opening folder {str(path)}", markup=False)
+    if ctx.config.open_folder_command:
+        _try_to_run(ctx, [ctx.config.open_folder_command], [str(path)], "settings.open_folder_command")
     else:
-        subprocess.Popen([open_folder_command if open_folder_command else "xdg-open", path])
+        if platform.system() == "Windows":
+            if _in_gui():
+                # type warnings because startfile only exists on Windows
+                os.startfile(path)  # pyright: ignore[reportAttributeAccessIssue, reportUnknownMemberType]
+            else:
+                raise RuntimeError("not in GUI, can't launch file manager")  # not possible while we assume GUI on Windows
+        else:
+            if _in_gui():
+                try_commands = ["open"] if platform.system() == "Darwin" else ["xdg-open", "open"]
+            else:
+                try_commands = ["nnn", "mc"]
+            _try_to_run(ctx, try_commands, [str(path)], "settings.open_folder_command")
+    ctx.console.print()
+
+
+def _run_tagger(ctx: Context, album_path: Path):
+    if ctx.config.tagger:
+        _try_to_run(ctx, [ctx.config.tagger], [str(album_path)], "settings.tagger")
+    else:
+        if _in_gui():
+            _try_to_run(ctx, ["easytag", "puddletag", "mp3tag"], [str(album_path)], "settings.tagger")
+        else:
+            raise RuntimeError("can't launch tagger, don't seem to be in GUI")  # tagger option shouldn't be shown if not GUI
+
+
+def _in_gui() -> bool:
+    return "DISPLAY" in os.environ or platform.system() == "Windows"  # TODO fancier GUI detection, don't assume GUI on Windows
+
+
+def _try_to_run(ctx: Context, commands: Sequence[str], params: Sequence[str], setting_name: str):
+    command = next((cmd for cmd in commands if shutil.which(cmd)), None)
+    if command:
+        ctx.console.print(f"Running {command} {escape(' '.join(f'"{param}"' for param in params))}", highlight=False)
+        subprocess.run([command, *params])
+        ctx.console.print()
+    else:
+        ctx.console.print(f"Could not find command {' or '.join(f'"{cmd}"' for cmd in commands)} - see configuration option {setting_name}")
 
 
 def _choose_from_menu(prompt: str, options: list[str], default_option_index: int | None) -> int | None:
