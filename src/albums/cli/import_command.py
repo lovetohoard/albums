@@ -15,7 +15,7 @@ from ..library.scanner import scan
 from .cli_context import enter_folder_context, pass_context, require_database, require_library, require_persistent_context
 
 
-@click.command("import", help="check album in a folder, copy to library if it passes")
+@click.command("import", help="check albums, copy each to library after it passes")
 @click.argument("scan_folder", required=True)
 @click.option("--extra", "-x", is_flag=True, help="copy extra files not scanned by albums")
 @click.option("--recursive", "-r", is_flag=True, help="copy folders (one album max, implies --extra)")
