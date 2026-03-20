@@ -21,6 +21,7 @@ jobs:
         with:
           files: |
             *
+            **/*
             .github
           incremental_files_only: false
       - name: Run tests
