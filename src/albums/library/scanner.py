@@ -127,7 +127,7 @@ def scan_library(
         else:
             album_match = (None,)
         (album,) = album_match
-        tagger = AlbumTagger(ctx.config.library / path, preload=_picture_cache(album))
+        tagger = AlbumTagger(ctx.config.library / path, preload={} if reread else _picture_cache(album))
         with session.begin_nested() as path_scan_transaction:
             if album and album.album_id is not None:
                 unvisited_album_ids.remove(album.album_id)
@@ -164,7 +164,7 @@ def rescan_albums(
 ) -> Mapping[AlbumScanResult, int]:
     scan_results: defaultdict[AlbumScanResult, int] = defaultdict(int)
     for album in scan_albums:
-        tagger = AlbumTagger(ctx.config.library / album.path, preload=_picture_cache(album))
+        tagger = AlbumTagger(ctx.config.library / album.path, preload={} if reread else _picture_cache(album))
         with session.begin_nested() as album_scan_transaction:
             result = _scan_album(ctx, tagger, album, reread)
             scan_results[result] += 1

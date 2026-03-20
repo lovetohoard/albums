@@ -440,10 +440,20 @@ class TestScanner:
             with Session(db) as session:
                 scan(ctx, session)
                 assert spy_image_open.call_count == 4
-
                 spy_image_open.reset_mock()
+
                 scan(ctx, session, reread=True)
-                assert spy_image_open.call_count == 0  # size/hash unchanged so pic info from database was reused
+                assert spy_image_open.call_count == 4  # reread=True so cache was not used
+                spy_image_open.reset_mock()
+
+                os.rename(library / album.path / album.tracks[0].filename, library / album.path / f"foo - {album.tracks[0].filename}")
+                os.rename(library / album.path / album.picture_files[0].filename, library / album.path / f"foo - {album.picture_files[0].filename}")
+                os.rename(library / album.path / album.picture_files[1].filename, library / album.path / f"foo - {album.picture_files[1].filename}")
+
+                scan(ctx, session)
+                assert spy_image_open.call_count == 0  # files were renamed but image data was the same, cache was used
+                spy_image_open.reset_mock()
+                album = next(session.execute(select(Album)).tuples())[0]
 
                 with AlbumTagger(library / album.path).open(album.tracks[0].filename) as tags:
                     pic = album.tracks[0].pictures[0]
@@ -453,11 +463,11 @@ class TestScanner:
                     file_hash = xxhash.xxh32_digest(image_data)
                     replacement_pic = Picture(PictureInfo("image/png", 411, 411, 24, len(image_data), file_hash), PictureType.COVER_FRONT, "")
                     tags.add_picture(replacement_pic, image_data)
-                with open(library / album.path / "cover.jpg", "wb") as f:
+                with open(library / album.path / album.picture_files[0].filename, "wb") as f:
                     f.write(make_image_data(333, 333, "JPEG"))
 
                 spy_image_open.reset_mock()
-                scan(ctx, session, reread=True)
-                assert spy_image_open.call_count == 2  # 1 embedded image and 1 file were edited
+                scan(ctx, session)
+                assert spy_image_open.call_count == 2  # 1 embedded image and 1 file were edited, cache was used for others
         finally:
             db.dispose()

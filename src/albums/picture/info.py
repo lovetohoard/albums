@@ -33,14 +33,15 @@ class PictureInfo:
 
 
 def get_picture_info(image_data: bytes, file_hash: bytes) -> PictureInfo:
-    image = Image.open(io.BytesIO(image_data))
-    image.load()  # fully load image to ensure it is loadable
-    depth_bpp = IMAGE_MODE_BPP.get(image.mode, 0)
     file_size = len(image_data)
 
+    image = Image.open(io.BytesIO(image_data))
+    image.load()  # fully load image to ensure it is loadable
     mime_type: str | None = None
     if image.format:
         mime_type = format_to_mime_type(image.format)
+
+    depth_bpp = 24 if mime_type == "image/jpeg" else IMAGE_MODE_BPP.get(image.mode, 0)
 
     return PictureInfo(
         mime_type if mime_type else "",
