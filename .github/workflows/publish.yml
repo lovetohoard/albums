@@ -11,7 +11,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           fetch-depth: 0
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: 3.14
       - uses: snok/install-poetry@v1
@@ -36,7 +36,7 @@ jobs:
           make package
           rm -rf dist/pyinstaller/
       - name: Upload package artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: albums-package
           path: dist/

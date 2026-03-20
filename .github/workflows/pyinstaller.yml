@@ -12,7 +12,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           fetch-depth: 0
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: 3.12
       - uses: abatilo/actions-poetry@v4
@@ -24,7 +24,7 @@ jobs:
       - name: Build executable
         run: make package && ls -l dist && ls -l dist/pyinstaller
       - name: Upload package artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: albums-pyinstaller-linux
           path: dist/pyinstaller/manylinux_2_39_x86_64/albums/
@@ -35,7 +35,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           fetch-depth: 0
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: 3.12
       - uses: abatilo/actions-poetry@v4
@@ -49,7 +49,7 @@ jobs:
         run: poetry -v build
         shell: bash
       - name: Upload pyinstaller artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: albums-pyinstaller-win
           path: dist/pyinstaller/win_amd64/albums/
@@ -57,6 +57,8 @@ jobs:
   release:
     needs: [build-linux, build-win]
     runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     permissions:
       contents: write
     steps:
@@ -85,7 +87,7 @@ jobs:
           zip -r albums_linux_x86_64.zip albums_linux_x86_64
       - name: Create release
         id: create_release
-        uses: actions/create-release@v1
+        uses: actions/create-release@v1  # TODO: test with Node 24 or find new solution to this unmaintained Node 20 package
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -94,7 +96,7 @@ jobs:
           draft: ${{ github.ref == 'refs/heads/main' }}
           prerelease: false
       - name: Upload albums_win_x86_64.zip
-        uses: actions/upload-release-asset@v1
+        uses: actions/upload-release-asset@v1  # TODO: test with Node 24 or find new solution to this unmaintained Node 20 package
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
