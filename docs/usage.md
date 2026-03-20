@@ -4,10 +4,11 @@ icon: lucide/user
 
 # Usage
 
-## Configuration
+## Initial Setup
 
-To work with a large music library or use custom configuration settings `albums`
-needs a database which it will create when you run `albums init`.
+To work with a large music library or use custom configuration settings,
+`albums` needs a database which is created by running `albums init`. Some parts
+of this documentation assume that `albums init` has been run.
 
 !!!tip
 
@@ -16,12 +17,21 @@ needs a database which it will create when you run `albums init`.
     `-d`/`--dir` is specified, no information will be stored between runs. Try:
     `albums --dir /path/to/one/album check --fix`
 
-## Basic commands
+## Options, Command, Args
+
+Usage: **albums** \[**OPTIONS**\] **COMMAND** \[**ARGS**\]
+
+1. **Options** come _before_ the command. Some options are for selecting which
+   albums or folders the following command will operate on.
+1. **Command** must be specified, like "list" or "check".
+1. **Args** some commands take arguments which come _after_ the command.
+
+## Basic Commands
 
 To see **all** options, run `albums --help` and `albums <command> --help`.
 
-`albums scan` will scan the library. This happens automatically the first time
-the tool is used, if there is a library in the configured location to scan.
+`albums scan` scans the library. This happens by default after `init` and when
+running some other commands.
 
 !!!info
 
@@ -30,32 +40,57 @@ the tool is used, if there is a library in the configured location to scan.
     take a few seconds. If you interrupt the scan with ^C, it will continue
     where it left off next time.
 
-Get a list of issues with `albums check`. Learn about using `albums` to fix
-problems in [Check and Fix](./check_and_fix.md).
+`albums list` lists albums (folders), including total size and play time.
 
-Most commands can be filtered. For example, to list albums matching a partial
-path (relative path within the library), you could run
-`albums --regex --path Freezepop list`. You can also filter by tag values with
-`--match tag=name:value`, for example
-`albums --match tag=artist:Freezepop list`.
+`albums check` finds issues with albums. Learn about using `albums` to review
+and fix problems in [Check and Fix](./check_and_fix.md).
 
-Within a library, albums can be in sets called "collections". To create a
-collection named "DAP" containing albums to sync to a Digital Audio Player, use
-for example `albums -rp Freezepop add DAP`. Review the collection with
-`albums --collection DAP list`. To copy/sync it to an SD card, see
+## Filtering
+
+Most commands can be filtered with options before the command. For example, to
+list albums matching a partial path (relative path within the library), you
+could run `albums --regex --path Freezepop list`. See help for options.
+
+### --match
+
+The `--match` / `-m` option provides several ways to filter albums. The same key
+may be specified more than once. If `--regex` / `-r` is specified, the values
+are regular expression partial matches.
+
+<!-- pyml disable line-length -->
+
+| Key              | Description                                       | Example                        |
+| ---------------- | ------------------------------------------------- | ------------------------------ |
+| **path**         | match _any_ of the given paths within the library | `-rm path=Soundtracks`         |
+| **tag**          | have _all_ specified tags, in _any_ tracks        | `-m tag=artist:Queen`          |
+| **collection**   | be in _any_ of the specified "collections"        | `-m collection=favorites`      |
+| **ignore_check** | ignore _any_ of the given checks                  | `-m ignore_check=cover-unique` |
+
+<!-- pyml enable line-length -->
+
+## More Commands
+
+`add` and `remove` - These commands add or remove associations between the
+selected albums and arbitrary named "collections," which can be used to filter
+future operations.
+
+`ignore` and `notice` - These commands cause the selected albums to ignore or
+stop ignoring certain checks.
+
+`import` - Search a folder outside the library for new albums, check them for
+tag/picture/filename/etc issues, fix everything interactively, then add them to
+the library - see [Import](./import.md).
+
+`sync` - Copy/sync selected albums to a storage device or player - see
 [Synchronize](./sync.md).
 
-You can search a folder for new albums, check them for tag/picture/filename/etc
-issues, fix everything interactively, then add the albums to your library with
-one command. For example: `albums import ./Downloads`.
+### Config
 
 To set up `albums` configuration options interactively, run `albums config`. See
-`albums config --help` for other ways to configure.
+`albums config --help` for other ways to configure. Configuration options for
+individual checks are described in [All Checks](./all_checks.md).
 
-## Global Settings
-
-In addition to check configurations (see [Check and Fix](./check_and_fix.md)),
-there are some global settings:
+#### Global Settings
 
 <!-- pyml disable line-length -->
 
@@ -68,18 +103,11 @@ there are some global settings:
 | `path_replace_invalid`        | `""` _(nothing)_                             | Replace any other illegal character with this     |
 | `rescan`                      | `"auto"`                                     | When to automatically rescan the library          |
 | `tagger`                      | `"easytag"` (if installed)                   | External program to view and set tags in an album |
-| `default_import_path`         | `"$artist/$album"`                           | Import: default path for new albums in library    |
-| `default_import_path_various` | `"Compilations/$album"`                      | Import: default path for new compilation albums   |
-| `more_import_paths`           | `"$A1/$artist/$album", "Soundtracks/$album"` | Import: other selectable paths for new albums     |
-| `import_scan_max_paths`       | **250**                                      | Import: maximum number of paths to import at once |
 | `id3v1`                       | `"UPDATE"`                                   | Policy for ID3 version 1 tags                     |
-
-!!!note
-
-    The import paths can use substitution values determined from the tags on
-    the new album. Available substitutions are: `$album`, `$artist` (which may
-    be the "album artist" value), `$A1` (first letter of artist name not
-    including "The", or `#` for numeric), and `$a1` (lowercase version of `$A1`)
+| `default_import_path`         | `"$artist/$album"`                           | Import command option - see [Import](./import.md) |
+| `default_import_path_various` | `"Compilations/$album"`                      | Import command option                             |
+| `more_import_paths`           | `"$A1/$artist/$album", "Soundtracks/$album"` | Import command option                             |
+| `import_scan_max_paths`       | **250**                                      | Import command option                             |
 
 <!-- pyml enable line-length -->
 
@@ -114,42 +142,3 @@ album will be the first parameter.
 do with ID3 version 1 tags. Options are **REMOVE** (ID3v1 tags will be removed),
 **UPDATE** (ID3v1 tags will be updated but not added), or **CREATE** (ID3v1 tags
 will be created and/or updated).
-
-## Tag Conversion
-
-`albums` attempts to apply some of the same checks and rules with Vorbis
-comments (FLAC, Ogg Vorbis), ID3 tags (MP3) and MP4 iTunes atoms (M4A). To
-enable this, common tags like track number are converted to the typical Vorbis
-comment tag names. For example, the ID3 tags TPE1 "Artist" and TPE2 "Band" are
-referenced by the standard tag names "artist" and "albumartist". Or in other
-words, if `albums` writes a new "album artist" to your MP3, behind the scenes
-it's actually writing to the TPE2 tag.
-
-### Track total and disc total
-
-If track number and track total are combined in the tracknumber (or ID3 TRCK)
-with a slash like "04/12" instead of being in separate tags, `albums` will see
-that as "tracknumber=04" and "tracktotal=12" and be able to write to the track
-number and track total field as if they were separate. The same rule applies for
-disc number and disc total if combined in the discnumber (or ID3 TPOS) tag.
-Storing track total and disc total this way is normal for ID3 tags.
-
-## Risks
-
-This software has no warranty and I am not claiming it is safe or fit for any
-purpose. But if something goes very wrong, you can simply restore your backups.
-If you don't have backups, maybe this tool isn't for you.
-
-More specifically, here are some of the actual risks:
-
-- Could overwrite correct tags with incorrect info, or rename files incorrectly,
-  etc, depending on configuration, use or bugs.
-- If you set a bad `sync` destination **and** use `--delete` **and** confirm or
-  use `--force`, it will delete everything at the specified path.
-    - Even if you set the correct `sync` location, the `--delete` option could
-      delete files from your digital audio player that you wanted to keep.
-- Might corrupt your music files while editing their tags due to hypothetical
-  bugs in Mutagen.
-- Might make corrupt copies of albums if there are bugs in the sync code.
-- Might create a vector for malware living in media file metadata to attack your
-  computer via hypothetical vulnerabilities in libraries or your OS.

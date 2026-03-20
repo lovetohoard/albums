@@ -10,7 +10,7 @@ updating portable collections and digital audio players as long as they can be
 accessed by the operating system like a regular storage device.
 
 > Only music files that `albums` knows about are copied. If there are other
-> files in the library album directory, `sync` ignores them!
+> files in the library album directory, including images, `sync` ignores them!
 
 ## Use a collection
 

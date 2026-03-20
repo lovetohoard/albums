@@ -57,3 +57,20 @@ x86 or ARM system with Linux, macOS or Windows.
 Binary releases for 64-bit Linux or Windows do not have any Python requirement.
 
 Albums is primarily tested on Linux and Windows.
+
+## Risks
+
+This software has no warranty and I am not claiming it is safe or fit for any
+purpose. But if something goes very wrong, you can simply restore your backup.
+By using this software, you voluntarily assume the risk that it might:
+
+- overwrite correct tags with incorrect info, or rename files incorrectly, etc,
+  depending on configuration, use or bugs.
+- create a vector for malware living in media file metadata to attack your
+  computer via hypothetical vulnerabilities in libraries or your OS.
+- corrupt files while changing tags due to hypothetical Mutagen bugs.
+- make incomplete copies of albums if there are bugs in the sync code.
+- delete entire directory trees if you use the `sync` command incorrectly with
+  `--delete` **and** confirmatuin or use `--force`.
+    - Even if you set the correct `sync` location, the `--delete` option could
+      delete files from your digital audio player that you wanted to keep.
