@@ -22,7 +22,7 @@ jobs:
           files: |
             *
             .github
-          incremental_files_only: false # imperfectt
+          incremental_files_only: false
       - name: Run tests
         env:
           TERM: "dumb"
