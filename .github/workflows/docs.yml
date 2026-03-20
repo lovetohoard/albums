@@ -17,22 +17,21 @@ jobs:
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     steps:
-      - uses: actions/configure-pages@v5  # TODO: test with Node 24 or find new solution to this unmaintained Node 20 package
+      - uses: actions/configure-pages@v5
       - uses: actions/checkout@v5
         with:
           fetch-depth: 0
       - uses: actions/setup-python@v6
         with:
           python-version: 3.14
-      - uses: ts-graphviz/setup-graphviz@v2  # TODO: test with Node 24 or find new solution to this unmaintained Node 20 package
+      - uses: ts-graphviz/setup-graphviz@v2
       - uses: snok/install-poetry@v1
       - name: Install dependencies
         run: make install
       - name: Make docs site
         run: make docs && ls -la site
-      - uses: actions/upload-pages-artifact@v4  # TODO: test with Node 24 or find new solution to this unmaintained Node 20 package
-        # upload-pages-artifact@v4 as of this writing uses deprecated actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 (v4.6.2)
+      - uses: actions/upload-pages-artifact@v4
         with:
           path: site
-      - uses: actions/deploy-pages@v4  # TODO: test with Node 24 or find new solution to this unmaintained Node 20 package
+      - uses: actions/deploy-pages@v4
         id: deployment
