@@ -1,6 +1,7 @@
 {
     "flagWords": [],
     "language": "en",
+    "useGitignore": true,
     "version": "0.2",
     "words": [
         "abatilo",

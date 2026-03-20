@@ -19,8 +19,10 @@ jobs:
       - name: Spell check
         uses: streetsidesoftware/cspell-action@v8
         with:
+          files: |
+            *
+            .github
           incremental_files_only: false # imperfectt
-          check_dot_files: true
       - name: Run tests
         env:
           TERM: "dumb"
