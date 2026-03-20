@@ -19,7 +19,11 @@ icon: lucide/flask-conical
 
 ### More checks and fixes
 
-- check genre, require/guess/validate
+- more genre features
+    - limit genres to user-defined list
+    - guess genre w/ albums from same artist (in library, not from import scan)
+    - save mappings from any-genre to user-genres
+    - use $genre in path templates
 - scan date(s), require/special validate
 - many suggested fixes for current no-fix check failures in TODOs
 - low bitrate or suboptimal codec

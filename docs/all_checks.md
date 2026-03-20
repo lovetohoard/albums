@@ -427,12 +427,11 @@ In some media formats including FLAC files, embedded images are classified with
 the "picture type" codes originally defined for ID3v2 `APIC` frames.
 
 When checks refer to the "cover" or "front cover" this means images classified
-as `COVER_FRONT` (0x03). If an embedded image does not have a picture type (such
-as `covr` atom in M4A files) the image is assumed to be a front cover.
+as `COVER_FRONT` (0x03). If an embedded image does not have an explicit picture
+type (such as `covr` atom in M4A files), the type `COVER_FRONT` is assumed.
 
-Image files are also considered front covers if they are **png**,
-**jpeg**/**jpg** or **gif** and they have the word "folder", "cover",
-"thumbnail" or "album" in the filename.
+Image files are also considered front covers if they have the word "folder",
+"cover", "thumbnail" or "album" in the filename.
 
 ### invalid-image
 
