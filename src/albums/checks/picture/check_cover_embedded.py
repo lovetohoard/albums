@@ -233,7 +233,7 @@ class CheckCoverEmbedded(Check):
             raise RuntimeError(f"unexpected: path exists {str(path)}")  # shouldn't happen because this fix is offered when there are no cover files
         with open(path, "wb") as f:
             f.write(image_data)
-        # create a record of the new image so it can be marked cover_source (details will be filled in when album is rescanned)
+        # create a record of the new image so it can be marked cover_source (details will be filled in when album is scanned)
         album.picture_files.append(
             PictureFile(filename=new_filename, picture_info=PictureInfo(cover.picture_info.mime_type, 0, 0, 0, 0, b""), cover_source=True)
         )

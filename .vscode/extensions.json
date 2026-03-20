@@ -6,7 +6,7 @@
     "ms-python.python",
     "ms-python.vscode-pylance",
     "ms-python.vscode-python-envs",
-    "tamasfe.even-better-toml",
+    "streetsidesoftware.code-spell-checker",
   ],
   "unwantedRecommendations": []
 }

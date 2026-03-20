@@ -67,6 +67,8 @@ The filename format is a template string. The template substitutions are:
 | **`$artist`**      | `Artist`                    | Track artist                                                  |
 | **`$title`**       | `Title`                     | Track title                                                   |
 
+<!-- pyml enable line-length -->
+
 The zero-padding on track number and disc number (if any) normally comes from
 formatting applied to the corresponding tag value. `albums` can format the tags
 with the `zero-pad-numbers` check/fix. But in some formats like **M4A**, the
@@ -74,8 +76,6 @@ tracknumber and discnumber tags don't support formatting. For such formats, if
 the `zero-pad-numbers` check is enabled, the `tracknumber_pad` and
 `discnumber_pad` options from _that_ check will be used to generate possibly
 zero-padded `$tracknumber` and `$discnumber` substitutions in _this_ check.
-
-<!-- pyml enable line-length -->
 
 The default template `"$track_auto $title_auto"` generates filenames like this:
 

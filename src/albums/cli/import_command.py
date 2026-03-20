@@ -71,7 +71,7 @@ def import_command(ctx: Context, extra: bool, recursive: bool, automatic: bool, 
                     ctx.console.print(f"Import album from {source_path} to {str(library / path_in_library)}")
                     import_album(ctx, source_path, path_in_library, album, extra, recursive)
 
-    ctx.console.print("importing complete! rescanning library...")
+    ctx.console.print("importing complete! scanning library...")
     scanner.scan(parent_context)
 
 

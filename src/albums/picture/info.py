@@ -8,7 +8,7 @@ from PIL import Image
 
 from .format import IMAGE_MODE_BPP, format_to_mime_type
 
-# calling mimetimes.init early prevents mimetypes.guess_type(".pcx") from failing with certain test run ordering
+# calling mimetypes.init early prevents mimetypes.guess_type(".pcx") from failing with certain test run ordering
 # and specifying files=[] may avoid OS-specific bugs:
 mimetypes.init(files=[])
 

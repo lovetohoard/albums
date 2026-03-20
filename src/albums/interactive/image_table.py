@@ -23,7 +23,7 @@ def render_image_table(
     pictures: Sequence[Picture | Tuple[Picture, Image.Image, bytes]],  # type: ignore
     picture_sources: Dict[Picture, List[str]],
 ) -> Sequence[Sequence[RenderableType]]:
-    pixelses: list[RenderableType] = []
+    pixels_images: list[RenderableType] = []
     target_width = int((ctx.console.width - 3) / len(pictures))
     target_height = (ctx.console.height - 10) * 2
     captions: list[RenderableType] = []
@@ -44,7 +44,7 @@ def render_image_table(
             scale = min(target_width, target_height) / max(image.width, h)
             pix_image = image.resize((int(image.width * scale), int(h * scale)), resample=Image.Resampling.LANCZOS)
             pixels = Pixels.from_image(pix_image)
-            pixelses.append(pixels)
+            pixels_images.append(pixels)
             caption = f"[{cover.picture_info.width} x {cover.picture_info.height}] {humanize.naturalsize(len(image_data), binary=True)}"
             if len(pictures) > 1:
                 image = image.convert("RGB")
@@ -65,7 +65,7 @@ def render_image_table(
                     (reference_width, reference_height) = image.size
                     caption += " [bold]reference[/bold]"
             captions.append(caption)
-    return [pixelses, captions] if captions else [pixelses]
+    return [pixels_images, captions] if captions else [pixels_images]
 
 
 def _describe_rmse(rmse: float) -> str:

@@ -133,10 +133,19 @@ fixed with `make fix`.
   strict mode for main project, looser rules for tests
 - markdown lint with [PyMarkdown](https://pymarkdown.readthedocs.io/en/latest/)
 
+### Spell check
+
+CI builds require [cSpell](https://cspell.org/) spell check to pass. The
+`make spelling` target is separate from `lint` because it requires Docker to be
+installed. Add valid words and relevant technical terms to `cspell.json`.
+
+### IDE
+
 Use an IDE like [Visual Studio Code](https://code.visualstudio.com/) that
 supports ruff/Black formatting and a
-[pyright](https://microsoft.github.io/pyright/) language server.
-[Prettier](https://prettier.io/) can reflow Markdown text.
+[pyright](https://microsoft.github.io/pyright/) language server and
+[cSpell](https://cspell.org/). [Prettier](https://prettier.io/) can reflow
+Markdown text.
 
 ### Other Tips
 

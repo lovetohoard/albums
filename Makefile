@@ -1,6 +1,7 @@
 POETRY := poetry
+DOCKER := docker
 
-.PHONY: build install lint lint-markdown fix test integration-test preview docs package clean
+.PHONY: build install lint lint-markdown spelling fix test integration-test preview docs package clean
 
 build: install lint test
 	@echo "build complete"
@@ -17,6 +18,9 @@ lint: lint-markdown ## Lint and static analysis
 	$(POETRY) run pyright
 	$(POETRY) run pyright -p tests
 	$(POETRY) run pymarkdown --strict-config scan *.md **/*.md
+
+spelling: ## Run spell check
+	$(DOCKER) run -it -v .:/workdir ghcr.io/streetsidesoftware/cspell:latest lint --gitignore * .github
 
 fix: install ## Automatically fix lint/format
 	$(POETRY) run ruff format

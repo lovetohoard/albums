@@ -20,7 +20,7 @@ to ignore it. At the end, the album will be copied to the library.
 ## Destination Pattern
 
 To determine where to put new albums in your library, define patterns that use
-substitition values from tags. The patterns, configured in global settings, are:
+substitution values from tags. The patterns, configured in global settings, are:
 
 - `default_import_path` - path for regular albums associated with an artist
 - `default_import_path_various` - path for compilations
@@ -48,7 +48,7 @@ is used.
 
 ## Completing
 
-At the end, the library will be rescanned.
+At the end, the library will be re-scanned.
 
 Currently, if you ignore a check or mark an image file as cover source while
 importing an album, those attributes are not imported. So those checks or

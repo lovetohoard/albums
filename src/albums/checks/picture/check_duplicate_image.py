@@ -40,11 +40,11 @@ class CheckDuplicateImage(Check):
             # if we have duplicate or conflicting embedded images within one track, stop and fix - might have to do this for each track
             for unique_picture in file_pics_by_content:
                 if len(file_pics_by_content[unique_picture]) > 1:
-                    # TODO: configurably allow duplicate image data if the picture_type is not the same
+                    # TODO: allow duplicate image data if configured and if the picture_type is not the same
                     pic_types = ", ".join(sorted(set(pic.type.name for pic in file_pics_by_content[unique_picture])))
                     return CheckResult(f"duplicate embedded image data in one or more files: {pic_types}")
 
-        # TODO dedup for all pictures, if not self.cover_only
+        # TODO deduplicate for all pictures, if not self.cover_only
         front_covers = pictures_by_type.get(PictureType.COVER_FRONT, [])
         cover_image_file = list(
             pic for pic in front_covers if any(Path(filename).suffix in SUPPORTED_IMAGE_SUFFIXES for filename in picture_sources[pic])

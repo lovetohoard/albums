@@ -4,9 +4,9 @@ icon: lucide/target
 
 # Overview
 
-`albums` is an interactive tool to manage music: configurably validate and fix
-tags and metadata, rename files, reformat and embed album art, import albums,
-and sync parts of the library to digital audio players or portable storage
+`albums` is an interactive tool to manage music: validate and fix tags and
+metadata, rename files, reformat and embed album art, import albums, and sync
+parts of the library to digital audio players or portable storage
 
 This documentation is for `albums` version **%%version_placeholder%%**.
 
@@ -71,6 +71,6 @@ By using this software, you voluntarily assume the risk that it might:
 - corrupt files while changing tags due to hypothetical Mutagen bugs.
 - make incomplete copies of albums if there are bugs in the sync code.
 - delete entire directory trees if you use the `sync` command incorrectly with
-  `--delete` **and** confirmatuin or use `--force`.
+  `--delete` **and** confirmation or use `--force`.
     - Even if you set the correct `sync` location, the `--delete` option could
       delete files from your digital audio player that you wanted to keep.

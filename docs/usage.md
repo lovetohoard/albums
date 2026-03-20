@@ -49,7 +49,7 @@ and fix problems in [Check and Fix](./check_and_fix.md).
 
 Most commands can be filtered with options before the command. For example, to
 list albums matching a partial path (relative path within the library), you
-could run `albums --regex --path Freezepop list`. See help for options.
+could run `albums --regex --path Nirvana list`. See help for options.
 
 ### --match
 
@@ -126,7 +126,7 @@ filenames. The compatibility options come from
 - `"universal"` _(default)_: most restrictions and most compatible
 
 **`rescan`**: Rescan the library before performing other operations. If the
-operation is filtered then only selected albums will be rescanned. Options:
+operation is filtered then only selected albums will be re-scanned. Options:
 
 - `always`: always scan the library so you never need to run "albums scan" but
   may be slow

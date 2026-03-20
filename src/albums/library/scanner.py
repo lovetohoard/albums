@@ -20,7 +20,7 @@ from ..app import SCANNER_VERSION, Context
 from ..picture.scan import PictureScannerCache
 from ..tagger.folder import AUDIO_FILE_SUFFIXES, AlbumTagger
 from ..types import Album, PictureFile, ScanHistoryEntity, TagV, Track, TrackPicture
-from .folder import Ministat, read_binary_file, stat_dir
+from .folder import MiniStat, read_binary_file, stat_dir
 
 MAX_IMAGE_SIZE = 128 * 1024 * 1024  # don't load and scan image files larger than this. 16 MB is the max for ID3v2 and FLAC tags.
 
@@ -128,7 +128,7 @@ def scan_library(
             album_match = (None,)
         (album,) = album_match
         tagger = AlbumTagger(ctx.config.library / path, preload=_picture_cache(album))
-        with session.begin_nested() as path_scan_transacion:
+        with session.begin_nested() as path_scan_transaction:
             if album and album.album_id is not None:
                 unvisited_album_ids.remove(album.album_id)
                 result = _scan_album(ctx, tagger, album, reread)
@@ -137,14 +137,14 @@ def scan_library(
                         session.delete(album)
                     else:
                         album.scanner = SCANNER_VERSION
-                    path_scan_transacion.commit()
+                    path_scan_transaction.commit()
             else:
                 album = Album(path=path, scanner=SCANNER_VERSION)
                 new_result = _scan_album(ctx, tagger, album, False)
                 if new_result == AlbumScanResult.UPDATED:
                     result = AlbumScanResult.NEW
                     session.add(album)
-                    path_scan_transacion.commit()
+                    path_scan_transaction.commit()
                 else:
                     result = AlbumScanResult.NO_TRACKS
         if result not in {AlbumScanResult.NO_TRACKS, AlbumScanResult.UNCHANGED}:
@@ -192,7 +192,7 @@ def _picture_cache(album: Album | None) -> PictureScannerCache:
     )
 
 
-def _scan_track(tagger: AlbumTagger, filename: str, stat: Ministat):
+def _scan_track(tagger: AlbumTagger, filename: str, stat: MiniStat):
     with tagger.open(filename) as tags:
         scan_result = tags.scan()
         tags = [TagV(tag=tag, value=value) for tag, values in scan_result.tags for value in values]
@@ -210,7 +210,7 @@ def _scan_track(tagger: AlbumTagger, filename: str, stat: Ministat):
         )
 
 
-def _scan_picture_file(tagger: AlbumTagger, filename: str, stat: Ministat):
+def _scan_picture_file(tagger: AlbumTagger, filename: str, stat: MiniStat):
     if stat.file_size > MAX_IMAGE_SIZE:
         size = humanize.naturalsize(stat.file_size, binary=True)
         max = humanize.naturalsize(MAX_IMAGE_SIZE, binary=True)
@@ -224,7 +224,7 @@ def _scan_picture_file(tagger: AlbumTagger, filename: str, stat: Ministat):
     return PictureFile(filename=filename, modify_timestamp=stat.modify_timestamp, cover_source=False, picture_info=picture_info)
 
 
-def _scan_file(album: Album, tagger: AlbumTagger, path: Path, stat: Ministat, replace: bool) -> None:
+def _scan_file(album: Album, tagger: AlbumTagger, path: Path, stat: MiniStat, replace: bool) -> None:
     if str.lower(path.suffix) in AUDIO_FILE_SUFFIXES:
         if replace:
             while (to_remove := next((t for t in album.tracks if t.filename == path.name), None)) is not None:
@@ -244,8 +244,8 @@ def _scan_file(album: Album, tagger: AlbumTagger, path: Path, stat: Ministat, re
 
 def _scan_album(ctx: Context, tagger: AlbumTagger, album: Album, reread: bool = False) -> AlbumScanResult:
     album_path = ctx.config.library / album.path
-    stored_files_list = [(t.filename, Ministat(t.file_size, t.modify_timestamp)) for t in album.tracks] + [
-        (f.filename, Ministat(f.picture_info.file_size, f.modify_timestamp)) for f in album.picture_files
+    stored_files_list = [(t.filename, MiniStat(t.file_size, t.modify_timestamp)) for t in album.tracks] + [
+        (f.filename, MiniStat(f.picture_info.file_size, f.modify_timestamp)) for f in album.picture_files
     ]
     duplicate_files = set(filename for (filename, _) in stored_files_list if sum(1 if filename == fn else 0 for (fn, _) in stored_files_list) > 1)
     stored_files = dict(stored_files_list)
