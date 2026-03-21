@@ -12,7 +12,7 @@ from .types import Album
 
 logger = logging.getLogger(__name__)
 
-SCANNER_VERSION = 1
+SCANNER_VERSION = 2
 
 
 class Context(dict[Any, Any]):  # this is a dict because it's required to be by click

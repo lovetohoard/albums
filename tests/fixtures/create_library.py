@@ -6,7 +6,7 @@ from typing import Collection
 
 from PIL import Image
 
-from albums.picture.format import MIME_PILLOW_FORMAT
+from albums.picture.format import mime_type_to_format
 from albums.tagger.folder import AlbumTagger
 from albums.tagger.types import Picture
 from albums.types import Album, Track, TrackPicture
@@ -41,7 +41,7 @@ def create_track_file(path: Path, spec: Track):
     tagger = AlbumTagger(path, padding=lambda _: 0)
     with tagger.open(spec.filename) as tags:
         for pic in spec.pictures:
-            image_data = make_image_data(pic.picture_info.width, pic.picture_info.height, MIME_PILLOW_FORMAT[pic.picture_info.mime_type])
+            image_data = make_image_data(pic.picture_info.width, pic.picture_info.height, mime_type_to_format(pic.picture_info.mime_type))
             picture = Picture(pic.picture_info, pic.picture_type, pic.description) if isinstance(pic, TrackPicture) else pic
             tags.add_picture(picture, image_data)
         for tag_name, values in spec.tag_dict().items():

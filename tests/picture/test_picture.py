@@ -1,6 +1,6 @@
 import xxhash
 
-from albums.picture.format import MIME_PILLOW_FORMAT
+from albums.picture.format import mime_type_to_format
 from albums.picture.info import PictureInfo
 from albums.picture.scan import PictureScanner
 
@@ -15,7 +15,7 @@ class TestPicture:
         assert result.file_hash == xxhash.xxh32_digest(image_data)
 
     def test_scan_png(self):
-        image_data = make_image_data(100, 200, MIME_PILLOW_FORMAT["image/png"])
+        image_data = make_image_data(100, 200, mime_type_to_format("image/png"))
         result = PictureScanner().scan(image_data)
         assert result.load_issue == ()
         assert result.mime_type == "image/png"
@@ -24,7 +24,7 @@ class TestPicture:
         assert result.depth_bpp == 24
 
     def test_scan_jpeg(self):
-        image_data = make_image_data(100, 200, MIME_PILLOW_FORMAT["image/jpeg"])
+        image_data = make_image_data(100, 200, mime_type_to_format("image/jpeg"))
         result = PictureScanner().scan(image_data)
         assert result.load_issue == ()
         assert result.mime_type == "image/jpeg"
@@ -33,7 +33,7 @@ class TestPicture:
         assert result.depth_bpp == 24
 
     def test_scan_gif(self):
-        image_data = make_image_data(100, 200, MIME_PILLOW_FORMAT["image/gif"])
+        image_data = make_image_data(100, 200, mime_type_to_format("image/gif"))
         result = PictureScanner().scan(image_data)
         assert result.load_issue == ()
         assert result.mime_type == "image/gif"
@@ -42,7 +42,7 @@ class TestPicture:
         assert result.depth_bpp == 8
 
     def test_scan_bmp(self):
-        image_data = make_image_data(100, 200, MIME_PILLOW_FORMAT["image/bmp"])
+        image_data = make_image_data(100, 200, mime_type_to_format("image/bmp"))
         result = PictureScanner().scan(image_data)
         assert result.load_issue == ()
         assert result.mime_type == "image/bmp"
@@ -51,7 +51,7 @@ class TestPicture:
         assert result.depth_bpp == 24
 
     def test_scan_pcx(self):
-        image_data = make_image_data(100, 200, MIME_PILLOW_FORMAT["image/vnd.zbrush.pcx"])
+        image_data = make_image_data(100, 200, mime_type_to_format("image/vnd.zbrush.pcx"))
         result = PictureScanner().scan(image_data)
         assert result.load_issue == ()
         assert result.mime_type == "image/vnd.zbrush.pcx"
@@ -60,7 +60,7 @@ class TestPicture:
         assert result.depth_bpp == 24
 
     def test_scan_tiff(self):
-        image_data = make_image_data(100, 200, MIME_PILLOW_FORMAT["image/tiff"])
+        image_data = make_image_data(100, 200, mime_type_to_format("image/tiff"))
         result = PictureScanner().scan(image_data)
         assert result.load_issue == ()
         assert result.mime_type == "image/tiff"
@@ -69,7 +69,7 @@ class TestPicture:
         assert result.depth_bpp == 24
 
     def test_scan_webp(self):
-        image_data = make_image_data(100, 200, MIME_PILLOW_FORMAT["image/webp"])
+        image_data = make_image_data(100, 200, mime_type_to_format("image/webp"))
         result = PictureScanner().scan(image_data)
         assert result.load_issue == ()
         assert result.mime_type == "image/webp"

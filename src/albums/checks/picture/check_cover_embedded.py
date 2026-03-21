@@ -9,7 +9,7 @@ from rich.markup import escape
 
 from ...interactive.image_table import render_image_table
 from ...library.folder import read_binary_file
-from ...picture.format import MIME_PILLOW_FORMAT
+from ...picture.format import mime_type_to_format
 from ...picture.info import PictureInfo
 from ...tagger.folder import Cap
 from ...tagger.types import Picture, PictureType
@@ -190,7 +190,7 @@ class CheckCoverEmbedded(Check):
             source_image = source_image.convert("RGB")
         source_image.thumbnail((self.create_max_height_width, self.create_max_height_width), Image.Resampling.LANCZOS)
         buffer = io.BytesIO()
-        format = MIME_PILLOW_FORMAT[self.create_mime_type]
+        format = mime_type_to_format(self.create_mime_type)
         source_image.save(buffer, format, quality=self.create_jpeg_quality)
         return (source_image, buffer.getvalue())
 

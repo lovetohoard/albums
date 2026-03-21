@@ -5,7 +5,7 @@ import time
 from collections import defaultdict
 from enum import Enum, auto
 from pathlib import Path
-from typing import Callable, Iterator, Mapping
+from typing import Callable, Iterator, List, Mapping, Tuple
 
 import humanize
 from rbloom import Bloom
@@ -244,15 +244,17 @@ def _scan_file(album: Album, tagger: AlbumTagger, path: Path, stat: MiniStat, re
 
 def _scan_album(ctx: Context, tagger: AlbumTagger, album: Album, reread: bool = False) -> AlbumScanResult:
     album_path = ctx.config.library / album.path
-    stored_files_list = [(t.filename, MiniStat(t.file_size, t.modify_timestamp)) for t in album.tracks] + [
-        (f.filename, MiniStat(f.picture_info.file_size, f.modify_timestamp)) for f in album.picture_files
+    stored_files_list: List[Tuple[str, Tuple[MiniStat, PictureFile | Track]]] = [
+        (t.filename, (MiniStat(t.file_size, t.modify_timestamp), t)) for t in album.tracks
     ]
+    stored_files_list.extend((f.filename, (MiniStat(f.picture_info.file_size, f.modify_timestamp), f)) for f in album.picture_files)
     duplicate_files = set(filename for (filename, _) in stored_files_list if sum(1 if filename == fn else 0 for (fn, _) in stored_files_list) > 1)
     stored_files = dict(stored_files_list)
     updated = False
     for path, stat in stat_dir(album_path):
         if path.name in stored_files:
-            if reread or stat != stored_files[path.name] or path.name in duplicate_files:
+            (stored_stat, file) = stored_files[path.name]
+            if reread or stat != stored_stat or path.name in duplicate_files or _needs_rescan(album.scanner, file):
                 logger.debug(f"re-scanning file: {str(path)}")
                 _scan_file(album, tagger, path, stat, True)
                 updated = True  # TODO if reread==True, check whether file actually changed
@@ -270,3 +272,14 @@ def _scan_album(ctx: Context, tagger: AlbumTagger, album: Album, reread: bool = 
     if len(album.tracks) == 0:
         return AlbumScanResult.REMOVED
     return AlbumScanResult.UPDATED if updated else AlbumScanResult.UNCHANGED
+
+
+def _needs_rescan(scanner: int, file: Track | PictureFile) -> bool:
+    if scanner < 2:
+        if isinstance(file, PictureFile):
+            pics = [file.picture_info]
+        else:
+            pics = [p.picture_info for p in file.pictures]
+        return any(p.depth_bpp == 0 for p in pics)
+
+    return False

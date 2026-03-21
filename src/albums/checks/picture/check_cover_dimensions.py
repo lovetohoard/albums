@@ -10,7 +10,7 @@ from PIL import Image
 from rich.markup import escape
 
 from ...interactive.image_table import render_image_table
-from ...picture.format import IMAGE_MODE_BPP, MIME_PILLOW_FORMAT, format_to_mime_type
+from ...picture.format import SUPPORTED_IMAGE_MIME_TYPES, format_to_mime_type, get_depth_bpp, mime_type_to_format
 from ...picture.info import PictureInfo
 from ...tagger.types import Picture, PictureType
 from ...types import Album, CheckResult, Fixer, PictureFile
@@ -46,8 +46,8 @@ class CheckCoverDimensions(Check):
         if self.max_crop > 1:
             raise ValueError("cover-dimensions.max_crop must be between 0 and 1")
         self.create_mime_type = str(check_config.get("create_mime_type", CheckCoverDimensions.default_config["create_mime_type"]))
-        if self.create_mime_type != "" and self.create_mime_type not in MIME_PILLOW_FORMAT:
-            raise ValueError(f"cover-dimensions.create_mime_type must be blank or one of {', '.join(MIME_PILLOW_FORMAT.keys())}")
+        if self.create_mime_type != "" and self.create_mime_type not in SUPPORTED_IMAGE_MIME_TYPES:
+            raise ValueError(f"cover-dimensions.create_mime_type must be blank or one of {', '.join(SUPPORTED_IMAGE_MIME_TYPES)}")
         self.create_jpeg_quality = int(check_config.get("create_jpeg_quality", CheckCoverDimensions.default_config["create_jpeg_quality"]))
         if self.create_jpeg_quality < 1 or self.create_jpeg_quality > 95:
             raise ValueError("cover-dimensions.create_jpeg_quality must be between 1 and 95")
@@ -122,7 +122,7 @@ class CheckCoverDimensions(Check):
                     if not new_cover:
                         filename = picture_source[cover][0]
                         (image, image_data, mime_type) = self._squarify(cover, self.ctx.config.library / album.path, filename)
-                        pic_info = PictureInfo(mime_type, image.width, image.height, IMAGE_MODE_BPP.get(image.mode, 0), len(image_data), b"")
+                        pic_info = PictureInfo(mime_type, image.width, image.height, get_depth_bpp(image.mode), len(image_data), b"")
                         new_cover.append((Picture(pic_info, cover.type, ""), image, image_data))
                     return new_cover[0]
 
@@ -239,6 +239,6 @@ class CheckCoverDimensions(Check):
         elif image.width > image.height:
             image = image.resize((image.height, image.height), resample=Image.Resampling.LANCZOS)
         buffer = io.BytesIO()
-        format = MIME_PILLOW_FORMAT[mime_type]
+        format = mime_type_to_format(mime_type)
         image.save(buffer, format, quality=self.create_jpeg_quality)
         return (image, buffer.getvalue(), mime_type)
