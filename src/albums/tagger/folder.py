@@ -12,8 +12,8 @@ from .file_types.aiff import AiffTagger
 from .file_types.asf import AsfTagger
 from .file_types.flac import FlacTagger
 from .file_types.image_file_reader import ImageFileReader
-from .file_types.m4a import M4aTagger
 from .file_types.mp3 import Mp3Tagger
+from .file_types.mp4 import Mp4Tagger
 from .file_types.oggvorbis import OggVorbisTagger
 from .file_types.universal import UniversalTagger
 from .types import BasicTag, TaggerFile
@@ -29,6 +29,8 @@ class Cap(Enum):
 SUFFIX_SUPPORT = {
     ".flac": {Cap.BASIC_TAGS, Cap.FORMATTED_TRACK_NUMBER, Cap.PICTURES, Cap.PICTURE_TYPE},
     ".m4a": {Cap.BASIC_TAGS, Cap.PICTURES},
+    ".m4b": {Cap.BASIC_TAGS, Cap.PICTURES},
+    ".mp4": {Cap.BASIC_TAGS, Cap.PICTURES},
     ".mp3": {Cap.BASIC_TAGS, Cap.FORMATTED_TRACK_NUMBER, Cap.PICTURES, Cap.PICTURE_TYPE},
     ".ogg": {Cap.BASIC_TAGS, Cap.FORMATTED_TRACK_NUMBER, Cap.PICTURES, Cap.PICTURE_TYPE},
     ".wma": {Cap.BASIC_TAGS, Cap.FORMATTED_TRACK_NUMBER},  # ASF / WMA reading pictures is implemented but so far untested (so no writing)
@@ -77,8 +79,8 @@ class AlbumTagger:
         try:
             if suffix == ".flac":
                 tagger_file = FlacTagger(path, picture_scanner=self._picture_scanner, padding=self._padding)
-            elif suffix == ".m4a":
-                tagger_file = M4aTagger(path, picture_scanner=self._picture_scanner, padding=self._padding)
+            elif suffix in {".m4a", ".m4b", ".mp4"}:
+                tagger_file = Mp4Tagger(path, picture_scanner=self._picture_scanner, padding=self._padding)
             elif suffix == ".mp3":
                 tagger_file = Mp3Tagger(path, picture_scanner=self._picture_scanner, padding=self._padding, id3v1=self._id3v1)
             elif suffix == ".ogg":

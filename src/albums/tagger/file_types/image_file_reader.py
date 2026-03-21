@@ -15,6 +15,10 @@ class ImageFileReader(TaggerFile):
         self._picture_scanner = picture_scanner
 
     @override
+    def has_video(self) -> bool:
+        return False
+
+    @override
     def scan(self) -> ScanResult:
         return ScanResult((), tuple(pic for pic, _ in self.get_pictures()), StreamInfo())
 

@@ -47,7 +47,13 @@ class TestScanner:
         ),
         Album(
             path="eee" + os.sep,
-            tracks=[Track(filename="1.m4a", tag={BasicTag.TITLE: "one"}), Track(filename="2.m4a", tag={BasicTag.TITLE: "two"})],
+            tracks=[
+                Track(filename="1.m4a", tag={BasicTag.TITLE: "one"}),
+                Track(filename="2.m4a", tag={BasicTag.TITLE: "two"}),
+                Track(
+                    filename="bonus_video.mp4", tag={BasicTag.TITLE: "bonus"}
+                ),  # mp4 file extension is scanned, but this will be a video so it will be skipped
+            ],
         ),
         Album(
             path="mob" + os.sep,
@@ -88,7 +94,7 @@ class TestScanner:
                 # m4a files
                 # TODO make sure we know what codec and stream rate is in sample file
                 tracks = sorted(result[2].tracks)
-                assert len(result[2].tracks) == 2
+                assert len(result[2].tracks) == 2  # valid mp4 file is NOT included because it has video
                 assert tracks[0].file_size > 1
                 assert tracks[0].modify_timestamp > 1
                 assert tracks[0].get(BasicTag.TITLE) == ("one",)

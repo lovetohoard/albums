@@ -192,8 +192,11 @@ def _picture_cache(album: Album | None) -> PictureScannerCache:
     )
 
 
-def _scan_track(tagger: AlbumTagger, filename: str, stat: MiniStat):
+def _scan_track(tagger: AlbumTagger, filename: str, stat: MiniStat) -> Track | None:
     with tagger.open(filename) as tags:
+        if tags.has_video():
+            return None
+
         scan_result = tags.scan()
         tags = [TagV(tag=tag, value=value) for tag, values in scan_result.tags for value in values]
         pictures = [
@@ -229,7 +232,9 @@ def _scan_file(album: Album, tagger: AlbumTagger, path: Path, stat: MiniStat, re
         if replace:
             while (to_remove := next((t for t in album.tracks if t.filename == path.name), None)) is not None:
                 album.tracks.remove(to_remove)
-        album.tracks.append(_scan_track(tagger, path.name, stat))
+        new_track = _scan_track(tagger, path.name, stat)
+        if new_track is not None:
+            album.tracks.append(new_track)
     else:
         cover_source = False
         if replace:

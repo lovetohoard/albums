@@ -16,6 +16,7 @@ from .empty_files import (
     EMPTY_FLAC_FILE_BYTES,
     EMPTY_M4A_FILE_BYTES,
     EMPTY_MP3_FILE_BYTES,
+    EMPTY_MP4_VIDEO_FILE_BYTES,
     EMPTY_OGG_VORBIS_FILE_BYTES,
     EMPTY_WMA_FILE_BYTES,
 )
@@ -32,6 +33,8 @@ def create_track_file(path: Path, spec: Track):
             file.write(EMPTY_M4A_FILE_BYTES)
         elif filename.suffix == ".mp3":
             file.write(EMPTY_MP3_FILE_BYTES)
+        elif filename.suffix == ".mp4":
+            file.write(EMPTY_MP4_VIDEO_FILE_BYTES)
         elif filename.suffix == ".wma":
             file.write(EMPTY_WMA_FILE_BYTES)
         elif filename.suffix == ".ogg":

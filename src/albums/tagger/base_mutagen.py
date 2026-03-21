@@ -41,6 +41,10 @@ class AbstractMutagenTagger[_FT: MutagenFileType](TaggerFile):
         self._get_file().save(padding=self._padding)  # pyright: ignore[reportUnknownMemberType]
 
     @override
+    def has_video(self) -> bool:
+        return False
+
+    @override
     def scan(self) -> ScanResult:
         file = self._get_file()
         stream_info = _get_stream_info(file.filename, file.info, self._get_codec())  # pyright: ignore[reportUnknownMemberType, reportArgumentType]

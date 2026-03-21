@@ -3,6 +3,7 @@ from copy import copy
 from pathlib import Path
 from typing import Callable, Generator, List, Tuple, override
 
+import av
 from mutagen._tags import PaddingInfo
 from mutagen.mp4 import MP4, MP4Cover, MP4Tags
 
@@ -23,14 +24,20 @@ BASIC_M4A_TEXT_FRAMES: Tuple[Tuple[BasicTag, str], ...] = (
 )
 
 
-class M4aTagger(AbstractMutagenTagger[MP4]):
+class Mp4Tagger(AbstractMutagenTagger[MP4]):
     _file: MP4
     _picture_scanner: PictureScanner
+    _has_video: bool
 
     def __init__(self, path: Path, picture_scanner: PictureScanner, padding: Callable[[PaddingInfo], int]):
         super().__init__(padding)
+        self._has_video = str.lower(path.suffix) == ".mp4" and _mp4_has_video(path)
         self._file = MP4(path)
         self._picture_scanner = picture_scanner
+
+    @override
+    def has_video(self) -> bool:
+        return self._has_video
 
     @override
     def get_pictures(self) -> Generator[Tuple[Picture, bytes], None, None]:
@@ -189,3 +196,8 @@ class M4aTagger(AbstractMutagenTagger[MP4]):
     def _set_trkn(self, track_number: int | None, track_total: int | None):
         tags = self._ensure_tags()
         tags["trkn"] = [(track_number if track_number else 0, track_total if track_total else 0)]
+
+
+def _mp4_has_video(path: Path) -> bool:
+    with av.open(path) as container:
+        return len(container.streams.video) > 0
