@@ -19,7 +19,7 @@ from albums.picture.format import format_to_mime_type
 from ..app import SCANNER_VERSION, Context
 from ..picture.scan import PictureScannerCache
 from ..tagger.folder import AUDIO_FILE_SUFFIXES, AlbumTagger
-from ..types import Album, PictureFile, ScanHistoryEntity, TagV, Track, TrackPicture
+from ..types import Album, OtherFile, PictureFile, ScanHistoryEntity, TagV, Track, TrackPicture
 from .folder import MiniStat, read_binary_file, stat_dir
 
 MAX_IMAGE_SIZE = 128 * 1024 * 1024  # don't load and scan image files larger than this. 16 MB is the max for ID3v2 and FLAC tags.
@@ -218,8 +218,6 @@ def _scan_picture_file(tagger: AlbumTagger, filename: str, stat: MiniStat):
         size = humanize.naturalsize(stat.file_size, binary=True)
         max = humanize.naturalsize(MAX_IMAGE_SIZE, binary=True)
         logger.warning(f"skipping image file {str(filename)} because it is {size} (albums max = {max})")
-        # TODO: record the existence of the large image even if we do not load its metadata, just like we would with a load error
-        # Note: recording images that are valid but lack metadata would cause issues with detecting duplicates and assigning cover art
         return None
 
     expect_mime_type = format_to_mime_type(Path(filename).suffix.replace(".", ""))
@@ -228,31 +226,42 @@ def _scan_picture_file(tagger: AlbumTagger, filename: str, stat: MiniStat):
 
 
 def _scan_file(album: Album, tagger: AlbumTagger, path: Path, stat: MiniStat, replace: bool) -> None:
+    cover_source = _remove_file(album, path.name)
+
     if str.lower(path.suffix) in AUDIO_FILE_SUFFIXES:
-        if replace:
-            while (to_remove := next((t for t in album.tracks if t.filename == path.name), None)) is not None:
-                album.tracks.remove(to_remove)
         new_track = _scan_track(tagger, path.name, stat)
-        if new_track is not None:
+        if new_track is None:
+            album.other_files.append(OtherFile(filename=path.name, file_size=stat.file_size, modify_timestamp=stat.modify_timestamp))
+        else:
             album.tracks.append(new_track)
     else:
-        cover_source = False
-        if replace:
-            while (original := next((f for f in album.picture_files if f.filename == path.name), None)) is not None:
-                cover_source = original.cover_source
-                album.picture_files.remove(original)
         new_picture_file = _scan_picture_file(tagger, path.name, stat)
-        if new_picture_file:
+        if new_picture_file is None:
+            album.other_files.append(OtherFile(filename=path.name, file_size=stat.file_size, modify_timestamp=stat.modify_timestamp))
+        else:
             new_picture_file.cover_source = cover_source
             album.picture_files.append(new_picture_file)
 
 
+def _remove_file(album: Album, filename: str) -> bool:
+    while (to_remove := next((o for o in album.other_files if o.filename == filename), None)) is not None:
+        album.other_files.remove(to_remove)
+    while (to_remove := next((t for t in album.tracks if t.filename == filename), None)) is not None:
+        album.tracks.remove(to_remove)
+    removed_cover_source = False
+    while (original := next((f for f in album.picture_files if f.filename == filename), None)) is not None:
+        removed_cover_source |= original.cover_source
+        album.picture_files.remove(original)
+    return removed_cover_source
+
+
 def _scan_album(ctx: Context, tagger: AlbumTagger, album: Album, reread: bool = False) -> AlbumScanResult:
     album_path = ctx.config.library / album.path
-    stored_files_list: List[Tuple[str, Tuple[MiniStat, PictureFile | Track]]] = [
+    stored_files_list: List[Tuple[str, Tuple[MiniStat, PictureFile | Track | OtherFile]]] = [
         (t.filename, (MiniStat(t.file_size, t.modify_timestamp), t)) for t in album.tracks
     ]
     stored_files_list.extend((f.filename, (MiniStat(f.picture_info.file_size, f.modify_timestamp), f)) for f in album.picture_files)
+    stored_files_list.extend((o.filename, (MiniStat(o.file_size, o.modify_timestamp), o)) for o in album.other_files)
     duplicate_files = set(filename for (filename, _) in stored_files_list if sum(1 if filename == fn else 0 for (fn, _) in stored_files_list) > 1)
     stored_files = dict(stored_files_list)
     updated = False
@@ -279,8 +288,8 @@ def _scan_album(ctx: Context, tagger: AlbumTagger, album: Album, reread: bool = 
     return AlbumScanResult.UPDATED if updated else AlbumScanResult.UNCHANGED
 
 
-def _needs_rescan(scanner: int, file: Track | PictureFile) -> bool:
-    if scanner < 2:
+def _needs_rescan(scanner: int, file: Track | PictureFile | OtherFile) -> bool:
+    if scanner < 2 and not isinstance(file, OtherFile):
         if isinstance(file, PictureFile):
             pics = [file.picture_info]
         else:

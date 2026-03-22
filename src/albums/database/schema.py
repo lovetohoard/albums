@@ -51,6 +51,7 @@ CREATE TABLE track (
     stream_codec TEXT NOT NULL,
     stream_length REAL NOT NULL,
     stream_sample_rate INTEGER NOT NULL
+    -- v12 add stream_error
 );
 CREATE INDEX idx_track_album_id ON track(album_id);
 
@@ -135,6 +136,17 @@ DROP TABLE collection;
 ALTER TABLE new_collection RENAME TO collection;
 PRAGMA foreign_keys = ON;
 """,  # cannot alter column constraints in sqlite3
+    12: """
+ALTER TABLE track ADD COLUMN stream_error TEXT NOT NULL DEFAULT '';
+CREATE TABLE album_other_file (
+    album_other_file_id INTEGER PRIMARY KEY,
+    album_id REFERENCES album(album_id) ON UPDATE CASCADE ON DELETE CASCADE,
+    filename TEXT NOT NULL,
+    file_size INTEGER NOT NULL,
+    modify_timestamp INTEGER NOT NULL
+);
+CREATE INDEX idx_album_other_file_album_id ON album_other_file(album_id);
+""",
 }
 
 CURRENT_SCHEMA_VERSION = max(MIGRATIONS.keys())

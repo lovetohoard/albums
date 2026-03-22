@@ -165,7 +165,7 @@ class Mp4Tagger(AbstractMutagenTagger[MP4]):
                     self._set_trkn(track_number, int(value_list[0]) if value_list[0] else None)
 
     def _ensure_tags(self) -> MP4Tags:
-        if not self._file.tags:
+        if self._file.tags is None:
             self._file.add_tags()
         return self._file.tags  # pyright: ignore[reportReturnType]
 

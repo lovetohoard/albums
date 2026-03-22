@@ -120,7 +120,8 @@ class Track(Base):
     _stream_channels: Mapped[int] = mapped_column("stream_channels", Integer, nullable=False, default=0)
     _stream_codec: Mapped[str] = mapped_column("stream_codec", Text, nullable=False, default="")
     _stream_sample_rate: Mapped[int] = mapped_column("stream_sample_rate", Integer, nullable=False, default=0)
-    stream = composite(StreamInfo, _stream_length, _stream_bitrate, _stream_channels, _stream_codec, _stream_sample_rate)
+    _stream_error: Mapped[str] = mapped_column("stream_error", Text, nullable=False, default="")
+    stream = composite(StreamInfo, _stream_length, _stream_bitrate, _stream_channels, _stream_codec, _stream_sample_rate, _stream_error)
 
     pictures: Mapped[List[TrackPicture]] = relationship("TrackPicture", back_populates="track", cascade="all, delete-orphan")
     tags: Mapped[List[TagV]] = relationship("TagV", back_populates="track", cascade="all, delete-orphan")
@@ -163,7 +164,7 @@ class Track(Base):
             del kw["tag"]
         super().__init__(**kw)
 
-    def __lt__(self, other: Track):
+    def __lt__(self, other: Track | PictureFile | OtherFile):
         return self.filename < other.filename
 
 
@@ -198,7 +199,30 @@ class PictureFile(Base):
     def to_picture(self) -> Picture:
         return Picture(self.picture_info, PictureType.from_filename(self.filename), "")
 
-    def __lt__(self, other: Track):
+    def __lt__(self, other: Track | PictureFile | OtherFile):
+        return self.filename < other.filename
+
+
+class OtherFile(Base):
+    __tablename__ = "album_other_file"
+    __table_args__ = (Index("idx_album_other_file_album_id", "album_id"),)
+
+    album_other_file_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=False, primary_key=True)
+    album_id: Mapped[Optional[int]] = mapped_column(ForeignKey("album.album_id"), nullable=False)
+    album: Mapped[Optional[Album]] = relationship("Album", back_populates="other_files")
+
+    filename: Mapped[str] = mapped_column(Text, nullable=False)
+    file_size: Mapped[int] = mapped_column("file_size", Integer, nullable=False, default=0)
+    modify_timestamp: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+
+    def to_dict(self):
+        return {
+            "filename": self.filename,
+            "modify_timestamp": self.modify_timestamp,
+            "file_size": self.file_size,
+        }
+
+    def __lt__(self, other: Track | PictureFile | OtherFile):
         return self.filename < other.filename
 
 
@@ -219,6 +243,7 @@ class Album(Base):
     )
     ignore_check_entities: Mapped[List[IgnoreCheckEntity]] = relationship("IgnoreCheckEntity", back_populates="album", cascade="all, delete-orphan")
     ignore_checks: AssociationProxy[List[str]] = association_proxy("ignore_check_entities", "check_name")
+    other_files: Mapped[List[OtherFile]] = relationship("OtherFile", back_populates="album", cascade="all, delete-orphan")
     picture_files: Mapped[List[PictureFile]] = relationship("PictureFile", back_populates="album", cascade="all, delete-orphan")
     tracks: Mapped[List[Track]] = relationship("Track", back_populates="album", cascade="all, delete-orphan")
 
@@ -231,6 +256,7 @@ class Album(Base):
             "ignore_checks": list(self.ignore_checks),
             "tracks": [track.to_dict() for track in self.tracks],
             "picture_files": [picture_file.to_dict() for picture_file in self.picture_files],
+            "other_files": [other_file.to_dict() for other_file in self.other_files],
         }
 
 

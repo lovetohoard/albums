@@ -10,11 +10,11 @@ from sqlalchemy.orm import Session
 
 from albums.app import SCANNER_VERSION, Context
 from albums.database import connection
-from albums.library.scanner import scan
+from albums.library.scanner import MAX_IMAGE_SIZE, scan
 from albums.picture.info import PictureInfo
 from albums.tagger.folder import AlbumTagger
 from albums.tagger.types import BasicTag, Picture, PictureType
-from albums.types import Album, PictureFile, Track, TrackPicture
+from albums.types import Album, OtherFile, PictureFile, Track, TrackPicture
 
 from .fixtures.create_library import create_album_in_library, create_library, create_picture_file, make_image_data
 
@@ -50,9 +50,6 @@ class TestScanner:
             tracks=[
                 Track(filename="1.m4a", tag={BasicTag.TITLE: "one"}),
                 Track(filename="2.m4a", tag={BasicTag.TITLE: "two"}),
-                Track(
-                    filename="bonus_video.mp4", tag={BasicTag.TITLE: "bonus"}
-                ),  # mp4 file extension is scanned, but this will be a video so it will be skipped
             ],
         ),
         Album(
@@ -91,10 +88,10 @@ class TestScanner:
                 assert tracks[0].stream.sample_rate == 44100
                 assert tracks[0].get(BasicTag.TITLE) == ("one",)
 
-                # m4a files
+                # mp4 files
                 # TODO make sure we know what codec and stream rate is in sample file
                 tracks = sorted(result[2].tracks)
-                assert len(result[2].tracks) == 2  # valid mp4 file is NOT included because it has video
+                assert len(result[2].tracks) == 2
                 assert tracks[0].file_size > 1
                 assert tracks[0].modify_timestamp > 1
                 assert tracks[0].get(BasicTag.TITLE) == ("one",)
@@ -123,6 +120,37 @@ class TestScanner:
                 assert cover_png.filename == "cover.jpg"
                 assert cover_png.picture_info.mime_type == "image/jpeg"  # because file extension is not correct
                 assert cover_png.modify_timestamp
+        finally:
+            db.dispose()
+
+    def test_scan_other_files(self):
+        db = connection.open(connection.MEMORY)
+        big_image_dimension = int(1 + (MAX_IMAGE_SIZE / 3) ** 0.5)  # square 24bpp uncompressed bitmap that is just slightly too large to load
+        big_picture = PictureInfo("image/bmp", big_image_dimension, big_image_dimension, 24, 0, b"")
+        album = Album(
+            path="foo" + os.sep,
+            tracks=[Track(filename="1.mp4", tag={BasicTag.TITLE: "1"})],
+            other_files=[OtherFile(filename="bonus_video.mp4")],  # create_library will make this a video because it's in other_files
+            picture_files=[
+                PictureFile(filename="large.bmp", picture_info=big_picture),
+                PictureFile(filename="small.bmp", picture_info=PictureInfo("image/bmp", 100, 100, 24, 0, b"")),
+            ],
+        )
+
+        try:
+            library = create_library("test_scan_other", [album])
+            scan(context(db, library))
+            with Session(db) as session:
+                [result] = [album for (album,) in session.execute(select(Album).order_by(Album.path)).tuples()]
+                assert len(result.tracks) == 1  # one of the .mp4 files is not included because it has video
+                assert result.tracks[0].filename == "1.mp4"
+                assert len(result.picture_files) == 1  # one of the .bmp pictures is not included because it is too big
+                assert result.picture_files[0].filename == "small.bmp"
+
+                assert len(result.other_files) == 2
+                files = sorted(result.other_files)
+                assert files[0].filename == "bonus_video.mp4"
+                assert files[1].filename == "large.bmp"
         finally:
             db.dispose()
 

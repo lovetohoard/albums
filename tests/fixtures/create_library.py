@@ -29,12 +29,10 @@ def create_track_file(path: Path, spec: Track):
     with open(filename, "wb") as file:
         if filename.suffix == ".flac":
             file.write(EMPTY_FLAC_FILE_BYTES)
-        elif filename.suffix == ".m4a":
+        elif filename.suffix in {".m4a", ".m4b", ".mp4"}:
             file.write(EMPTY_M4A_FILE_BYTES)
         elif filename.suffix == ".mp3":
             file.write(EMPTY_MP3_FILE_BYTES)
-        elif filename.suffix == ".mp4":
-            file.write(EMPTY_MP4_VIDEO_FILE_BYTES)
         elif filename.suffix == ".wma":
             file.write(EMPTY_WMA_FILE_BYTES)
         elif filename.suffix == ".ogg":
@@ -56,6 +54,12 @@ def create_picture_file(path: Path, width: int = 400, height: int = 400, color: 
     image.save(path)
 
 
+def create_other_file(path: Path):
+    with open(path, "wb") as file:
+        if path.suffix == ".mp4":
+            file.write(EMPTY_MP4_VIDEO_FILE_BYTES)
+
+
 def create_album_in_library(library_path: Path, album: Album):
     path = library_path / album.path
     os.makedirs(path)
@@ -63,6 +67,8 @@ def create_album_in_library(library_path: Path, album: Album):
         create_track_file(path, track)
     for file in album.picture_files:
         create_picture_file(path / file.filename, file.picture_info.width, file.picture_info.height)
+    for other in album.other_files:
+        create_other_file(path / other.filename)
 
 
 def create_library(library_name: str, albums: Collection[Album]):

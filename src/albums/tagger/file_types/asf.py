@@ -177,7 +177,7 @@ class AsfTagger(AbstractMutagenTagger[ASF]):
                     self._set_wm_tracknumber(track_number, value_list[0] if value_list[0] else None)
 
     def _ensure_tags(self) -> ASFTags:
-        if not self._file.tags:
+        if self._file.tags is None:
             self._file.add_tags()
         return self._file.tags
 

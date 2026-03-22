@@ -126,9 +126,13 @@ class StreamInfo:
     channels: int = 0
     codec: str = "unknown"
     sample_rate: int = 0
+    error: str = ""
 
     def to_dict(self):
-        return self.__dict__
+        result = self.__dict__
+        if not self.error:
+            del result["error"]
+        return result
 
 
 @dataclass(frozen=True)
