@@ -53,7 +53,7 @@ def import_command(ctx: Context, extra: bool, recursive: bool, automatic: bool, 
                 issues = non_interactive_checker.run_enabled(session)
                 if issues == 0:
                     ctx.console.print("No issues")
-                quit = issues == 0 or confirm("There are still issues, want to quit?")
+                quit = issues == 0 or confirm("There are still issues. Do you want to skip importing this album?")
 
             if not issues:
                 library_paths = make_library_paths(ctx, album)
@@ -89,7 +89,7 @@ def _check_existing_destination(ctx: Context, library_paths: list[str]) -> Tuple
     existing = next((path for path in library_paths if (root_ctx.config.library / path).exists()), None)
     if existing is not None:
         ctx.console.print(f"This album appears to be in the library: [bold]{escape(existing)}[/bold]")
-        if confirm("Are you sure you want to continue?"):
+        if confirm("Do you want to add it anyway?"):
             return (True, True)
         else:
             return (True, False)

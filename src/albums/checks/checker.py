@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 
 from ..app import Context
 from ..database import selector
-from ..interactive.interact import interact
+from ..interactive.interact import interact, prompt_ignore_checks
 from ..library import scanner
 from ..tagger.provider import AlbumTaggerProvider
 from ..types import Album, CheckResult
@@ -78,7 +78,11 @@ class Checker:
                             f'[bold]dependency not met for check {check.name}[/bold] on "{album_display_name(self.ctx, album)}": {" and ".join(missing_dependent_checks)} must pass first',
                             highlight=False,
                         )
+                        if self._interactive and album.album_id is not None:
+                            prompt_ignore_checks(session, album.album_id, check.name)
+
                         issues_displayed += 1
+
                     else:
                         disposition = self._run_check(session, check, album)
                         if disposition.maybe_changed:

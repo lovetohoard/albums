@@ -85,7 +85,7 @@ def interact(ctx: Context, session: Session, check_name: str, check_result: Chec
                 done = True
                 user_quit = True
             elif choice == OPTION_IGNORE_CHECK:
-                done = _prompt_ignore_checks(session, album.album_id, check_name) if album.album_id is not None else False
+                done = prompt_ignore_checks(session, album.album_id, check_name) if album.album_id is not None else False
                 maybe_changed |= done
                 user_quit = done
             elif choice == OPTION_OPEN_FOLDER:
@@ -115,14 +115,17 @@ def interact(ctx: Context, session: Session, check_name: str, check_result: Chec
     return (maybe_changed, user_quit)
 
 
-def _prompt_ignore_checks(session: Session, album_id: int, check_name: str):
+def prompt_ignore_checks(session: Session, album_id: int, check_name: str):
     album = session.execute(select(Album).where(Album.album_id == album_id)).tuples().one()[0]
     if check_name in album.ignore_checks:
         logger.error(f'did not expect "{check_name}" to already be ignored for {album.path}')
-    elif shortcuts.confirm(f'Do you want to ignore the check "{check_name}" for this album?'):
+        return True
+
+    if shortcuts.confirm(f'Do you want to ignore the check "{check_name}" for this album?'):
         album.ignore_checks.append(check_name)
         session.commit()
         return True
+
     return False
 
 
