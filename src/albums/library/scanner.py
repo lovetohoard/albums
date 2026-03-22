@@ -279,10 +279,7 @@ def _scan_album(ctx: Context, tagger: AlbumTagger, album: Album, reread: bool = 
             _scan_file(album, tagger, path, stat, False)
             updated = True
     for filename in stored_files:  # anything left has been deleted
-        if Path(filename).suffix in AUDIO_FILE_SUFFIXES:
-            album.tracks.remove(next(t for t in album.tracks if t.filename == filename))
-        else:
-            album.picture_files.remove(next(f for f in album.picture_files if f.filename == filename))
+        _remove_file(album, filename)
         updated = True
     if len(album.tracks) == 0:
         return AlbumScanResult.REMOVED

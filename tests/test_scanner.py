@@ -279,6 +279,29 @@ class TestScanner:
         finally:
             db.dispose()
 
+    def test_scan_remove_other(self):
+        db = connection.open(connection.MEMORY)
+        album = Album(
+            path="foo" + os.sep,
+            tracks=[Track(filename="1.mp4", tag={BasicTag.TITLE: "1"})],
+            other_files=[OtherFile(filename="bonus_video.mp4")],  # create_library will make this a video because it's in other_files
+        )
+        try:
+            library = create_library("test_scan_remove_other", [album])
+            ctx = context(db, library)
+            with Session(db) as session:
+                scan(ctx, session)
+                result = session.execute(select(Album)).tuples().one()
+                assert len(result[0].other_files) == 1
+
+                os.unlink(library / album.path / album.other_files[0].filename)
+
+                scan(ctx, session)
+                result = session.execute(select(Album)).tuples().one()
+                assert len(result[0].other_files) == 0
+        finally:
+            db.dispose()
+
     def test_scan_filtered(self):
         db = connection.open(connection.MEMORY)
         try:
