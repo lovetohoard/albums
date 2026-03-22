@@ -198,6 +198,7 @@ def _scan_track(tagger: AlbumTagger, filename: str, stat: MiniStat) -> Track | N
             return None
 
         scan_result = tags.scan()
+
         tags = [TagV(tag=tag, value=value) for tag, values in scan_result.tags for value in values]
         pictures = [
             TrackPicture(picture_type=picture.type, picture_info=picture.picture_info, description=picture.description, embed_ix=embed_ix)

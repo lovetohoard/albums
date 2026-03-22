@@ -25,6 +25,7 @@ from .tags.check_extra_whitespace import CheckExtraWhitespace
 from .tags.check_genre_present import CheckGenrePresent
 from .tags.check_single_value_tags import CheckSingleValueTags
 from .tags.check_track_title import CheckTrackTitle
+from .tags.check_unreadable_track import CheckUnreadableTrack
 
 # enabled checks will run on an album in this order:
 ALL_CHECKS: tuple[type[Check], ...] = (
@@ -32,6 +33,7 @@ ALL_CHECKS: tuple[type[Check], ...] = (
     CheckDuplicatePathname,
     CheckIllegalPathname,
     # tag checks 1
+    CheckUnreadableTrack,
     CheckExtraWhitespace,
     # numbering checks
     CheckDiscInTrackNumber,

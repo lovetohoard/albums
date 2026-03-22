@@ -17,6 +17,7 @@ from .file_types.mp4 import Mp4Tagger
 from .file_types.oggvorbis import OggVorbisTagger
 from .file_types.universal import UniversalTagger
 from .types import BasicTag, TaggerFile
+from .unreadable import UnreadableTagger
 
 
 class Cap(Enum):
@@ -73,26 +74,9 @@ class AlbumTagger:
         if str(file.parent) != ".":
             raise ValueError(f"parameter must be a filename only, this AlbumTagger only works in {str(self._folder)}")
 
-        path = Path(self._folder / file)
-        suffix = str.lower(path.suffix)
         tagger_file: TaggerFile | None = None
         try:
-            if suffix == ".flac":
-                tagger_file = FlacTagger(path, picture_scanner=self._picture_scanner, padding=self._padding)
-            elif suffix in {".m4a", ".m4b", ".mp4"}:
-                tagger_file = Mp4Tagger(path, picture_scanner=self._picture_scanner, padding=self._padding)
-            elif suffix == ".mp3":
-                tagger_file = Mp3Tagger(path, picture_scanner=self._picture_scanner, padding=self._padding, id3v1=self._id3v1)
-            elif suffix == ".ogg":
-                tagger_file = OggVorbisTagger(path, picture_scanner=self._picture_scanner, padding=self._padding)
-            elif suffix in {".wma", ".asf"}:
-                tagger_file = AsfTagger(path, picture_scanner=self._picture_scanner, padding=self._padding)
-            elif suffix in {".aiff", ".aif"}:
-                tagger_file = AiffTagger(path, picture_scanner=self._picture_scanner, padding=self._padding, id3v1=self._id3v1)
-            elif suffix in SUPPORTED_IMAGE_SUFFIXES:
-                tagger_file = ImageFileReader(path, picture_scanner=self._picture_scanner)
-            else:
-                tagger_file = UniversalTagger(path, padding=self._padding)
+            tagger_file = self._get_tagger_file(Path(self._folder / file))
             yield tagger_file
         finally:
             if tagger_file is not None:
@@ -110,3 +94,26 @@ class AlbumTagger:
         with self.open(path.name) as f:
             for tag, value in tag_values:
                 f.set_tag(tag, value)
+
+    def _get_tagger_file(self, path: Path):
+        suffix = str.lower(path.suffix)
+        try:
+            if suffix == ".flac":
+                tagger_file = FlacTagger(path, picture_scanner=self._picture_scanner, padding=self._padding)
+            elif suffix in {".m4a", ".m4b", ".mp4"}:
+                tagger_file = Mp4Tagger(path, picture_scanner=self._picture_scanner, padding=self._padding)
+            elif suffix == ".mp3":
+                tagger_file = Mp3Tagger(path, picture_scanner=self._picture_scanner, padding=self._padding, id3v1=self._id3v1)
+            elif suffix == ".ogg":
+                tagger_file = OggVorbisTagger(path, picture_scanner=self._picture_scanner, padding=self._padding)
+            elif suffix in {".wma", ".asf"}:
+                tagger_file = AsfTagger(path, picture_scanner=self._picture_scanner, padding=self._padding)
+            elif suffix in {".aiff", ".aif"}:
+                tagger_file = AiffTagger(path, picture_scanner=self._picture_scanner, padding=self._padding, id3v1=self._id3v1)
+            elif suffix in SUPPORTED_IMAGE_SUFFIXES:
+                tagger_file = ImageFileReader(path, picture_scanner=self._picture_scanner)
+            else:
+                tagger_file = UniversalTagger(path, padding=self._padding)
+        except Exception as ex:
+            tagger_file = UnreadableTagger(path.name, repr(ex))
+        return tagger_file

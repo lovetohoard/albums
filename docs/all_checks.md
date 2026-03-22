@@ -12,6 +12,7 @@ Enabled checks will run in order on each album:
 
 1. `duplicate-pathname` check _("Path and Filename")_
 1. `illegal-pathname` check _("Path and Filename")_
+1. `unreadable-track` check _("Other Tags")_
 1. `extra-whitespace` check _("Other Tags")_
 1. All "Numbering" checks
 1. Remaining "Other Tags" checks
@@ -276,6 +277,14 @@ Choose a policy for each tag. The policy options are:
 ## Other Tags
 
 Tag checks that are not related to numbering or pictures.
+
+### unreadable-track
+
+This check runs before all other tag checks and fails if the tagger cannot open
+or detect streams in a track. This is probably because the file is corrupt. The
+fix offers to rename any unreadable tracks by adding `.unreadable` to the end of
+the filename, preserving the file but causing it to be ignored. The fix is
+**not** automatic.
 
 ### extra-whitespace
 
