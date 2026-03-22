@@ -3,7 +3,6 @@ import logging
 import mimetypes
 from itertools import chain
 from os import unlink
-from pathlib import Path
 from typing import Any, Callable, Dict, List, Tuple
 
 from PIL import Image
@@ -121,7 +120,7 @@ class CheckCoverDimensions(Check):
                 def make_new_cover():
                     if not new_cover:
                         filename = picture_source[cover][0]
-                        (image, image_data, mime_type) = self._squarify(cover, self.ctx.config.library / album.path, filename)
+                        (image, image_data, mime_type) = self._squarify(cover, album.path, filename)
                         pic_info = PictureInfo(mime_type, image.width, image.height, get_depth_bpp(image.mode), len(image_data), b"")
                         new_cover.append((Picture(pic_info, cover.type, ""), image, image_data))
                     return new_cover[0]
@@ -202,8 +201,8 @@ class CheckCoverDimensions(Check):
     def _can_squarify(self, w: int, h: int):
         return not self._cover_square_enough(w, h) and self._aspect(w, h) >= self.fixable_squareness
 
-    def _squarify(self, pic: Picture, path: Path, filename: str):
-        with self.tagger.get(path).open(filename) as tags:
+    def _squarify(self, pic: Picture, album_path: str, filename: str):
+        with self.tagger.get(album_path).open(filename) as tags:
             image_data = tags.get_image_data(pic)
 
         image = Image.open(io.BytesIO(image_data))
