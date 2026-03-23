@@ -55,7 +55,9 @@ class CheckCoverUnique(Check):
 
         if len(front_covers) > 1:
             cover_embedded = list(
-                pic for pic in front_covers if any(str.lower(Path(filename).suffix) not in SUPPORTED_IMAGE_SUFFIXES for filename in picture_sources[pic])
+                pic
+                for pic in front_covers
+                if any(str.lower(Path(filename).suffix) not in SUPPORTED_IMAGE_SUFFIXES for filename in picture_sources[pic])
             )
             cover_embedded_desc = [self._describe_album_art(pic, picture_sources) for pic in cover_embedded]
             table = (

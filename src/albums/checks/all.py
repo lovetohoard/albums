@@ -7,6 +7,7 @@ from .numbering.check_zero_pad_numbers import CheckZeroPadNumbers
 from .path.check_album_under_album import CheckAlbumUnderAlbum
 from .path.check_cover_filename import CheckCoverFilename
 from .path.check_duplicate_pathname import CheckDuplicatePathname
+from .path.check_file_extension import CheckFileExtension
 from .path.check_illegal_pathname import CheckIllegalPathname
 from .path.check_track_filename import CheckTrackFilename
 from .picture.check_album_art import CheckAlbumArt
@@ -32,6 +33,7 @@ ALL_CHECKS: tuple[type[Check], ...] = (
     # path checks 1
     CheckDuplicatePathname,
     CheckIllegalPathname,
+    CheckFileExtension,
     # tag checks 1
     CheckUnreadableTrack,
     CheckExtraWhitespace,

@@ -12,6 +12,7 @@ Enabled checks will run in order on each album:
 
 1. `duplicate-pathname` check _("Path and Filename")_
 1. `illegal-pathname` check _("Path and Filename")_
+1. `file-extension` check _("Path and Filename")_
 1. `unreadable-track` check _("Other Tags")_
 1. `extra-whitespace` check _("Other Tags")_
 1. All "Numbering" checks
@@ -47,6 +48,19 @@ related settings (see [Usage](./usage.md)).
 
 **Automatic fix**: Rename any tracks with illegal names, according to
 configuration.
+
+### file-extension
+
+For best compatibility, track filename extensions should be lowercase. For
+example, an MP3 file should end with **.mp3** rather than **.MP3**. This check
+only examines scanned files with recognized extensions. Files not scanned by
+`albums` are ignored.
+
+**Automatic fix**: Rename selected files with all-lowercase file extensions.
+
+| Option          | Default   | Description                                 |
+| --------------- | --------- | ------------------------------------------- |
+| `lowercase_all` | **false** | If true, check known image/video extensions |
 
 ### track-filename
 
