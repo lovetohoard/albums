@@ -67,12 +67,12 @@ jobs:
           mkdir albums_win_x86_64
           mkdir albums_linux_x86_64
       - name: Download Linux executable
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: albums-pyinstaller-linux
           path: albums_linux_x86_64/
       - name: Download Windows executable
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: albums-pyinstaller-win
           path: albums_win_x86_64/
