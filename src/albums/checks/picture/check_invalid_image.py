@@ -32,7 +32,7 @@ class CheckInvalidImage(Check):
                     error = str(load_issue["error"])
                     table_rows.append([source_filename, picture.type.name, error])
                     issues.add(error)
-                    embedded = Path(source_filename).suffix not in SUPPORTED_IMAGE_SUFFIXES
+                    embedded = str.lower(Path(source_filename).suffix) not in SUPPORTED_IMAGE_SUFFIXES
                     any_bad_embedded_images |= embedded
                     any_bad_image_files |= not embedded
         if issues:

@@ -78,7 +78,7 @@ class CheckCoverAvailable(Check):
     def _fix_set_cover(self, album: Album, option: str, options: list[str], pics: list[Picture], sources: Mapping[Picture, Sequence[str]]):
         ix = options.index(option)
         pic = pics[ix]
-        file_sources = [filename for filename in sources[pic] if Path(filename).suffix in SUPPORTED_IMAGE_SUFFIXES]
+        file_sources = [filename for filename in sources[pic] if str.lower(Path(filename).suffix) in SUPPORTED_IMAGE_SUFFIXES]
         if file_sources:
             path = self.ctx.config.library / album.path / file_sources[0]
             new_filename = f"{FRONT_COVER_FILENAME}{path.suffix}"

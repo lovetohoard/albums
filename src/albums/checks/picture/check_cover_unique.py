@@ -46,16 +46,16 @@ class CheckCoverUnique(Check):
         cover_image_files = list(
             pic
             for pic in sorted(front_covers, key=lambda pic: pic.picture_info.file_size, reverse=True)
-            if any(Path(filename).suffix in SUPPORTED_IMAGE_SUFFIXES for filename in picture_sources[pic])
+            if any(str.lower(Path(filename).suffix) in SUPPORTED_IMAGE_SUFFIXES for filename in picture_sources[pic])
         )
         cover_image_filenames = [
-            [file for file in picture_sources[pic] if Path(file).suffix in SUPPORTED_IMAGE_SUFFIXES][0] for pic in cover_image_files
+            [file for file in picture_sources[pic] if str.lower(Path(file).suffix) in SUPPORTED_IMAGE_SUFFIXES][0] for pic in cover_image_files
         ]
         cover_source_filename = next((file.filename for file in album.picture_files if file.cover_source), None)
 
         if len(front_covers) > 1:
             cover_embedded = list(
-                pic for pic in front_covers if any(Path(filename).suffix not in SUPPORTED_IMAGE_SUFFIXES for filename in picture_sources[pic])
+                pic for pic in front_covers if any(str.lower(Path(filename).suffix) not in SUPPORTED_IMAGE_SUFFIXES for filename in picture_sources[pic])
             )
             cover_embedded_desc = [self._describe_album_art(pic, picture_sources) for pic in cover_embedded]
             table = (
