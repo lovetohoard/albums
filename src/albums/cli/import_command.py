@@ -41,7 +41,7 @@ def import_command(ctx: Context, extra: bool, recursive: bool, automatic: bool, 
     non_interactive_checker = Checker(ctx, False, False, False, False, False)
     with Session(ctx.db) as session:
         for album in ctx.select_album_entities(session):
-            (exists, ok) = _check_existing_destination(ctx, make_library_paths(ctx, album))
+            (exists, ok) = _check_existing_destination(ctx, make_library_paths(ctx, album), automatic)
             if not ok:
                 continue
             issues = 0
@@ -58,7 +58,7 @@ def import_command(ctx: Context, extra: bool, recursive: bool, automatic: bool, 
             if not issues:
                 library_paths = make_library_paths(ctx, album)
                 if not exists:  # check again in case tag fixes changed the destination paths
-                    (exists, ok) = _check_existing_destination(ctx, library_paths)
+                    (exists, ok) = _check_existing_destination(ctx, library_paths, automatic)
                     if not ok:
                         continue
                 source_path = Path(scan_folder) / album.path
@@ -83,14 +83,15 @@ def _check_path_count(ctx: Context, path_count: int) -> None:
         raise SystemExit(1)
 
 
-def _check_existing_destination(ctx: Context, library_paths: list[str]) -> Tuple[bool, bool]:
+def _check_existing_destination(ctx: Context, library_paths: list[str], automatic: bool) -> Tuple[bool, bool]:
     root_ctx = ctx.parent if ctx.parent is not None else ctx
     # TODO check for duplicate album by tag values too
     existing = next((path for path in library_paths if (root_ctx.config.library / path).exists()), None)
     if existing is not None:
         ctx.console.print(f"This album appears to be in the library: [bold]{escape(existing)}[/bold]")
-        if confirm("Do you want to add it anyway?"):
+        if not automatic and confirm("Do you want to add it anyway?"):
             return (True, True)
         else:
+            ctx.console.print("Skipping import")
             return (True, False)
     return (False, True)
