@@ -91,8 +91,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ steps.get-version.outputs.ALBUMS_VERSION }}
-          release_name: Release ${{ steps.get-version.outputs.ALBUMS_VERSION }}
+          tag_name: v${{ steps.get-version.outputs.ALBUMS_VERSION }}
+          release_name: Release v${{ steps.get-version.outputs.ALBUMS_VERSION }}
           draft: ${{ github.ref == 'refs/heads/main' }}
           prerelease: false
       - name: Upload albums_win_x86_64.zip
