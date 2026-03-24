@@ -177,16 +177,16 @@ class PictureFile(Base):
     album: Mapped[Optional[Album]] = relationship("Album", back_populates="picture_files")
 
     filename: Mapped[str] = mapped_column(Text, nullable=False)
+    file_size: Mapped[int] = mapped_column("file_size", Integer, nullable=False, default=0)
     modify_timestamp: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     cover_source: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     _format: Mapped[str] = mapped_column("format", Text, nullable=False, default="")
     _width: Mapped[int] = mapped_column("width", Integer, nullable=False, default=0)
     _height: Mapped[int] = mapped_column("height", Integer, nullable=False, default=0)
     _depth_bpp: Mapped[int] = mapped_column("depth_bpp", Integer, nullable=False, default=0)
-    _file_size: Mapped[int] = mapped_column("file_size", Integer, nullable=False, default=0)
     _file_hash: Mapped[bytes] = mapped_column("file_hash", LargeBinary, nullable=False, default=b"")
     _load_issue: Mapped[LoadIssuesType] = mapped_column("load_issue", LoadIssuesAsJson)
-    picture_info = composite(PictureInfo, _format, _width, _height, _depth_bpp, _file_size, _file_hash, _load_issue)
+    picture_info = composite(PictureInfo, _format, _width, _height, _depth_bpp, file_size, _file_hash, _load_issue)
 
     def to_dict(self):
         return {
