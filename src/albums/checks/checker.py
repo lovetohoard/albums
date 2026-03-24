@@ -10,7 +10,7 @@ from ..database import selector
 from ..interactive.interact import interact, prompt_ignore_checks
 from ..library import scanner
 from ..tagger.provider import AlbumTaggerProvider
-from ..types import Album, CheckResult
+from ..types import Album, CheckResult, FixResult
 from .all import ALL_CHECKS
 from .base_check import Check
 from .helpers import album_display_name
@@ -23,6 +23,7 @@ class CheckDisposition:
     # album: Album
     passed: bool
     maybe_changed: bool
+    deleted: bool
     user_quit: bool
     displayed: bool
     suppressed_failure_message: str | None
@@ -64,6 +65,11 @@ class Checker:
         issues_displayed = 0
 
         for album in self.ctx.select_album_entities(session):
+            if not (self.ctx.config.library / album.path).is_dir():
+                logger.info(f"album was deleted: {album.path}")
+                scanner.scan(self.ctx, session, iter([album]))
+                continue
+
             logger.info(f"checking album: {album.path}")
             checks_passed: set[str] = set()
             preview_failed_checks = []
@@ -114,12 +120,13 @@ class Checker:
 
     def _run_check(self, session: Session, check: Check, album: Album) -> CheckDisposition:
         maybe_changed = False
+        deleted = False
         maybe_fixable = True
         passed = False
         quit = False
         displayed = False
         suppressed_failure_message = None
-        while maybe_fixable and not passed and not quit:
+        while maybe_fixable and not passed and not quit and not deleted:
             check_result = check.check(album)
             if check_result:
                 disposition = self._handle_check_result(session, check, check_result, album)
@@ -128,8 +135,9 @@ class Checker:
                 displayed |= disposition.displayed
                 maybe_changed |= disposition.maybe_changed
                 quit = disposition.user_quit
+                deleted = disposition.deleted
 
-                if disposition.maybe_changed:
+                if not deleted and disposition.maybe_changed:
                     session.flush()
                     path = album.path
                     (_, any_changes) = scanner.scan(self.ctx, session, selector.load_album_entities(session, path=[path]), reread=True)
@@ -138,12 +146,13 @@ class Checker:
                     maybe_fixable = False
             else:
                 passed = True
-        return CheckDisposition(passed, maybe_changed, quit, displayed, suppressed_failure_message)
+        return CheckDisposition(passed, maybe_changed, deleted, quit, displayed, suppressed_failure_message)
 
     def _handle_check_result(self, session: Session, check: Check, check_result: CheckResult, album: Album) -> CheckDisposition:
         fixer = check_result.fixer
         displayed_any = False
         maybe_changed = False
+        deleted = False
         user_quit = False
         suppressed_failure_message = None
         if self._preview and fixer and fixer.option_automatic_index is not None:
@@ -159,7 +168,9 @@ class Checker:
                 highlight=False,
             )
             self.ctx.console.print(f"    {fixer.prompt}: {fixer.options[fixer.option_automatic_index]}", highlight=False)
-            maybe_changed = fixer.fix(fixer.options[fixer.option_automatic_index])
+            fix_result = fixer.fix(fixer.options[fixer.option_automatic_index])
+            maybe_changed = fix_result != FixResult.NO_CHANGE
+            deleted = fix_result == FixResult.DELETED_ALBUM
             displayed_any = True
         elif self._interactive or (fixer and self._fix):
             self.ctx.console.print()
@@ -174,4 +185,4 @@ class Checker:
                 self.ctx.console.print(message, highlight=False)
                 displayed_any = True
 
-        return CheckDisposition(False, maybe_changed, user_quit, displayed_any, suppressed_failure_message)
+        return CheckDisposition(False, maybe_changed, deleted, user_quit, displayed_any, suppressed_failure_message)

@@ -7,7 +7,7 @@ from rich.markup import escape
 
 from ...tagger.folder import AlbumTagger, Cap
 from ...tagger.types import BasicTag
-from ...types import Album, CheckResult, Fixer, Track
+from ...types import Album, CheckResult, Fixer, FixResult, Track
 from ..base_check import Check
 from ..helpers import get_tracks_by_disc
 from .check_track_numbering import describe_track_number
@@ -143,7 +143,7 @@ class CheckZeroPadNumbers(Check):
 
         return None
 
-    def _fix(self, album: Album, option: str, tracks_by_disc: Mapping[int, Sequence[Track]]) -> bool:
+    def _fix(self, album: Album, option: str, tracks_by_disc: Mapping[int, Sequence[Track]]):
         if not option.startswith(OPTION_APPLY_POLICY):
             raise ValueError(f"ZeroPadNumbers._fix invalid option {option}")
 
@@ -180,4 +180,4 @@ class CheckZeroPadNumbers(Check):
                     )
                     self.tagger.get(album.path).set_basic_tags(file, new_values)
                     changed = True
-        return changed
+        return FixResult.of(changed)

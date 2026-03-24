@@ -4,7 +4,7 @@ from rich.markup import escape
 
 from ...tagger.folder import AlbumTagger, Cap
 from ...tagger.types import BasicTag
-from ...types import Album, CheckResult, Fixer, Track
+from ...types import Album, CheckResult, Fixer, FixResult, Track
 from ..base_check import Check
 from ..helpers import parse_filename, show_tag
 
@@ -40,7 +40,7 @@ class CheckTrackTitle(Check):
                 option_free_text = False
                 options = [OPTION_USE_PROPOSED]
                 option_automatic_index = 0
-                fixer = Fixer(lambda option: self._fix(album, option), options, option_free_text, option_automatic_index, table)
+                fixer = Fixer(lambda _: self._fix(album), options, option_free_text, option_automatic_index, table)
                 return CheckResult(f"{no_title} tracks missing title tag", fixer)
 
             return CheckResult(f"{no_title} tracks missing title tag and cannot guess from filename")
@@ -55,7 +55,7 @@ class CheckTrackTitle(Check):
         # TODO: if it looks like spaces were converted to underscores, consider trying to recover
         return title
 
-    def _fix(self, album: Album, option: str) -> bool:
+    def _fix(self, album: Album):
         changed = False
         for track in sorted(album.tracks):
             file = self.ctx.config.library / album.path / track.filename
@@ -64,4 +64,4 @@ class CheckTrackTitle(Check):
                 self.ctx.console.print(f"setting title on {escape(track.filename)}", highlight=False)
                 self.tagger.get(album.path).set_basic_tags(file, [(BasicTag.TITLE, new_title)])
                 changed = True
-        return changed
+        return FixResult.of(changed)

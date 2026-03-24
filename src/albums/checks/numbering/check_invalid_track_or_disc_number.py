@@ -5,7 +5,7 @@ from rich.markup import escape
 
 from ...tagger.folder import AlbumTagger, Cap
 from ...tagger.types import BasicTag
-from ...types import Album, CheckResult, Fixer, Track
+from ...types import Album, CheckResult, Fixer, FixResult, Track
 from ..base_check import Check
 from .check_track_numbering import describe_track_number, ordered_tracks
 
@@ -42,7 +42,7 @@ class CheckInvalidTrackOrDiscNumber(Check):
 
         return None
 
-    def _fix(self, album: Album, option: str) -> bool:
+    def _fix(self, album: Album, option: str):
         if option != OPTION_AUTOMATIC_REPAIR:
             raise ValueError(f"invalid option: {option}")
 
@@ -71,7 +71,7 @@ class CheckInvalidTrackOrDiscNumber(Check):
                 self.tagger.get(album.path).set_basic_tags(file, new_values)
                 changed = True
 
-        return changed
+        return FixResult.of(changed)
 
 
 def get_issues_invalid_disc_or_track_number(tracks: Sequence[Track]):

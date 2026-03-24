@@ -8,7 +8,7 @@ from rich.markup import escape
 
 from ...picture.format import SUPPORTED_IMAGE_SUFFIXES
 from ...tagger.folder import Cap
-from ...types import Album, CheckResult, Fixer
+from ...types import Album, CheckResult, Fixer, FixResult
 from ..base_check import Check
 
 logger = logging.getLogger(__name__)
@@ -71,4 +71,4 @@ class CheckInvalidImage(Check):
                     else:
                         logger.warning(f"cannot remove embedded image from {track.filename} because file type not supported yet")
 
-        return changed
+        return FixResult.of(changed)

@@ -6,7 +6,7 @@ from rich.markup import escape
 from ..app import Context
 from ..tagger.folder import AlbumTagger
 from ..tagger.types import BasicTag
-from ..types import Album, CheckResult, Fixer
+from ..types import Album, CheckResult, Fixer, FixResult
 from .helpers import describe_track_number, ordered_tracks
 
 OPTION_REMOVE_TAG = ">> Remove tag"
@@ -87,7 +87,7 @@ def check_policy(
     raise RuntimeError(f"internal error! tag={tag.value}, policy={policy.name}, on_all_tracks={on_all_tracks}, on_any_tracks={on_any_tracks}")
 
 
-def _fix(ctx: Context, tagger: AlbumTagger, album: Album, tag: BasicTag, option: str) -> bool:
+def _fix(ctx: Context, tagger: AlbumTagger, album: Album, tag: BasicTag, option: str) -> FixResult:
     if option.startswith(OPTION_REMOVE_TAG):
         value = None
     else:
@@ -103,4 +103,4 @@ def _fix(ctx: Context, tagger: AlbumTagger, album: Album, tag: BasicTag, option:
             ctx.console.print(f"setting {tag} on {escape(track.filename)}", highlight=False)
             tagger.set_basic_tags(path, [(tag, value)])
             changed = True
-    return changed
+    return FixResult.of(changed)

@@ -28,3 +28,10 @@ class DuplicateFinder:
         if ids is None or (album_id is not None and ids[0] != album_id):
             return None
         return ids[1:]
+
+    def remove(self, ctx: Context, session: Session, artist: str, album_name: str, album_id: int):
+        ids = self._duplicates.get((str.lower(artist), str.lower(album_name)), [])
+        if album_id in ids:
+            ids.remove(album_id)
+        else:
+            raise ValueError(f"error, cannot remove duplicate album {album_id} ({artist}/{album_name}) because it was not found")

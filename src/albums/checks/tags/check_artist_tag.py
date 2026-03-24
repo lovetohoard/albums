@@ -7,7 +7,7 @@ from rich.markup import escape
 
 from ...tagger.folder import AlbumTagger, Cap
 from ...tagger.types import BasicTag
-from ...types import Album, CheckResult, Fixer
+from ...types import Album, CheckResult, Fixer, FixResult
 from ..base_check import Check
 from ..helpers import show_tag
 
@@ -82,9 +82,9 @@ class CheckArtistTag(Check):
             ),
         )
 
-    def _fix(self, album: Album, option: str, filenames: list[str]) -> bool:
+    def _fix(self, album: Album, option: str, filenames: list[str]):
         for filename in filenames:
             file = self.ctx.config.library / album.path / filename
             self.ctx.console.print(f"setting artist on {escape(filename)}", highlight=False)
             self.tagger.get(album.path).set_basic_tags(file, [(BasicTag.ARTIST, option)])
-        return True
+        return FixResult.CHANGED_ALBUM

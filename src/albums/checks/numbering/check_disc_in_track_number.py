@@ -6,7 +6,7 @@ from rich.markup import escape
 
 from ...tagger.folder import AlbumTagger, Cap
 from ...tagger.types import BasicTag
-from ...types import Album, CheckResult, Fixer, Track
+from ...types import Album, CheckResult, Fixer, FixResult, Track
 from ..base_check import Check
 from .check_track_numbering import describe_track_number, ordered_tracks
 
@@ -38,7 +38,7 @@ class CheckDiscInTrackNumber(Check):
 
         return None
 
-    def _fix(self, album: Album, option: str | None) -> bool:
+    def _fix(self, album: Album, option: str | None):
         if option != OPTION_USE_PROPOSED:
             raise ValueError(f"invalid option {option}")
 
@@ -47,7 +47,7 @@ class CheckDiscInTrackNumber(Check):
             self.ctx.console.print(f"setting discnumber and tracknumber on {escape(track.filename)}", highlight=False)
             (discnumber, tracknumber) = self._proposed_disc_and_tracknumber(track)
             self.tagger.get(album.path).set_basic_tags(path, [(BasicTag.DISCNUMBER, discnumber), (BasicTag.TRACKNUMBER, tracknumber)])
-        return True
+        return FixResult.CHANGED_ALBUM
 
     def _proposed_disc_and_tracknumber(self, track: Track):
         [discnumber, tracknumber] = track.get(BasicTag.TRACKNUMBER)[0].split("-")

@@ -8,7 +8,7 @@ from rich.markup import escape
 
 from ...library.tag_tools import get_album_name_from_tags, get_artist_from_tags
 from ...tagger.types import BasicTag
-from ...types import Album, CheckResult, Fixer
+from ...types import Album, CheckResult, Fixer, FixResult
 from ..base_check import Check
 
 
@@ -57,7 +57,7 @@ class CheckFolderName(Check):
         self.ctx.console.print(f"Renaming {escape(old_path.name)} to {escape(new_path_str)}", highlight=False)
         rename(old_path, self.ctx.config.library / new_path_str)
         album.path = new_path_str + sep
-        return True
+        return FixResult.CHANGED_ALBUM
 
     def _can_generate_folder_name(self, album: Album) -> bool:
         ids = self.format.get_identifiers()

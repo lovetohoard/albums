@@ -6,7 +6,7 @@ from rich.markup import escape
 
 from ...tagger.folder import AlbumTagger, Cap
 from ...tagger.types import BASIC_TAGS, BasicTag
-from ...types import Album, CheckResult, Fixer
+from ...types import Album, CheckResult, Fixer, FixResult
 from ..base_check import Check
 from ..helpers import describe_track_number, ordered_tracks
 
@@ -62,7 +62,7 @@ class CheckSingleValueTags(Check):
                 ),
             )
 
-    def _fix(self, album: Album, option: str) -> bool:
+    def _fix(self, album: Album, option: str):
         if option.startswith(OPTION_CONCATENATE_WITH):
             concat = option[len(OPTION_CONCATENATE_WITH) + 1 : -1]
         elif option == OPTION_REMOVE_DUPLICATES_ONLY:
@@ -87,4 +87,4 @@ class CheckSingleValueTags(Check):
                 self.tagger.get(album.path).set_basic_tags(file, new_values)
                 changed = True
 
-        return changed
+        return FixResult.of(changed)

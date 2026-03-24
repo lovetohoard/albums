@@ -92,6 +92,7 @@ class TestChecker:
         ctx = Context()
         ctx.db = connection.open(connection.MEMORY)
         ctx.select_album_entities = lambda session: selector.load_album_entities(session)
+        ctx.config.library = create_library("dependent_check_failures", [album])
         try:
             with Session(ctx.db) as session:
                 session.add(album)
@@ -123,3 +124,43 @@ class TestChecker:
         output = " ".join((Text.from_markup(call_args.args[0]).plain for call_args in print_spy.call_args_list))
         assert "Configuration error" in output
         assert "invalid-track-or-disc-number required by" in output
+
+    def test_run_enabled_delete_album(self, mocker):
+        albums = [
+            Album(
+                path="One!" + os.sep,
+                tracks=[
+                    Track(filename="01 a.flac", tag={BasicTag.ARTIST: "A", BasicTag.ALBUM: "One!", BasicTag.TRACKNUMBER: "01", BasicTag.TITLE: "a"})
+                ],
+            ),
+            Album(
+                path="One" + os.sep,
+                tracks=[Track(filename="1.flac", tag={BasicTag.ARTIST: "A", BasicTag.ALBUM: "One!", BasicTag.TRACKNUMBER: "01"})],
+            ),
+        ]
+        ctx = Context()
+        ctx.config.library = create_library("checker_delete_album", albums)
+        ctx.db = connection.open(connection.MEMORY, True)
+        try:
+            with Session(ctx.db) as session:
+                ctx.select_album_entities = lambda s: selector.load_album_entities(s)
+                scanner.scan(ctx, session)
+                session.commit()
+                mock_choice = mocker.patch(
+                    "albums.interactive.interact.choice",
+                    return_value=f">> KEEP left (THIS album) and DELETE right (other): One{os.sep}",
+                )
+                mock_confirm = mocker.patch("albums.checks.tags.check_duplicate_album.confirm", return_value=True)
+                showed_issues = Checker(ctx, automatic=True, preview=False, fix=True, interactive=False, show_ignore_option=False).run_enabled(
+                    session
+                )
+
+                assert mock_choice.call_count == 1
+                assert mock_confirm.call_count == 1
+                assert showed_issues == 1
+
+                after = list(ctx.select_album_entities(session))
+                assert len(after) == 1
+                assert after[0].path == "One!" + os.sep
+        finally:
+            ctx.db.dispose()

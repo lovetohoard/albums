@@ -9,7 +9,7 @@ from rich.markup import escape
 
 from ...tagger.folder import Cap
 from ...tagger.types import BasicTag
-from ...types import Album, CheckResult, Fixer, Track
+from ...types import Album, CheckResult, Fixer, FixResult, Track
 from ..base_check import Check
 from ..numbering.check_zero_pad_numbers import CheckZeroPadNumbers, ZeroPadPolicy, apply_pad_policy
 
@@ -128,7 +128,7 @@ class CheckTrackFilename(Check):
             rename(album_path / track.filename, album_path / new_filename)
             track.filename = new_filename
 
-        return True
+        return FixResult.CHANGED_ALBUM
 
     def _pad(self, tag_name: Literal["tracknumber", "tracktotal", "discnumber", "disctotal"], value: str, total: int) -> str:
         if not value or not int(value):

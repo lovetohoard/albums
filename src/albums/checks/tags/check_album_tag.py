@@ -7,7 +7,7 @@ from rich.markup import escape
 
 from ...tagger.folder import AlbumTagger, Cap
 from ...tagger.types import BasicTag
-from ...types import Album, CheckResult, Fixer
+from ...types import Album, CheckResult, Fixer, FixResult
 from ..base_check import Check
 from ..helpers import show_tag
 
@@ -79,7 +79,7 @@ class CheckAlbumTag(Check):
             f"select album name to use for all {len(album.tracks)} tracks",
         )
 
-    def _fix(self, album: Album, option: str) -> bool:
+    def _fix(self, album: Album, option: str):
         changed = False
         for track in sorted(album.tracks):
             file = self.ctx.config.library / album.path / track.filename
@@ -87,4 +87,4 @@ class CheckAlbumTag(Check):
                 self.ctx.console.print(f"setting album on {escape(track.filename)}", highlight=False)
                 self.tagger.get(album.path).set_basic_tags(file, [(BasicTag.ALBUM, option)])
                 changed = True
-        return changed
+        return FixResult.of(changed)

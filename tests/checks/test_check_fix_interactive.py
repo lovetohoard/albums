@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 from albums.app import Context
 from albums.database import connection
 from albums.interactive.interact import OPTION_IGNORE_CHECK, interact
-from albums.types import Album, CheckResult, Fixer, Track
+from albums.types import Album, CheckResult, Fixer, FixResult, Track
 
 
 class MockFixer(Fixer):
@@ -18,8 +18,8 @@ class MockFixer(Fixer):
             lambda option: self._fix(album, option), options, option_free_text, option_automatic_index, table, "which one"
         )
 
-    def _fix(self, album, option) -> bool:
-        return True
+    def _fix(self, album, option):
+        return FixResult.CHANGED_ALBUM
 
 
 class TestCheckFixInteractive:
@@ -28,7 +28,7 @@ class TestCheckFixInteractive:
         ctx = Context()
         ctx.db = connection.open(connection.MEMORY)
         fixer = MockFixer(ctx, album)
-        mock_choice = mocker.patch("albums.interactive.interact.shortcuts.choice", return_value=fixer.options[0])
+        mock_choice = mocker.patch("albums.interactive.interact.choice", return_value=fixer.options[0])
 
         with Session(ctx.db) as session:
             (changed, quit) = interact(ctx, session, "", CheckResult("hello", fixer), album, True)
@@ -46,8 +46,8 @@ class TestCheckFixInteractive:
                 session.flush()
 
                 fixer = MockFixer(ctx, album)
-                mock_choice = mocker.patch("albums.interactive.interact.shortcuts.choice", return_value=OPTION_IGNORE_CHECK)
-                mock_confirm = mocker.patch("albums.interactive.interact.shortcuts.confirm", return_value=True)
+                mock_choice = mocker.patch("albums.interactive.interact.choice", return_value=OPTION_IGNORE_CHECK)
+                mock_confirm = mocker.patch("albums.interactive.interact.confirm", return_value=True)
 
                 (changed, quit) = interact(ctx, session, "album-tag", CheckResult("hello", fixer), album, True)
                 assert changed
@@ -71,8 +71,8 @@ class TestCheckFixInteractive:
                 session.add(album)
                 session.flush()
                 fixer = MockFixer(ctx, album, [], False, None)
-                mocker.patch("albums.interactive.interact.shortcuts.choice", return_value=OPTION_IGNORE_CHECK)
-                mock_confirm = mocker.patch("albums.interactive.interact.shortcuts.confirm", return_value=True)
+                mocker.patch("albums.interactive.interact.choice", return_value=OPTION_IGNORE_CHECK)
+                mock_confirm = mocker.patch("albums.interactive.interact.confirm", return_value=True)
 
                 (changed, quit) = interact(ctx, session, "album-tag", CheckResult("hello", fixer), album, True)
                 assert mock_confirm.call_count == 1

@@ -7,7 +7,7 @@ from rich.markup import escape
 
 from ..app import Context
 from ..tagger.types import BasicTag
-from ..types import Album, Track
+from ..types import Album, FixResult, Track
 
 FRONT_COVER_FILENAME = "cover"
 
@@ -114,4 +114,4 @@ def delete_files_except(ctx: Context, keep_filename: str | None, album: Album, f
             path = ctx.config.library / album.path / filename
             unlink(path)
             changed = True
-    return changed
+    return FixResult.of(changed)

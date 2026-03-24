@@ -8,7 +8,7 @@ from rich.markup import escape
 
 from ...library.folder import read_binary_file
 from ...tagger.types import PictureType
-from ...types import Album, CheckResult, Fixer
+from ...types import Album, CheckResult, Fixer, FixResult
 from ..base_check import Check
 
 
@@ -87,7 +87,7 @@ class CheckCoverFilename(Check):
         new_filename = f"{self.stem}{self.suffix}"
         image.save(album_path / new_filename, quality=self.jpeg_quality)  # file type is automatically determined by suffix
         file.filename = new_filename
-        return True
+        return FixResult.CHANGED_ALBUM
 
     def _fix_rename_cover(self, album: Album, cover_file: str, new_filename: str):
         file = next(file for file in album.picture_files if file.filename == cover_file)
@@ -105,7 +105,7 @@ class CheckCoverFilename(Check):
             self.ctx.console.print(f"Renaming {escape(cover_file)} to {escape(new_filename)}", highlight=False)
             rename(album_path / cover_file, album_path / new_filename)
         file.filename = new_filename
-        return True
+        return FixResult.CHANGED_ALBUM
 
     def _matches(self, filename: str, case_sensitive: bool) -> bool:
         path = Path(filename)

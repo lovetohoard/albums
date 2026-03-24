@@ -8,7 +8,7 @@ from rich.markup import escape
 
 from albums.tagger.folder import AUDIO_FILE_SUFFIXES
 
-from ...types import Album, CheckConfiguration, CheckResult, Fixer
+from ...types import Album, CheckConfiguration, CheckResult, Fixer, FixResult
 from ..base_check import Check
 
 logger = logging.getLogger(__name__)
@@ -69,4 +69,4 @@ class CheckFileExtension(Check):
         for old_filename, new_filename in rename_files_2:
             self.ctx.console.print(f"Renaming {escape(old_filename)} to {escape(str(new_filename))}", highlight=False)
             rename(album_path / old_filename, album_path / new_filename)
-        return True
+        return FixResult.CHANGED_ALBUM

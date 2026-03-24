@@ -1,8 +1,9 @@
 from itertools import chain
 from shutil import rmtree
 from typing import Sequence, override
-from prompt_toolkit.shortcuts import confirm
+
 import humanize
+from prompt_toolkit.shortcuts import confirm
 from rich.console import RenderableType
 from rich.markup import escape
 from sqlalchemy import select
@@ -13,12 +14,12 @@ from albums.library.duplicates import DuplicateFinder
 from albums.tagger.provider import AlbumTaggerProvider
 
 from ...library.tag_tools import get_album_name_from_tags, get_artist_from_tags
-from ...types import Album, CheckResult, Fixer, OtherFile, PictureFile, Track
+from ...types import Album, CheckResult, Fixer, FixResult, OtherFile, PictureFile, Track
 from ..base_check import Check
-
 
 OPTION_DELETE_OTHER = ">> KEEP left (THIS album) and DELETE right (other): "
 OPTION_KEEP_OTHER = ">> DELETE left (THIS album) and KEEP right (other): "
+
 
 class CheckDuplicateAlbum(Check):
     name = "duplicate-album"
@@ -70,21 +71,29 @@ class CheckDuplicateAlbum(Check):
         table = ([f'This album: "{escape(album.path)}"', "files", f'Other album: "{other.path}"', "files"], rows)
         options: list[str] = [f"{OPTION_DELETE_OTHER}{other.path}", f"{OPTION_KEEP_OTHER}{other.path}"]
         option_automatic_index = None
-        return CheckResult(f'possible duplicate of "{other.path}"', Fixer(lambda option: self._fix_delete_album(album, other, option), options, False, option_automatic_index, table))
+        return CheckResult(
+            f'possible duplicate of "{other.path}"',
+            Fixer(lambda option: self._fix_delete_album(album, other, option), options, False, option_automatic_index, table),
+        )
 
-    def _fix_delete_album(self, album: Album, other: Album, option: str) -> bool:
+    def _fix_delete_album(self, album: Album, other: Album, option: str):
         if option == f"{OPTION_DELETE_OTHER}{other.path}":
             if self._confirm_delete(other):
-                return True
+                return FixResult.CHANGED_OTHER
         elif option == f"{OPTION_KEEP_OTHER}{other.path}":
             if self._confirm_delete(album):
-                return True
+                return FixResult.CHANGED_ALBUM
         raise ValueError(f"invalid option {option}")
 
     def _confirm_delete(self, album: Album):
+        album_name = get_album_name_from_tags(album)
+        artist = get_artist_from_tags(album)
         path = self.ctx.config.library / album.path
+        if artist is None or album_name is None or album.album_id is None:
+            raise RuntimeError(f'duplicate-album: target not fully identified (album="{album_name}", artist="{artist}", album_id={album.album_id})')
         if confirm(f'Are you sure you want to permanently delete "{str(path)}"?'):
             rmtree(path)
+            self._duplicates.remove(self.ctx, self.session, artist, album_name, album.album_id)
             return True
         return False
 

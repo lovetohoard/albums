@@ -4,7 +4,7 @@ from rich.markup import escape
 
 from ...tagger.folder import AlbumTagger, Cap
 from ...tagger.types import BasicTag
-from ...types import Album, CheckResult, Fixer
+from ...types import Album, CheckResult, Fixer, FixResult
 from ..base_check import Check
 
 
@@ -36,7 +36,7 @@ class CheckExtraWhitespace(Check):
                 ),
             )
 
-    def _fix_strip_tags(self, album: Album, filenames: Collection[str]) -> bool:
+    def _fix_strip_tags(self, album: Album, filenames: Collection[str]):
         changed = False
         tagger = self.tagger.get(album.path)
         for track in (track for track in sorted(album.tracks) if track.filename in filenames):
@@ -47,4 +47,4 @@ class CheckExtraWhitespace(Check):
                         self.ctx.console.print(f"Removing whitespace from {tag.value} in {escape(track.filename)}")
                         tags.set_tag(tag, new_values)
                         changed = True
-        return changed
+        return FixResult.of(changed)

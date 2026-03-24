@@ -9,7 +9,7 @@ from rich.markup import escape
 from ...checks.helpers import FRONT_COVER_FILENAME
 from ...interactive.image_table import render_image_table
 from ...tagger.types import Picture, PictureType
-from ...types import Album, CheckResult, Fixer
+from ...types import Album, CheckResult, Fixer, FixResult
 from ..base_check import Check
 
 logger = logging.getLogger(__name__)
@@ -90,4 +90,4 @@ class CheckAlbumArt(Check):
                     self.ctx.console.print(f"Removing {pic.type.name} {pic.picture_info.mime_type} from {escape(filename)}", highlight=False)
                     tags.remove_picture(pic)
 
-        return True
+        return FixResult.CHANGED_ALBUM
