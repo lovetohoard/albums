@@ -45,7 +45,7 @@ class CheckDuplicateAlbum(Check):
 
         other_albums = [a for (a,) in self.session.execute(select(Album).filter(Album.album_id.in_(duplicate_ids))).tuples()]
         if len(other_albums) > 1:
-            return CheckResult(f"multiple possible duplicate albums: {', '.join(f'"{a.path}"' for a in other_albums)}")
+            return CheckResult(f"multiple duplicates: {', '.join(f'"{a.path}"' for a in other_albums)}")
 
         other = other_albums[0]
         options: list[str] = []
@@ -66,10 +66,7 @@ class CheckDuplicateAlbum(Check):
                 for ix in range(0, max(len(this_more), len(other_more)))
             )
         table = ([f'This album: "{escape(album.path)}"', "files", f'Other album: "{other.path}"', "files"], rows)
-        return CheckResult(
-            f"possible duplicate albums: {', '.join(f'"{a.path}"' for a in other_albums)}",
-            Fixer(lambda _: False, options, False, option_automatic_index, table),
-        )
+        return CheckResult(f'possible duplicate of "{other.path}"', Fixer(lambda _: False, options, False, option_automatic_index, table))
 
     def _summarize(self, album: Album) -> tuple[str, str]:
         track_codecs = set(t.stream.codec for t in album.tracks)
