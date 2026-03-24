@@ -59,7 +59,7 @@ class Checker:
         preview_failed_checks: list[str] = []
 
         tagger = AlbumTaggerProvider(self.ctx.config.library, id3v1=self.ctx.config.id3v1)
-        check_instances = [check(self.ctx, tagger) for check in ALL_CHECKS if self.ctx.config.checks[check.name]["enabled"]]
+        check_instances = [check(self.ctx, tagger=tagger, session=session) for check in ALL_CHECKS if self.ctx.config.checks[check.name]["enabled"]]
 
         issues_displayed = 0
 

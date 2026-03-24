@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from sqlalchemy.orm import Session
+
 from ..app import Context
 from ..tagger.provider import AlbumTaggerProvider
 from ..types import Album, CheckConfiguration, CheckResult
@@ -18,6 +20,7 @@ class Check:
 
     # subclass may use these instance values
     ctx: Context
+    session: Session
 
     # subclass must override check()
     def check(self, album: Album) -> CheckResult | None:
@@ -27,7 +30,9 @@ class Check:
     def init(self, check_config: CheckConfiguration):
         pass
 
-    def __init__(self, ctx: Context, tagger: AlbumTaggerProvider | None = None):
+    def __init__(self, ctx: Context, tagger: AlbumTaggerProvider | None = None, session: Session | None = None):
         self.ctx = ctx
+        # note "real" non-test code should always provide tagger and managed session
         self.tagger = tagger if tagger else AlbumTaggerProvider(ctx.config.library, id3v1=ctx.config.id3v1)
+        self.session = session if session else (Session(ctx.db) if hasattr(ctx, "db") else Session())
         self.init(ctx.config.checks[self.name])

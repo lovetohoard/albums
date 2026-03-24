@@ -19,8 +19,8 @@ class TestCheckAlbumUnderAlbum:
         ctx = Context()
         ctx.db = connection.open(connection.MEMORY)
         try:
-            checker = CheckAlbumUnderAlbum(ctx)
             with Session(ctx.db) as session:
+                checker = CheckAlbumUnderAlbum(ctx, session=session)
                 session.add(albums[0])
                 session.add(albums[1])
                 session.add(albums[2])
