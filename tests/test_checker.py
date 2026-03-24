@@ -17,7 +17,7 @@ from .fixtures.create_library import create_library
 class TestChecker:
     def test_run_enabled_all_ok(self):
         album = Album(
-            path="foo" + os.sep,
+            path="Foo" + os.sep,
             tracks=[
                 Track(
                     filename="01 one.flac",
@@ -49,7 +49,7 @@ class TestChecker:
 
     def test_run_enabled_automatic_dependent_check_ok(self):
         album = Album(
-            path="foo" + os.sep,
+            path="Foo" + os.sep,
             tracks=[
                 Track(
                     filename="1-01 one.flac",

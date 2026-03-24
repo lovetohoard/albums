@@ -92,7 +92,7 @@ def scan(
 
         scanned = sum(scan_results.values())
         albums_total = scan_results[AlbumScanResult.NEW] + scan_results[AlbumScanResult.UPDATED] + scan_results[AlbumScanResult.UNCHANGED]
-        any_changes = any(k in scan_results for k in [AlbumScanResult.NEW, AlbumScanResult.UPDATED, AlbumScanResult.REMOVED])
+        any_changes = any(scan_results.get(k) for k in [AlbumScanResult.NEW, AlbumScanResult.UPDATED, AlbumScanResult.REMOVED])
         if full_scan:
             session.add(ScanHistoryEntity(timestamp=int(time.time()), folders_scanned=scanned, albums_total=albums_total))
         session.flush()
