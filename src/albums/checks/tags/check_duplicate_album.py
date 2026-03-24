@@ -1,6 +1,7 @@
 from itertools import chain
+from shutil import rmtree
 from typing import Sequence, override
-
+from prompt_toolkit.shortcuts import confirm
 import humanize
 from rich.console import RenderableType
 from rich.markup import escape
@@ -15,6 +16,9 @@ from ...library.tag_tools import get_album_name_from_tags, get_artist_from_tags
 from ...types import Album, CheckResult, Fixer, OtherFile, PictureFile, Track
 from ..base_check import Check
 
+
+OPTION_DELETE_OTHER = ">> KEEP left (THIS album) and DELETE right (other): "
+OPTION_KEEP_OTHER = ">> DELETE left (THIS album) and KEEP right (other): "
 
 class CheckDuplicateAlbum(Check):
     name = "duplicate-album"
@@ -48,8 +52,6 @@ class CheckDuplicateAlbum(Check):
             return CheckResult(f"multiple duplicates: {', '.join(f'"{a.path}"' for a in other_albums)}")
 
         other = other_albums[0]
-        options: list[str] = []
-        option_automatic_index = None
         this_tracks = sorted(album.tracks)
         other_tracks = sorted(other.tracks)
         rows: list[list[RenderableType]] = [[*self._summarize(album), *self._summarize(other)], [""] * 4]
@@ -66,7 +68,25 @@ class CheckDuplicateAlbum(Check):
                 for ix in range(0, max(len(this_more), len(other_more)))
             )
         table = ([f'This album: "{escape(album.path)}"', "files", f'Other album: "{other.path}"', "files"], rows)
-        return CheckResult(f'possible duplicate of "{other.path}"', Fixer(lambda _: False, options, False, option_automatic_index, table))
+        options: list[str] = [f"{OPTION_DELETE_OTHER}{other.path}", f"{OPTION_KEEP_OTHER}{other.path}"]
+        option_automatic_index = None
+        return CheckResult(f'possible duplicate of "{other.path}"', Fixer(lambda option: self._fix_delete_album(album, other, option), options, False, option_automatic_index, table))
+
+    def _fix_delete_album(self, album: Album, other: Album, option: str) -> bool:
+        if option == f"{OPTION_DELETE_OTHER}{other.path}":
+            if self._confirm_delete(other):
+                return True
+        elif option == f"{OPTION_KEEP_OTHER}{other.path}":
+            if self._confirm_delete(album):
+                return True
+        raise ValueError(f"invalid option {option}")
+
+    def _confirm_delete(self, album: Album):
+        path = self.ctx.config.library / album.path
+        if confirm(f'Are you sure you want to permanently delete "{str(path)}"?'):
+            rmtree(path)
+            return True
+        return False
 
     def _summarize(self, album: Album) -> tuple[str, str]:
         track_codecs = set(t.stream.codec for t in album.tracks)

@@ -1,4 +1,6 @@
 import os
+from pathlib import Path
+from unittest.mock import call
 
 from albums.app import Context, Session
 from albums.checks.tags.check_duplicate_album import CheckDuplicateAlbum
@@ -22,7 +24,7 @@ class TestCheckDuplicateAlbum:
             assert not CheckDuplicateAlbum(ctx).check(albums[0])
             assert not CheckDuplicateAlbum(ctx).check(albums[1])
 
-    def test_duplicate_exact(self):
+    def test_duplicate_exact_keep_this(self, mocker):
         albums = [
             Album(path="One (2001)" + os.sep, tracks=[Track(filename="1.flac", tag={BasicTag.ALBUM: "The One", BasicTag.ARTIST: "Foo"})]),
             Album(path="One!" + os.sep, tracks=[Track(filename="1.flac", tag={BasicTag.ALBUM: "The One", BasicTag.ARTIST: "Foo"})]),
@@ -39,7 +41,50 @@ class TestCheckDuplicateAlbum:
             assert result
             assert 'possible duplicate of "One!' in result.message
             assert result.fixer
-            # TODO test fixer
+            assert result.fixer.options == [
+                f">> KEEP left (THIS album) and DELETE right (other): One!{os.sep}",
+                f">> DELETE left (THIS album) and KEEP right (other): One!{os.sep}",
+            ]
+            assert result.fixer.option_automatic_index is None
+
+            mock_rmtree = mocker.patch("albums.checks.tags.check_duplicate_album.rmtree")
+            mock_confirm = mocker.patch("albums.checks.tags.check_duplicate_album.confirm", return_value=True)
+            fix_result = result.fixer.fix(result.fixer.options[0])
+
+            assert fix_result
+            assert mock_confirm.call_count == 1
+            assert mock_rmtree.call_args_list == [call(Path(albums[1].path))]
+
+    def test_duplicate_exact_keep_other(self, mocker):
+        albums = [
+            Album(path="One (2001)" + os.sep, tracks=[Track(filename="1.flac", tag={BasicTag.ALBUM: "The One", BasicTag.ARTIST: "Foo"})]),
+            Album(path="One!" + os.sep, tracks=[Track(filename="1.flac", tag={BasicTag.ALBUM: "The One", BasicTag.ARTIST: "Foo"})]),
+        ]
+        ctx = Context()
+        ctx.db = connection.open(connection.MEMORY)
+        with Session(ctx.db) as session:
+            session.add(albums[0])
+            session.add(albums[1])
+            session.flush()
+
+            assert not CheckDuplicateAlbum(ctx).check(albums[1])
+            result = CheckDuplicateAlbum(ctx).check(albums[0])
+            assert result
+            assert 'possible duplicate of "One!' in result.message
+            assert result.fixer
+            assert result.fixer.options == [
+                f">> KEEP left (THIS album) and DELETE right (other): One!{os.sep}",
+                f">> DELETE left (THIS album) and KEEP right (other): One!{os.sep}",
+            ]
+            assert result.fixer.option_automatic_index is None
+
+            mock_rmtree = mocker.patch("albums.checks.tags.check_duplicate_album.rmtree")
+            mock_confirm = mocker.patch("albums.checks.tags.check_duplicate_album.confirm", return_value=True)
+            fix_result = result.fixer.fix(result.fixer.options[1])
+
+            assert fix_result
+            assert mock_confirm.call_count == 1
+            assert mock_rmtree.call_args_list == [call(Path(albums[0].path))]
 
     def test_duplicate_multiple(self):
         albums = [
@@ -79,7 +124,6 @@ class TestCheckDuplicateAlbum:
             assert result
             assert 'possible duplicate of "One at a Time' in result.message
             assert result.fixer
-            # TODO test fixer
 
     def test_duplicate_compilation(self):
         albums = [
@@ -110,4 +154,3 @@ class TestCheckDuplicateAlbum:
             assert result
             assert f'possible duplicate of "Lots{os.sep}' in result.message
             assert result.fixer
-            # TODO test fixer
