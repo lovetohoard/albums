@@ -1,4 +1,3 @@
-from collections import defaultdict
 from os import rename, sep
 from pathlib import Path
 from string import Template
@@ -7,6 +6,7 @@ from typing import Any
 from pathvalidate import sanitize_filename
 from rich.markup import escape
 
+from ...library.tag_tools import get_album_name_from_tags, get_artist_from_tags
 from ...tagger.types import BasicTag
 from ...types import Album, CheckResult, Fixer
 from ..base_check import Check
@@ -68,19 +68,8 @@ class CheckFolderName(Check):
         return True
 
     def _generate_folder_name(self, album: Album) -> str:
-        artists: defaultdict[str, int] = defaultdict(int)
-        album_names: defaultdict[str, int] = defaultdict(int)
-        for track in album.tracks:
-            for artist in track.get(BasicTag.ARTIST, []):
-                artists[artist] += 1
-            for albumartist in track.get(BasicTag.ALBUMARTIST, []):
-                artists[albumartist] += 1
-            for album_name in track.get(BasicTag.ALBUM, []):
-                album_names[album_name] += 1
-        artist_list = sorted(((k, v) for k, v in artists.items()), key=lambda i: i[1], reverse=True)
-        artist = artist_list[0][0] if len(artist_list) else "Unknown Artist"
-        album_name_list = sorted(((k, v) for k, v in album_names.items()), key=lambda i: i[1], reverse=True)
-        album_name = album_name_list[0][0] if len(album_name_list) else "Unknown Album"
+        artist = get_artist_from_tags(album)
+        album_name = get_album_name_from_tags(album)
         folder_name = self.format.safe_substitute({"artist": artist, "album": album_name})
         folder_name = folder_name.replace("/", self.ctx.config.path_replace_slash)
         folder_name = sanitize_filename(
