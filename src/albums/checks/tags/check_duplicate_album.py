@@ -53,6 +53,9 @@ class CheckDuplicateAlbum(Check):
             return CheckResult(f"multiple duplicates: {', '.join(f'"{a.path}"' for a in other_albums)}")
 
         other = other_albums[0]
+        if str.lower(album.path) == str.lower(other.path):
+            return CheckResult(f'possible duplicate of "{other.path}" but no automatic fix because paths differ only in case')
+
         this_tracks = sorted(album.tracks)
         other_tracks = sorted(other.tracks)
         rows: list[list[RenderableType]] = [[*self._summarize(album), *self._summarize(other)], [""] * 4]
@@ -82,7 +85,7 @@ class CheckDuplicateAlbum(Check):
                 return FixResult.CHANGED_OTHER
         elif option == f"{OPTION_KEEP_OTHER}{other.path}":
             if self._confirm_delete(album):
-                return FixResult.CHANGED_ALBUM
+                return FixResult.DELETED_ALBUM
         raise ValueError(f"invalid option {option}")
 
     def _confirm_delete(self, album: Album):
@@ -92,8 +95,13 @@ class CheckDuplicateAlbum(Check):
         if artist is None or album_name is None or album.album_id is None:
             raise RuntimeError(f'duplicate-album: target not fully identified (album="{album_name}", artist="{artist}", album_id={album.album_id})')
         if confirm(f'Are you sure you want to permanently delete "{str(path)}"?'):
+            num = 0
+            while (temp := path.with_suffix(f".{num}")) and temp.exists():
+                num += 1
+
             rmtree(path)
             self._duplicates.remove(self.ctx, self.session, artist, album_name, album.album_id)
+            self.ctx.console.print(f"Deleted {escape(album.path)}")
             return True
         return False
 

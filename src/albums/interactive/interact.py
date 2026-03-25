@@ -23,7 +23,9 @@ OPTION_DO_NOTHING = ">> Do nothing"
 OPTION_IGNORE_CHECK = ">> Ignore this check for this album"
 
 
-def interact(ctx: Context, session: Session, check_name: str, check_result: CheckResult, album: Album, show_ignore_option: bool) -> Tuple[bool, bool]:
+def interact(
+    ctx: Context, session: Session, check_name: str, check_result: CheckResult, album: Album, show_ignore_option: bool
+) -> Tuple[bool, bool, bool]:
     # if there is a fixer, offer the options it specifies
     #
     # always offer these options:
@@ -37,6 +39,7 @@ def interact(ctx: Context, session: Session, check_name: str, check_result: Chec
     fixer = check_result.fixer
     done = False  # allow user to start over if canceled by accident or not confirmed
     maybe_changed = False
+    deleted = False
     user_quit = False  # user explicitly quit this checkRenderableType
 
     OPTION_RUN_TAGGER = f">> Edit tags with {ctx.config.tagger or 'external tagger'}"
@@ -107,13 +110,14 @@ def interact(ctx: Context, session: Session, check_name: str, check_result: Chec
 
             fix_result = fixer.fix(option)
             maybe_changed |= fix_result != FixResult.NO_CHANGE
+            deleted |= fix_result == FixResult.DELETED_ALBUM
             done = maybe_changed  # if that fixer option didn't change anything, loop
 
         if maybe_changed:
             session.flush()
         # otherwise loop and ask again
 
-    return (maybe_changed, user_quit)
+    return (maybe_changed, deleted, user_quit)
 
 
 def prompt_ignore_checks(session: Session, album_id: int, check_name: str):

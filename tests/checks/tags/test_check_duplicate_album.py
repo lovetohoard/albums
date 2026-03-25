@@ -123,7 +123,8 @@ class TestCheckDuplicateAlbum:
             result = CheckDuplicateAlbum(ctx).check(albums[0])
             assert result
             assert 'possible duplicate of "One at a Time' in result.message
-            assert result.fixer
+            assert "no automatic fix because paths differ only in case" in result.message
+            assert not result.fixer
 
     def test_duplicate_compilation(self):
         albums = [

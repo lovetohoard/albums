@@ -68,13 +68,16 @@ class Checker:
             if not (self.ctx.config.library / album.path).is_dir():
                 logger.info(f"album was deleted: {album.path}")
                 scanner.scan(self.ctx, session, iter([album]))
+                session.commit()
                 continue
-
+            deleted = False
             logger.info(f"checking album: {album.path}")
             checks_passed: set[str] = set()
             preview_failed_checks = []
             for check in check_instances:
-                if check.name not in album.ignore_checks:
+                if deleted:
+                    logger.debug(f"skipping check {check.name} for deleted album {album.path}")
+                elif check.name not in album.ignore_checks:
                     missing_dependent_checks = check.must_pass_checks - checks_passed
                     if missing_dependent_checks:
                         for message in preview_failed_checks:
@@ -91,15 +94,18 @@ class Checker:
 
                     else:
                         disposition = self._run_check(session, check, album)
+                        if disposition.displayed:
+                            issues_displayed += 1
                         if disposition.maybe_changed:
                             logger.debug(f"commit changes after running {check.name}")
                             session.commit()
-                        if disposition.passed:
+
+                        if disposition.deleted:
+                            deleted = True
+                        elif disposition.passed:
                             checks_passed.add(check.name)
-                        if disposition.suppressed_failure_message:
+                        elif disposition.suppressed_failure_message:
                             preview_failed_checks.append(disposition.suppressed_failure_message)
-                        if disposition.displayed:
-                            issues_displayed += 1
                 else:
                     logger.debug(f"skipping ignored check {check.name} for album {album.path}")
         session.commit()
@@ -142,6 +148,8 @@ class Checker:
                     path = album.path
                     (_, any_changes) = scanner.scan(self.ctx, session, selector.load_album_entities(session, path=[path]), reread=True)
                     maybe_fixable = any_changes
+                elif deleted:
+                    scanner.scan(self.ctx, session, iter([album]))  # delete immediately
                 else:
                     maybe_fixable = False
             else:
@@ -175,7 +183,7 @@ class Checker:
         elif self._interactive or (fixer and self._fix):
             self.ctx.console.print()
             self.ctx.console.print(f'>> [bold cyan]"{album_display_name(self.ctx, album)}"[/bold cyan]', highlight=False)
-            (maybe_changed, user_quit) = interact(self.ctx, session, check.name, check_result, album, self._show_ignore_option)
+            (maybe_changed, deleted, user_quit) = interact(self.ctx, session, check.name, check_result, album, self._show_ignore_option)
             displayed_any = True
         else:
             message = f'[bold]{check.name}[/bold] [bold yellow]{escape(check_result.message)}[/bold yellow] : [bold cyan]"{album_display_name(self.ctx, album)}"[/bold cyan]'
