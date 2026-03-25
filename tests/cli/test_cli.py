@@ -76,7 +76,7 @@ class TestCli:
     def test_check(self):
         result = self.run(["check", "--default", "album-tag"], init=True)
         assert result.exit_code == 0
-        assert f'1 tracks missing album tag : "foo{os.sep}"' in result.output
+        assert f'1 track missing album tag : "foo{os.sep}"' in result.output
         assert f'2 tracks missing album tag : "bar{os.sep}"' in result.output
 
     def test_check_automatically_enabled_dependencies(self):
@@ -105,11 +105,11 @@ class TestCli:
     def test_notice_check(self):
         self.run(["scan"], init=True)
         result = self.run(["check", "--default"])
-        assert f'1 tracks missing album tag : "foo{os.sep}"' in result.output
+        assert f'1 track missing album tag : "foo{os.sep}"' in result.output
         assert f'2 tracks missing album tag : "bar{os.sep}"' in result.output
         self.run(["-p", "foo" + os.sep, "ignore", "album-tag"])
         result = self.run(["check", "--default"])
-        assert f'1 tracks missing album tag : "foo{os.sep}"' not in result.output
+        assert f'1 track missing album tag : "foo{os.sep}"' not in result.output
         assert f'2 tracks missing album tag : "bar{os.sep}"' in result.output
 
         result = self.run(["notice", "--force", "album-tag"])
@@ -117,13 +117,13 @@ class TestCli:
         assert f"album foo{os.sep} will stop ignoring album-tag" in result.output
 
         result = self.run(["check", "--default"])
-        assert f'1 tracks missing album tag : "foo{os.sep}"' in result.output
+        assert f'1 track missing album tag : "foo{os.sep}"' in result.output
         assert f'2 tracks missing album tag : "bar{os.sep}"' in result.output
 
     def test_check_automatic_fix(self):
         result = self.run(["check", "--automatic", "album-tag"], init=True)
         assert result.exit_code == 0
-        assert f'"foo{os.sep}" - 1 tracks missing album tag' in result.output
+        assert f'"foo{os.sep}" - 1 track missing album tag' in result.output
         assert f'"bar{os.sep}" - 2 tracks missing album tag' in result.output
         assert "setting album on 1.flac" in result.output
 

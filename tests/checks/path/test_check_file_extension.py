@@ -38,7 +38,7 @@ class TestCheckFileExtension:
         result = CheckFileExtension(Context()).check(album)
         assert result is not None
         assert (
-            'bad file extensions, example "normal.MP4" should be "normal.mp4" (automatic fix not possible due to filename conflict)' in result.message
+            'bad file extension, example "normal.MP4" should be "normal.mp4" (automatic fix not possible due to filename conflict)' in result.message
         )
         assert result.fixer is None
 
@@ -46,7 +46,7 @@ class TestCheckFileExtension:
         album = Album(path="foo" + os.sep, tracks=[Track(filename="upper.MP3")])
         result = CheckFileExtension(Context()).check(album)
         assert result is not None
-        assert 'bad file extensions, example "upper.MP3" should be "upper.mp3"' in result.message
+        assert 'bad file extension, example "upper.MP3" should be "upper.mp3"' in result.message
         assert result.fixer is not None
         assert result.fixer.options == [">> Change file extensions"]
         assert result.fixer.option_automatic_index == 0

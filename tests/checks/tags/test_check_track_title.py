@@ -89,7 +89,7 @@ class TestCheckTrackTitle:
         )
         result = CheckTrackTitle(Context()).check(album)
         assert result is not None
-        assert "1 tracks missing title" in result.message
+        assert "1 track missing title" in result.message
         assert result.fixer.options == [">> Use proposed track titles"]
         assert result.fixer.option_automatic_index == 0
 

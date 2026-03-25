@@ -26,7 +26,7 @@ class TestCheckCheckInvalidImage:
         album = Album(path="", tracks=[Track(filename="1.flac", pictures=[pic])])
         result = CheckInvalidImage(Context()).check(album)
         assert result is not None
-        assert "image load errors: test load failed" in result.message
+        assert "image load error: test load failed" in result.message
 
         assert result.fixer
         assert result.fixer.option_automatic_index is None
@@ -63,7 +63,7 @@ class TestCheckCheckInvalidImage:
         )
         result = CheckInvalidImage(Context()).check(album)
         assert result is not None
-        assert "image load errors: test load failed" in result.message
+        assert "image load error: test load failed" in result.message
         assert result.fixer
         assert result.fixer.option_automatic_index is None
         assert len(result.fixer.options) == 1

@@ -14,6 +14,7 @@ from ...picture.info import PictureInfo
 from ...tagger.folder import Cap
 from ...tagger.types import Picture, PictureType
 from ...types import Album, CheckResult, Fixer, FixResult, PictureFile
+from ...words.make import is_plural, plural, pluralize
 from ..base_check import Check
 from ..helpers import FRONT_COVER_FILENAME
 
@@ -72,13 +73,13 @@ class CheckCoverEmbedded(Check):
                 not_expected_format = sum(0 if not c or c and c[1].picture_info.mime_type == self.create_mime_type else 1 for c in track_covers)
                 problems: list[str] = []
                 if unsupported:
-                    problems.append(f"{unsupported} tracks where albums doesn't support embedded images")
+                    problems.append(f"{plural(unsupported, 'track')} where albums doesn't support embedded images")
                 if missing:
-                    problems.append(f"{missing} with no cover")
+                    problems.append(f"{plural(missing, 'track')} with no cover")
                 if not_expected_size:
-                    problems.append(f"{not_expected_size} with wrong dimensions")
+                    problems.append(f"{plural(not_expected_size, 'track cover')} with wrong dimensions")
                 if not_expected_format:
-                    problems.append(f"{not_expected_format} with wrong MIME type")
+                    problems.append(f"{plural(not_expected_format, 'track cover')} with wrong MIME type")
                 problem_summary = ", ".join(problems)
                 if len(unique_track_covers) > 1:
                     # TODO we could offer a non-automatic fix if user wants to overwrite non-unique covers
@@ -133,13 +134,13 @@ class CheckCoverEmbedded(Check):
         all_good_enough = all(c and good_enough(c[1]) for c in track_covers)
         if not all_good_enough:
             not_good_enough = sum(0 if not c or c and good_enough(c[1]) else 1 for c in track_covers)
-            problem_summary = f"{missing} tracks with no cover and {not_good_enough} tracks with out of spec covers"
+            problem_summary = f"{plural(unsupported, 'track')} with no cover and {plural(not_good_enough, 'track')} with out of spec {pluralize('cover', not_good_enough)}"
             cover_files = [file for file in album.picture_files if PictureType.from_filename(file.filename) == PictureType.COVER_FRONT]
 
             unique_covers = unique_track_covers.union(Picture(file.picture_info, PictureType.COVER_FRONT, "") for file in cover_files)
             if len(unique_covers) > 1:
                 return CheckResult(
-                    f"{problem_summary}, but there are {len(unique_covers)} unique front covers and no cover_source (enable cover-unique for fixes)",
+                    f"{problem_summary}, but there {is_plural(unique_covers, 'unique front cover')} and no cover_source (enable cover-unique for fixes)",
                 )
             # else
             if len(unique_covers) == 1:

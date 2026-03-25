@@ -4,6 +4,7 @@ from os import rename
 from rich.markup import escape
 
 from ...types import Album, CheckResult, Fixer, FixResult
+from ...words.make import plural
 from ..base_check import Check
 
 logger = logging.getLogger(__name__)
@@ -25,7 +26,7 @@ class CheckUnreadableTrack(Check):
         options = [OPTION_RENAME_UNREADABLE]
         option_automatic_index = None
         fixer = Fixer(lambda option: self._fix_rename_unreadable(album), options, False, option_automatic_index, table)
-        return CheckResult(f"{unreadable_count} unreadable tracks, example {example_filename}", fixer)
+        return CheckResult(f"{plural(unreadable_count, 'unreadable track')}, example {example_filename}", fixer)
 
     def _fix_rename_unreadable(self, album: Album):
         changed = False

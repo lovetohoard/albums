@@ -6,6 +6,7 @@ from rich.markup import escape
 from ...tagger.folder import AlbumTagger, Cap
 from ...tagger.types import BasicTag
 from ...types import Album, CheckResult, Fixer, FixResult
+from ...words.make import pluralize
 from ..base_check import Check
 from ..helpers import describe_track_number, get_tracks_by_disc, ordered_tracks
 from ..tag_policy import Policy, check_policy
@@ -101,11 +102,11 @@ class CheckDiscNumbering(Check):
                         f"album only has a single disc {list(all_disc_numbers)[0]} of {expect_disc_total} (if this is wanted, enable discs_in_separate_folders)",
                     )
             elif missing_disc_numbers:
-                return CheckResult(f"missing disc numbers: {missing_disc_numbers}")
+                return CheckResult(f"missing disc {pluralize('number', missing_disc_numbers)}: {missing_disc_numbers}")
 
             unexpected_disc_numbers = all_disc_numbers - expect_disc_numbers
             if unexpected_disc_numbers:
-                return CheckResult(f"unexpected disc numbers: {unexpected_disc_numbers}")
+                return CheckResult(f"unexpected disc {pluralize('number', unexpected_disc_numbers)}: {unexpected_disc_numbers}")
 
             if self.remove_redundant_discnumber and len(all_disc_numbers) == 1 and expect_disc_total == 1 and all_disc_numbers.pop() == 1:
                 disctotal_notice = " and disc total 1" if max(all_disc_totals) else ""

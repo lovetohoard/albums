@@ -14,12 +14,12 @@ from rich.progress import Progress
 from sqlalchemy import delete, desc, select
 from sqlalchemy.orm import Session
 
-from albums.picture.format import format_to_mime_type
-
 from ..app import SCANNER_VERSION, Context
+from ..picture.format import format_to_mime_type
 from ..picture.scan import PictureScannerCache
 from ..tagger.folder import AUDIO_FILE_SUFFIXES, AlbumTagger
 from ..types import Album, OtherFile, PictureFile, ScanHistoryEntity, TagV, Track, TrackPicture
+from ..words.make import plural
 from .folder import MiniStat, read_binary_file, stat_dir
 
 MAX_IMAGE_SIZE = 128 * 1024 * 1024  # don't load and scan image files larger than this. 16 MB is the max for ID3v2 and FLAC tags.
@@ -102,7 +102,7 @@ def scan(
         raise SystemExit(1)
 
     if ctx.verbose:
-        ctx.console.print(f"scanned {scanned} folders in {escape(str(ctx.config.library))} in {int(time.perf_counter() - start_time)}s.")
+        ctx.console.print(f"scanned {plural(scanned, 'folder')} in {escape(str(ctx.config.library))} in {int(time.perf_counter() - start_time)}s.")
         ctx.console.print(", ".join(f"{str.lower(k.name).replace('_', ' ')}: {v}" for (k, v) in scan_results.items()))
 
     return (albums_total, any_changes)

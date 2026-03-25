@@ -127,7 +127,7 @@ class TestCheckDiscNumbering:
             ],
         )
         result = CheckDiscNumbering(Context()).check(album)
-        assert "missing disc numbers: {2}" in result.message
+        assert "missing disc number: {2}" in result.message
         assert result.fixer is None
 
     def test_check_discnumber_unexpected_disc(self):
@@ -140,7 +140,7 @@ class TestCheckDiscNumbering:
             ],
         )
         result = CheckDiscNumbering(Context()).check(album)
-        assert "unexpected disc numbers: {3}" in result.message
+        assert "unexpected disc number: {3}" in result.message
         assert result.fixer is None
 
     def test_check_missing_disc_with_discs_in_separate_folders_default_true(self):

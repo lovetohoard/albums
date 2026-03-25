@@ -31,7 +31,7 @@ class TestCheckAlbumTag:
             ],
         )
         result = CheckAlbumTag(Context()).check(album)
-        assert "1 tracks missing album tag" in result.message
+        assert "1 track missing album tag" in result.message
 
     def test_check_needs_album__conflicting(self):
         album = Album(
@@ -81,7 +81,7 @@ class TestCheckAlbumTag:
             ],
         )
         result = CheckAlbumTag(Context()).check(album)
-        assert "1 tracks missing album tag" in str(result.message)
+        assert "1 track missing album tag" in str(result.message)
         assert result.fixer is not None
         assert result.fixer.option_automatic_index is None
         assert result.fixer.option_free_text

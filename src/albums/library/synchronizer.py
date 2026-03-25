@@ -11,6 +11,7 @@ from rich.progress import Progress, TransferSpeedColumn
 from sqlalchemy.orm import Session
 
 from ..app import Context
+from ..words.make import plural
 
 logger = logging.getLogger(__name__)
 
@@ -68,7 +69,9 @@ def do_sync(ctx: Context, dest: Path, delete: bool, force: bool):
             ctx.console.print("skipped deleting files from destination")
 
     elif len(existing_dest_paths) > 0:
-        ctx.console.print(f"[bold green]not deleting {len(existing_dest_paths)} paths from {escape(str(dest))}, e.g. {list(existing_dest_paths)[:2]}")
+        ctx.console.print(
+            f"[bold green]not deleting {plural(existing_dest_paths, 'path')} from {escape(str(dest))}, e.g. {list(existing_dest_paths)[:2]}"
+        )
 
     skipped = f" (skipped {skipped_tracks})" if skipped_tracks > 0 else ""
     if len(tracks) > 0:
@@ -80,7 +83,7 @@ def do_sync(ctx: Context, dest: Path, delete: bool, force: bool):
 
 def copy_files_with_progress(ctx: Context, to_copy: Sequence[Tuple[Path, Path, int]]):
     total_size = sum(size for _src, _dest, size in to_copy)
-    ctx.console.print(f"Copying {len(to_copy)} files {humanize.naturalsize(total_size)}")
+    ctx.console.print(f"Copying {plural(to_copy, 'file')} {humanize.naturalsize(total_size)}")
     with Progress(*Progress.get_default_columns(), TransferSpeedColumn()) as progress:
         sync_task = progress.add_task("Progress", total=total_size)
         for source_track_path, dest_track_path, size in sorted(to_copy, key=lambda t: t[1]):

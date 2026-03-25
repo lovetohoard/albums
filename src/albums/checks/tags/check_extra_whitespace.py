@@ -5,6 +5,7 @@ from rich.markup import escape
 from ...tagger.folder import AlbumTagger, Cap
 from ...tagger.types import BasicTag
 from ...types import Album, CheckResult, Fixer, FixResult
+from ...words.make import plural
 from ..base_check import Check
 
 
@@ -27,7 +28,7 @@ class CheckExtraWhitespace(Check):
             options = [f">> Strip leading and trailing whitespace in tags: {', '.join(sorted(tags))}"]
             option_automatic_index = 0
             return CheckResult(
-                f"Extra whitespace present in {len(filenames)} files in tags: {', '.join(sorted(tags))} - example {example}",
+                f"Extra whitespace present in {plural(filenames, 'file')} in tags: {', '.join(sorted(tags))} - example {example}",
                 Fixer(
                     lambda _: self._fix_strip_tags(album, filenames),
                     options,

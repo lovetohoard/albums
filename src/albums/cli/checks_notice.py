@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from ..app import Context
 from ..checks.all import ALL_CHECK_NAMES
 from ..checks.helpers import album_display_name
+from ..words.make import pluralize
 from .cli_context import pass_context, require_configured, require_persistent_context
 
 
@@ -32,7 +33,7 @@ def checks_notice(ctx: Context, force: bool, check_names: list[str]):
                     ctx.console.print(f"album {album_display_name(ctx, album)} was already not ignoring {target_check}")
 
             if changed and not error:
-                if force or ctx.is_filtered or confirm(f"stop ignoring checks {check_names} for all albums?"):
+                if force or ctx.is_filtered or confirm(f"stop ignoring {pluralize('check', check_names)} {', '.join(check_names)} for all albums?"):
                     session.commit()
             elif not error and ctx.is_filtered:
                 ctx.console.print(f"no changes to album {album_display_name(ctx, album)}")

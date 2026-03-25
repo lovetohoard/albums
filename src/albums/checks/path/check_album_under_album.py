@@ -1,6 +1,7 @@
 from sqlalchemy import and_, func, select
 
 from ...types import Album, CheckResult
+from ...words.make import a_plural, is_plural
 from ..base_check import Check
 from ..helpers import album_display_name
 
@@ -19,4 +20,6 @@ class CheckAlbumUnderAlbum(Check):
         )
 
         if matches > 0:
-            return CheckResult(f"there are {matches} albums in directories under album {album_display_name(self.ctx, album)}")
+            return CheckResult(
+                f"there {is_plural(matches, 'album')} in {a_plural(matches, 'directory')} under album {album_display_name(self.ctx, album)}"
+            )

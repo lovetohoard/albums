@@ -49,9 +49,10 @@ the db used by a regular installation of `albums`).
 | **`cli`**         | everything                      | Entry point and command implementations         |
 | **`database`**    | `picture`, `tagger`             | Create/update db, store config, build queries   |
 | **`interactive`** | `database`, `tagger`            | UI for interacting with checks & configuration  |
-| **`library`**     | `picture`, `tagger`             | Scan library, import album, sync to destination |
+| **`library`**     | `picture`, `tagger`, `words`    | Scan library, import album, sync to destination |
 | **`picture`**     | _none_                          | Get picture info, caching picture scanner       |
 | **`tagger`**      | `picture`                       | Read/write metadata in media files              |
+| **`words`**       | _none_                          | Simple text generation e.g. pluralize words     |
 
 <!-- pyml enable line-length -->
 

@@ -9,6 +9,7 @@ from ...app import Context
 from ...tagger.folder import AlbumTagger, Cap
 from ...tagger.types import BasicTag
 from ...types import Album, CheckResult, Fixer, FixResult, Track
+from ...words.make import plural, pluralize
 from ..base_check import Check
 from ..helpers import describe_track_number, get_tracks_by_disc, ordered_tracks, parse_filename
 from ..tag_policy import Policy, check_policy
@@ -55,7 +56,7 @@ class TrackTotalFixer(Fixer):
             True,
             option_automatic_index,
             table,
-            f"select option to apply to {len(self.tracks)} tracks{discnumber_notice}",
+            f"select option to apply to {plural(self.tracks, 'track')}{discnumber_notice}",
         )
 
     def _fix(self, ctx: Context, tagger: AlbumTagger, album: Album, option: str | None):
@@ -158,18 +159,18 @@ class CheckTrackNumbering(Check):
             missing_track_numbers = expected_track_numbers - actual_track_numbers
             unexpected_track_numbers = actual_track_numbers - expected_track_numbers
             if actual_track_numbers > expected_track_numbers:
-                return CheckResult(f"unexpected track numbers{on_disc_message} {unexpected_track_numbers}")
+                return CheckResult(f"unexpected track {pluralize('number', unexpected_track_numbers)}{on_disc_message} {unexpected_track_numbers}")
             elif len(missing_track_numbers) > 0:
                 if duplicate_tracks:
-                    return CheckResult(f"duplicate track numbers{on_disc_message} {duplicate_tracks}")
+                    return CheckResult(f"duplicate track {pluralize('number', duplicate_tracks)}{on_disc_message} {duplicate_tracks}")
                 if len(actual_track_numbers) == len(tracks):
                     # if all tracks have a unique track number tag and there are no unexpected track numbers but there are missing track numbers,
                     # then it looks like the album is incomplete.
-                    return CheckResult(f"tracks missing from album{on_disc_message} {missing_track_numbers}")
+                    return CheckResult(f"{pluralize('track', missing_track_numbers)} missing from album{on_disc_message} {missing_track_numbers}")
 
                 # TODO: we can probably offer this fixer in some other cases, also
                 fixer = self._renumber_fixer(album, disc_number, tracks)
-                return CheckResult(f"missing track numbers{on_disc_message} {missing_track_numbers}", fixer)
+                return CheckResult(f"missing track {pluralize('number', missing_track_numbers)}{on_disc_message} {missing_track_numbers}", fixer)
 
         return None
 
@@ -187,7 +188,7 @@ class CheckTrackNumbering(Check):
                 new_tracknumbers[track.filename] = str(filename_tracknumber)
         if not new_tracknumbers:
             return None
-        options = [f">> Automatically renumber {len(new_tracknumbers)} tracks based on filenames"]
+        options = [f">> Automatically renumber {plural(new_tracknumbers, 'track')} based on {pluralize('filename', new_tracknumbers)}"]
         option_automatic_index = 0
 
         table = (

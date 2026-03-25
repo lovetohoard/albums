@@ -5,6 +5,7 @@ from pathvalidate import ValidationError, sanitize_filename, validate_filename
 from rich.markup import escape
 
 from ...types import Album, CheckResult, Fixer, FixResult
+from ...words.make import pluralize
 from ..base_check import Check
 
 logger = logging.getLogger(__name__)
@@ -31,7 +32,7 @@ class CheckIllegalPathname(Check):
                 [[escape(track.filename), escape(self._sanitize(track.filename)) if self._check(track.filename) else ""] for track in album.tracks],
             )
             return CheckResult(
-                f"illegal filenames: {', '.join(list(issues))}",
+                f"illegal {pluralize('filename', issues)}: {', '.join(list(issues))}",
                 Fixer(lambda _: self._fix_sanitize_filenames(album), options, False, option_automatic_index, table),
             )
 

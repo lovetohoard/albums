@@ -8,6 +8,7 @@ from rich.markup import escape
 from ...tagger.folder import AlbumTagger, Cap
 from ...tagger.types import BasicTag
 from ...types import Album, CheckResult, Fixer, FixResult
+from ...words.make import plural, pluralize
 from ..base_check import Check
 from ..helpers import show_tag
 
@@ -48,12 +49,12 @@ class CheckAlbumTag(Check):
         if len(candidates) > 1:  # multiple conflicting album names (not including folder name)
             if folder_str not in candidates:
                 candidates.append(folder_str)
-            return CheckResult(f"{len(candidates)} conflicting album tag values", self._make_fixer(album, candidates))
+            return CheckResult(f"{len(candidates)} conflicting album tag {pluralize('value', candidates)}", self._make_fixer(album, candidates))
 
         if track_album_tags[""] > 0:  # tracks missing album tag
             if folder_str not in candidates:
                 candidates.append(folder_str)
-            return CheckResult(f"{track_album_tags['']} tracks missing album tag", self._make_fixer(album, candidates))
+            return CheckResult(f"{plural(track_album_tags[''], 'track')} missing album tag", self._make_fixer(album, candidates))
 
         return None
 
@@ -76,7 +77,7 @@ class CheckAlbumTag(Check):
             True,
             0 if len(options) == 1 else None,
             table,
-            f"select album name to use for all {len(album.tracks)} tracks",
+            f"select album name to use for {plural(album.tracks, 'track')}",
         )
 
     def _fix(self, album: Album, option: str):

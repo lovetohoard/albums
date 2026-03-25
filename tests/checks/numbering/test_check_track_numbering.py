@@ -143,7 +143,7 @@ class TestCheckTrackNumbering:
             ],
         )
         result = CheckTrackNumbering(Context()).check(album)
-        assert "unexpected track numbers {3}" in result.message
+        assert "unexpected track number {3}" in result.message
         assert result.fixer is None
 
     def test_check_duplicate_track_number(self):
@@ -156,7 +156,7 @@ class TestCheckTrackNumbering:
             ],
         )
         result = CheckTrackNumbering(Context()).check(album)
-        assert "duplicate track numbers [2]" in result.message
+        assert "duplicate track number [2]" in result.message
         assert result.fixer is None
 
     def test_check_missing_track_with_totals(self):

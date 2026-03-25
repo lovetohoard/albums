@@ -6,6 +6,7 @@ from rich.markup import escape
 
 from ...tagger.types import Picture, PictureType
 from ...types import Album, CheckResult
+from ...words.make import is_plural
 from ..base_check import Check
 
 
@@ -26,5 +27,5 @@ class CheckConflictingEmbedded(Check):
             )
             if conflict_type:
                 # TODO preview and remove or change type of conflicting images
-                message = f"there are {len(pics_by_type[conflict_type])} different images for {conflict_type.name} in {escape(track.filename)}"
+                message = f"there {is_plural(pics_by_type[conflict_type], 'different image')} for {conflict_type.name} in {escape(track.filename)}"
                 return CheckResult(message)

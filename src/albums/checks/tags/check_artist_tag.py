@@ -8,6 +8,7 @@ from rich.markup import escape
 from ...tagger.folder import AlbumTagger, Cap
 from ...tagger.types import BasicTag
 from ...types import Album, CheckResult, Fixer, FixResult
+from ...words.make import plural
 from ..base_check import Check
 from ..helpers import show_tag
 
@@ -71,14 +72,14 @@ class CheckArtistTag(Check):
         option_free_text = True
         option_automatic_index = 0 if len(candidates) == 1 else None
         return CheckResult(
-            f"{len(artist_values[''])} tracks missing artist tag",
+            f"{plural(artist_values[''], 'track')} missing artist tag",
             Fixer(
                 lambda option: self._fix(album, option, artist_values[""]),
                 candidates,
                 option_free_text,
                 option_automatic_index,
                 table,
-                f"select artist name to use for {len(artist_values[''])} tracks where it is missing",
+                f"select artist name to use for {plural(artist_values[''], 'track')} where it is missing",
             ),
         )
 

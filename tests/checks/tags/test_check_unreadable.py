@@ -25,7 +25,7 @@ class TestCheckUnreadable:
             [(album,)] = session.execute(select(Album)).tuples()
             result = CheckUnreadableTrack(ctx).check(album)
             assert result is not None
-            assert result.message == "1 unreadable tracks, example 2.mp3"
+            assert result.message == "1 unreadable track, example 2.mp3"
             assert result.fixer is not None
             assert result.fixer.get_table()
             assert result.fixer.option_automatic_index is None

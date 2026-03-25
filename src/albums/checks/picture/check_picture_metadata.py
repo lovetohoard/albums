@@ -8,6 +8,7 @@ from rich.markup import escape
 from ...tagger.folder import AlbumTagger, Cap
 from ...tagger.types import Picture
 from ...types import Album, CheckResult, Fixer, FixResult
+from ...words.make import plural, pluralize
 from ..base_check import Check
 
 logger = logging.getLogger(__name__)
@@ -66,11 +67,11 @@ class CheckPictureMetadata(Check):
             fixes: list[str] = []
             problems: list[str] = []
             if embedded_mismatches:
-                problems.append(f"embedded image metadata mismatch on {len(embedded_mismatches)} tracks")
-                fixes.append("re-embedding images in tracks")
+                problems.append(f"embedded image metadata mismatch on {plural(embedded_mismatches, 'track')}")
+                fixes.append(f"re-embedding images in {pluralize('track', embedded_mismatches)}")
             if image_files_to_rename:
-                problems.append("image files with wrong extension")
-                fixes.append("renaming image files")
+                problems.append(f"image {pluralize('file', image_files_to_rename)} with wrong extension")
+                fixes.append(f"renaming image {pluralize('file', image_files_to_rename)}")
             options = [f">> Fix by {' and '.join(fixes)}"]
             option_automatic_index = 0
             files = [escape(track.filename) for track in sorted(album.tracks)] + [escape(file.filename) for file in sorted(album.picture_files)]
@@ -83,10 +84,10 @@ class CheckPictureMetadata(Check):
     def _fix(self, album: Album, mismatch_tracks: list[int], image_files_to_rename: list[tuple[str, str]]):
         for track_index in mismatch_tracks:
             track = album.tracks[track_index]
-            self.ctx.console.print(f"Re-embedding pictures in {escape(track.filename)}", highlight=False)
             tagger = self.tagger.get(album.path)
             with tagger.open(track.filename) as tags:
                 all_pictures = list(tags.get_pictures())
+                self.ctx.console.print(f"Re-embedding {pluralize('picture', all_pictures)} in {escape(track.filename)}", highlight=False)
                 for pic, _data in all_pictures:
                     tags.remove_picture(pic)
                 for pic, image_data in all_pictures:

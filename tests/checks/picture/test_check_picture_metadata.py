@@ -34,7 +34,7 @@ class TestCheckPictureMetadata:
         album = Album(path="", tracks=[Track(filename="1.flac", pictures=[pic])])
         result = CheckPictureMetadata(Context()).check(album)
         assert result is not None
-        assert result.message == "embedded image metadata mismatch on 1 tracks, example image/png 400x400 but container says image/jpeg 0x0"
+        assert result.message == "embedded image metadata mismatch on 1 track, example image/png 400x400 but container says image/jpeg 0x0"
         assert result.fixer
 
     def test_picture_metadata_mismatch_fix_flac(self):
@@ -63,7 +63,7 @@ class TestCheckPictureMetadata:
                 result = CheckPictureMetadata(ctx).check(result)
                 assert result is not None
                 assert (
-                    result.message == "embedded image metadata mismatch on 1 tracks, example image/png 400x400 but container says image/jpeg 399x399"
+                    result.message == "embedded image metadata mismatch on 1 track, example image/png 400x400 but container says image/jpeg 399x399"
                 )
                 assert result.fixer
                 assert result.fixer.option_automatic_index is not None
@@ -104,7 +104,7 @@ class TestCheckPictureMetadata:
                 assert result.tracks[0].pictures[0].picture_info.load_issue
                 result = CheckPictureMetadata(ctx).check(result)
                 assert result is not None
-                assert result.message == "embedded image metadata mismatch on 1 tracks, example image/png 400x400 but container says image/jpeg"
+                assert result.message == "embedded image metadata mismatch on 1 track, example image/png 400x400 but container says image/jpeg"
                 assert result.fixer
                 assert result.fixer.option_automatic_index is not None
                 assert result.fixer.fix(result.fixer.options[result.fixer.option_automatic_index])
@@ -140,7 +140,7 @@ class TestCheckPictureMetadata:
 
                 result = CheckPictureMetadata(ctx).check(result)
                 assert result is not None
-                assert result.message == "image files with wrong extension, example cover.gif should be cover.png"
+                assert result.message == "image file with wrong extension, example cover.gif should be cover.png"
                 assert result.fixer
                 assert result.fixer.option_automatic_index is not None
                 assert result.fixer.fix(result.fixer.options[result.fixer.option_automatic_index])

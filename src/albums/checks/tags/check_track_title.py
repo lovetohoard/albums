@@ -5,6 +5,7 @@ from rich.markup import escape
 from ...tagger.folder import AlbumTagger, Cap
 from ...tagger.types import BasicTag
 from ...types import Album, CheckResult, Fixer, FixResult, Track
+from ...words.make import plural
 from ..base_check import Check
 from ..helpers import parse_filename, show_tag
 
@@ -41,9 +42,9 @@ class CheckTrackTitle(Check):
                 options = [OPTION_USE_PROPOSED]
                 option_automatic_index = 0
                 fixer = Fixer(lambda _: self._fix(album), options, option_free_text, option_automatic_index, table)
-                return CheckResult(f"{no_title} tracks missing title tag", fixer)
+                return CheckResult(f"{plural(no_title, 'track')} missing title tag", fixer)
 
-            return CheckResult(f"{no_title} tracks missing title tag and cannot guess from filename")
+            return CheckResult(f"{plural(no_title, 'track')} missing title tag and cannot guess from filename")
 
         return None
 

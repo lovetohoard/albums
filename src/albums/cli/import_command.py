@@ -3,6 +3,7 @@ import rich_click as click
 from ..app import Context
 from ..library import scanner
 from ..library.importer import Importer
+from ..words.make import plural
 from .cli_context import enter_folder_context, pass_context, require_configured, require_library, require_persistent_context
 
 
@@ -21,7 +22,7 @@ def import_command(ctx: Context, extra: bool, recursive: bool, automatic: bool, 
     parent_context = enter_folder_context(ctx, scan_folder)
     importer = Importer(ctx, extra, recursive, automatic)
     albums_total = importer.scan()
-    ctx.console.print(f"Ready to try importing {albums_total} albums")
+    ctx.console.print(f"Ready to try importing {plural(albums_total, 'album')}")
 
     importer.run()
 

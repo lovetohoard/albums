@@ -9,6 +9,7 @@ from rich.markup import escape
 from ...picture.format import SUPPORTED_IMAGE_SUFFIXES
 from ...tagger.folder import Cap
 from ...types import Album, CheckResult, Fixer, FixResult
+from ...words.make import pluralize
 from ..base_check import Check
 
 logger = logging.getLogger(__name__)
@@ -37,7 +38,7 @@ class CheckInvalidImage(Check):
                     any_bad_image_files |= not embedded
         if issues:
             return CheckResult(
-                f"image load errors: {', '.join(issues)}",
+                f"image load {pluralize('error', issues)}: {', '.join(issues)}",
                 Fixer(
                     lambda _: self._fix_remove_bad_images(album),
                     [">> Remove/delete all invalid images"],

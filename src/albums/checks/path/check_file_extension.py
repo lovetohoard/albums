@@ -6,9 +6,9 @@ from typing import Sequence, Tuple, override
 
 from rich.markup import escape
 
-from albums.tagger.folder import AUDIO_FILE_SUFFIXES
-
+from ...tagger.folder import AUDIO_FILE_SUFFIXES
 from ...types import Album, CheckConfiguration, CheckResult, Fixer, FixResult
+from ...words.make import pluralize
 from ..base_check import Check
 
 logger = logging.getLogger(__name__)
@@ -36,7 +36,7 @@ class CheckFileExtension(Check):
         rename_files = [(old, new) for old, new in files if old != new]
         if len(rename_files) == 0:
             return None
-        message = f'bad file extensions, example "{rename_files[0][0]}" should be "{rename_files[0][1]}"'
+        message = f'bad file {pluralize("extension", rename_files)}, example "{rename_files[0][0]}" should be "{rename_files[0][1]}"'
 
         final_names = [new for _, new in files]
         if len(final_names) != len(set(final_names)):

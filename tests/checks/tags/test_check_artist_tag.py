@@ -50,7 +50,7 @@ class TestCheckArtistTag:
         )
         result = CheckArtistTag(Context()).check(album)
         assert result
-        assert "1 tracks missing artist tag" in result.message
+        assert "1 track missing artist tag" in result.message
         assert result.fixer
         assert result.fixer.options == ["Baz", "Foo"]
         assert result.fixer.option_automatic_index is None
