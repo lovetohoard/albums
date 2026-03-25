@@ -43,7 +43,7 @@ class CheckFolderName(Check):
         )
 
     def _fix_use_generated(self, album: Album):
-        new_path_str = str(Path(album.path).parent / self._generate_folder_name(album))
+        new_path_str = str(Path(album.path).parent / self._generate_folder_name(album)) + sep
         old_path = self.ctx.config.library / album.path
         if str.lower(new_path_str) == str.lower(album.path):
             # extra step for case-only rename
@@ -56,7 +56,7 @@ class CheckFolderName(Check):
 
         self.ctx.console.print(f"Renaming {escape(old_path.name)} to {escape(new_path_str)}", highlight=False)
         rename(old_path, self.ctx.config.library / new_path_str)
-        album.path = new_path_str + sep
+        album.path = new_path_str
         return FixResult.CHANGED_ALBUM
 
     def _can_generate_folder_name(self, album: Album) -> bool:

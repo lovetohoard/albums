@@ -54,6 +54,20 @@ class TestCheckFolderName:
         assert mock_rename.call_args_list == [call(Path("Foo (2026)"), Path("Foo"))]
         assert album.path == "Foo" + os.sep
 
+    def test_folder_name_fix_case_sensitive(self, mocker):
+        album = Album(path="foo" + os.sep, tracks=[Track(filename="1.flac", tag={BasicTag.ALBUM: "Foo"})])
+        result = CheckFolderName(Context()).check(album)
+        assert result
+        assert "folder name does not match pattern" in result.message
+        assert result.fixer
+        assert result.fixer.options == ['>> Rename folder to "Foo"']
+        assert result.fixer.option_automatic_index == 0
+
+        mock_rename = mocker.patch("albums.checks.path.check_folder_name.rename")
+        assert result.fixer.fix(result.fixer.options[result.fixer.option_automatic_index])
+        assert mock_rename.call_args_list == [call(Path("foo"), Path("foo.0")), call(Path("foo.0"), Path("Foo"))]
+        assert album.path == "Foo" + os.sep
+
     def test_folder_name_preserve_db_entry(self, mocker):
         ctx = Context()
         ctx.config.library = create_library(
