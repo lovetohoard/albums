@@ -134,6 +134,22 @@ class TestSelector:
         finally:
             db.dispose()
 
+    def test_select_multiple_ignore_check(self):
+        db = connection.open(connection.MEMORY)
+        try:
+            with Session(db) as session:
+                session.add(TestSelector.album)
+                session.add(TestSelector.album2)
+                result = list(selector.load_album_entities(session, ignore_check=["artist-tag", "anything"]))
+                assert len(result) == 1
+                assert result[0].path.startswith("foo")
+                result = list(selector.load_album_entities(session, ignore_check=["artist-t", "anything"], regex=True))
+                assert len(result) == 1
+                assert result[0].path.startswith("foo")
+
+        finally:
+            db.dispose()
+
     def test_select_by_tags(self):
         db = connection.open(connection.MEMORY)
         try:

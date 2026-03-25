@@ -48,7 +48,7 @@ def load_album_entities(session: Session, **kwargs: Unpack[LoadEntityOptions]) -
 
     ignore_check_names = kwargs.get("ignore_check", [])
     if ignore_check_names and regex:
-        stmt = stmt.where(Album.ignore_check_entities.any(and_(*(IgnoreCheckEntity.check_name.regexp_match(c) for c in ignore_check_names))))
+        stmt = stmt.where(Album.ignore_check_entities.any(or_(*(IgnoreCheckEntity.check_name.regexp_match(c) for c in ignore_check_names))))
     elif ignore_check_names:
         stmt = stmt.where(Album.ignore_check_entities.any(IgnoreCheckEntity.check_name.in_(ignore_check_names)))
 
