@@ -15,7 +15,7 @@ from ..fixtures.create_library import create_library, test_data_path
 albums = [
     Album(
         path="foo" + os.sep,
-        tracks=[Track(filename="1.mp3", tag={BasicTag.TITLE: "1"})],
+        tracks=[Track(filename="1.mp3", tag={BasicTag.TITLE: "1", BasicTag.ARTIST: "a"})],
         picture_files=[PictureFile(filename="folder.png", picture_info=PictureInfo("ignored", 400, 400, 24, 0, b""))],
     ),
     Album(
@@ -262,6 +262,28 @@ class TestCli:
         result = self.run(["list"])
         assert "baz" in result.output
         assert "foobar" in result.output
+
+    def test_import_automatic_conflict(self):
+        result = self.run(["check", "--automatic", "album-tag"], init=True)
+        assert len(json.loads(self.run(["list", "-j"]).output)) == 2
+
+        result = self.run(["list"])
+        assert "baz" not in result.output
+        assert "foobar" not in result.output
+
+        new_album = Album(
+            path="foo" + os.sep,
+            tracks=[
+                Track(filename="01 one.flac", tag={BasicTag.TITLE: "one", BasicTag.TRACKNUMBER: "01", BasicTag.ALBUM: "foo", BasicTag.ARTIST: "a"})
+            ],
+        )
+
+        src = create_library("cli_import_conflict", [new_album])
+        result = self.run(["-v", "import", "--automatic", str(src)])
+        assert result.exit_code == 0
+        assert "Copying" not in result.output
+
+        assert len(json.loads(self.run(["list", "-j"]).output)) == 2
 
     def test_sql(self):
         self.run(["scan"], init=True)

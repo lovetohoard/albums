@@ -41,7 +41,7 @@ def scan(
     session: Session | None = None,
     scan_albums: Iterator[Album] | None = None,
     reread: bool = False,
-    check_first_full_scan_path_count: Callable[[Context, int], None] = lambda _ctx, _: None,
+    check_first_full_scan_path_count: Callable[[int], None] = lambda _: None,
 ) -> tuple[int, bool]:
     if session is None:
         with Session(ctx.db) as session:
@@ -67,7 +67,7 @@ def scan(
                 path_list = glob.glob("**/", root_dir=ctx.config.library, recursive=True)
             paths = iter(path_list)
             expected_path_count = len(path_list)
-            check_first_full_scan_path_count(ctx, expected_path_count)
+            check_first_full_scan_path_count(expected_path_count)
         paths = itertools.chain(["."], paths)
 
     def do_scan(update_progress: Callable[[], None] = lambda: None):

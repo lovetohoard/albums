@@ -1,18 +1,45 @@
 from collections import defaultdict
 from typing import Sequence
 
-from sqlalchemy import select
-from sqlalchemy.orm import Session
+from sqlalchemy import and_, or_, select
+from sqlalchemy.orm import Session, aliased
 
-from albums.app import Context
-from albums.library.tag_tools import get_album_name_from_tags, get_artist_from_tags
-from albums.types import Album
+from albums.tagger.types import BasicTag
+
+from ..app import Context
+from ..types import Album, TagV
+from .tag_tools import get_album_name_from_tags, get_artist_from_tags
+
+
+def album_in_library(ctx: Context, album: Album) -> str | None:
+    library_ctx = ctx.parent if ctx.parent is not None else ctx
+    album_name = get_album_name_from_tags(album)
+    artist = get_artist_from_tags(album)
+    if album_name and artist:
+        with Session(library_ctx.db) as session:
+            TagV2 = aliased(TagV)
+            stmt = (
+                select(TagV)
+                .filter(and_(TagV.tag == BasicTag.ALBUM, TagV.value == album_name))
+                .join(
+                    TagV2,
+                    and_(
+                        TagV.track_id == TagV2.track_id,
+                        TagV2.value == artist,
+                        or_(TagV2.tag == BasicTag.ARTIST, TagV2.tag == BasicTag.ALBUMARTIST),
+                    ),
+                )
+            )
+            tag_match = session.execute(stmt).tuples().first()
+            if tag_match is not None and tag_match[0].track and tag_match[0].track.album:
+                return tag_match[0].track.album.path
+    return None
 
 
 class DuplicateFinder:
-    _duplicates: dict[tuple[str, str], list[int]]
+    _duplicates: dict[tuple[str, str], list[int]] = {}
 
-    def __init__(self, ctx: Context, session: Session):
+    def start(self, session: Session):  # TODO make initializing DuplicateFinder faster
         # this takes several seconds on a large library, but when checking the whole library, this way is 6x faster than querying per album
         albums: defaultdict[tuple[str, str], list[int]] = defaultdict(list[int])
         for (album,) in session.execute(select(Album).order_by(Album.path)).tuples():
@@ -21,17 +48,31 @@ class DuplicateFinder:
             if add_album_name and add_artist and album.album_id is not None:
                 albums[(str.lower(add_artist), str.lower(add_album_name))].append(album.album_id)
         self._duplicates = dict((k, ids) for k, ids in albums.items() if len(ids) > 1)
+        return self
 
-    def find(self, ctx: Context, session: Session, artist: str, album_name: str, album_id: int | None = None) -> Sequence[int] | None:
+    def find(self, album: Album) -> Sequence[int] | None:
+        album_name = get_album_name_from_tags(album)
+        artist = get_artist_from_tags(album)
+        if not artist or not album_name:
+            return None
+
         # TODO: try variants (without parenthetical, without articles) and/or match "similar" strings
         ids = self._duplicates.get((str.lower(artist), str.lower(album_name)))
-        if ids is None or (album_id is not None and ids[0] != album_id):
+
+        # only the first album in the list fails the check
+        if ids is None or ids[0] != album.album_id:
             return None
         return ids[1:]
 
-    def remove(self, ctx: Context, session: Session, artist: str, album_name: str, album_id: int):
+    def remove(self, album: Album):
+        album_name = get_album_name_from_tags(album)
+        artist = get_artist_from_tags(album)
+        if artist is None or album_name is None or album.album_id is None:
+            raise RuntimeError(f'remove: target not fully identified (album="{album_name}", artist="{artist}", album_id={album.album_id})')
+
+        # artist: str, album_name: str, album_id: int
         ids = self._duplicates.get((str.lower(artist), str.lower(album_name)), [])
-        if album_id in ids:
-            ids.remove(album_id)
+        if album.album_id in ids:
+            ids.remove(album.album_id)
         else:
-            raise ValueError(f"error, cannot remove duplicate album {album_id} ({artist}/{album_name}) because it was not found")
+            raise ValueError(f"error, cannot remove duplicate album {album.album_id} ({artist}/{album_name}) because it was not found")

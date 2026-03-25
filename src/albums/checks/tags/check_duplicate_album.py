@@ -13,7 +13,6 @@ from albums.app import Context
 from albums.library.duplicates import DuplicateFinder
 from albums.tagger.provider import AlbumTaggerProvider
 
-from ...library.tag_tools import get_album_name_from_tags, get_artist_from_tags
 from ...types import Album, CheckResult, Fixer, FixResult, OtherFile, PictureFile, Track
 from ..base_check import Check
 
@@ -25,26 +24,21 @@ class CheckDuplicateAlbum(Check):
     name = "duplicate-album"
     default_config = {"enabled": True}
     must_pass_checks = {"album-tag", "artist-tag"}
-    _duplicates: DuplicateFinder
+    _duplicates = DuplicateFinder()
 
     def __init__(self, ctx: Context, tagger: AlbumTaggerProvider | None = None, session: Session | None = None):
         super().__init__(ctx, tagger, session)
 
         # tell user about the delay so the check can be disabled if unwanted
         with ctx.console.status(f"Initializing [bold]{self.name}[/bold] check [italic](disable check to skip)[/italic]", spinner="bouncingBar"):
-            self._duplicates = DuplicateFinder(ctx, self.session)
+            self._duplicates.start(self.session)
 
     @override
     def check(self, album: Album) -> CheckResult | None:
         if not self.ctx.is_persistent:
             return None
 
-        album_name = get_album_name_from_tags(album)
-        artist = get_artist_from_tags(album)
-        if not artist or not album_name:
-            return None
-
-        duplicate_ids = self._duplicates.find(self.ctx, self.session, artist, album_name, album.album_id)
+        duplicate_ids = self._duplicates.find(album)
         if not duplicate_ids:
             return None
 
@@ -89,18 +83,14 @@ class CheckDuplicateAlbum(Check):
         raise ValueError(f"invalid option {option}")
 
     def _confirm_delete(self, album: Album):
-        album_name = get_album_name_from_tags(album)
-        artist = get_artist_from_tags(album)
         path = self.ctx.config.library / album.path
-        if artist is None or album_name is None or album.album_id is None:
-            raise RuntimeError(f'duplicate-album: target not fully identified (album="{album_name}", artist="{artist}", album_id={album.album_id})')
         if confirm(f'Are you sure you want to permanently delete "{str(path)}"?'):
             num = 0
             while (temp := path.with_suffix(f".{num}")) and temp.exists():
                 num += 1
 
             rmtree(path)
-            self._duplicates.remove(self.ctx, self.session, artist, album_name, album.album_id)
+            self._duplicates.remove(album)
             self.ctx.console.print(f"Deleted {escape(album.path)}")
             return True
         return False
