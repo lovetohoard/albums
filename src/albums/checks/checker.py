@@ -70,44 +70,47 @@ class Checker:
                 scanner.scan(self.ctx, session, iter([album]))
                 session.commit()
                 continue
-            deleted = False
             logger.info(f"checking album: {album.path}")
-            checks_passed: set[str] = set()
-            preview_failed_checks = []
-            for check in check_instances:
-                if deleted:
-                    logger.debug(f"skipping check {check.name} for deleted album {album.path}")
-                elif check.name not in album.ignore_checks:
-                    missing_dependent_checks = check.must_pass_checks - checks_passed
-                    if missing_dependent_checks:
-                        for message in preview_failed_checks:
-                            self.ctx.console.print(message, highlight=False)
-                        preview_failed_checks = []
-                        self.ctx.console.print(
-                            f'[bold]dependency not met for check {check.name}[/bold] on "{album_display_name(self.ctx, album)}": {" and ".join(missing_dependent_checks)} must pass first',
-                            highlight=False,
-                        )
-                        if self._interactive and album.album_id is not None:
-                            prompt_ignore_checks(session, album.album_id, check.name)
+            deleted = False
+            check_all = True
+            while check_all and not deleted:
+                preview_failed_checks = []
+                checks_passed: set[str] = set()
+                check_all = False
+                for check in check_instances:
+                    if check.name not in album.ignore_checks:
+                        missing_dependent_checks = check.must_pass_checks - checks_passed
+                        if missing_dependent_checks:
+                            for message in preview_failed_checks:
+                                self.ctx.console.print(message, highlight=False)
+                            preview_failed_checks = []
+                            self.ctx.console.print(
+                                f'[bold]dependency not met for check {check.name}[/bold] on "{album_display_name(self.ctx, album)}": {" and ".join(missing_dependent_checks)} must pass first',
+                                highlight=False,
+                            )
+                            if self._interactive and album.album_id is not None:
+                                prompt_ignore_checks(session, album.album_id, check.name)
 
-                        issues_displayed += 1
-
-                    else:
-                        disposition = self._run_check(session, check, album)
-                        if disposition.displayed:
                             issues_displayed += 1
-                        if disposition.maybe_changed:
-                            logger.debug(f"commit changes after running {check.name}")
-                            session.commit()
 
-                        if disposition.deleted:
-                            deleted = True
-                        elif disposition.passed:
-                            checks_passed.add(check.name)
-                        elif disposition.suppressed_failure_message:
-                            preview_failed_checks.append(disposition.suppressed_failure_message)
-                else:
-                    logger.debug(f"skipping ignored check {check.name} for album {album.path}")
+                        else:
+                            disposition = self._run_check(session, check, album)
+                            if disposition.displayed:
+                                issues_displayed += 1
+                            if disposition.deleted:
+                                deleted = True
+                                break  # don't run any more checks on this album
+                            if disposition.maybe_changed:
+                                logger.debug(f"commit changes after running {check.name}")
+                                session.commit()
+                                check_all = True  # re-run all checks
+                                break  # from the beginning
+                            elif disposition.passed:
+                                checks_passed.add(check.name)
+                            elif disposition.suppressed_failure_message:
+                                preview_failed_checks.append(disposition.suppressed_failure_message)
+                    else:
+                        logger.debug(f"skipping ignored check {check.name} for album {album.path}")
         session.commit()
         return issues_displayed
 
