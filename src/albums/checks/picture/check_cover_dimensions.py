@@ -12,7 +12,7 @@ from ...interactive.image_table import render_image_table
 from ...picture.format import SUPPORTED_IMAGE_MIME_TYPES, format_to_mime_type, get_depth_bpp, mime_type_to_format
 from ...picture.info import PictureInfo
 from ...tagger.types import Picture, PictureType
-from ...types import Album, CheckResult, Fixer, PictureFile
+from ...types import Album, CheckResult, Fixer, FixResult, PictureFile
 from ..base_check import Check
 
 logger = logging.getLogger(__name__)
@@ -173,7 +173,7 @@ class CheckCoverDimensions(Check):
         with open(new_path, "wb") as f:
             self.ctx.console.print(f"Writing {new_path.name}")
             f.write(image_data)
-        return True
+        return FixResult.CHANGED_ALBUM
 
     def _render_table(
         self,

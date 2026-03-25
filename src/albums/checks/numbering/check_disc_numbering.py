@@ -5,7 +5,7 @@ from rich.markup import escape
 
 from ...tagger.folder import AlbumTagger, Cap
 from ...tagger.types import BasicTag
-from ...types import Album, CheckResult, Fixer
+from ...types import Album, CheckResult, Fixer, FixResult
 from ..base_check import Check
 from ..helpers import describe_track_number, get_tracks_by_disc, ordered_tracks
 from ..tag_policy import Policy, check_policy
@@ -124,7 +124,7 @@ class CheckDiscNumbering(Check):
 
         return None
 
-    def _fix_disc_total(self, album: Album, option: str) -> bool:
+    def _fix_disc_total(self, album: Album, option: str):
         if option.startswith(OPTION_SET_DISC_TOTAL):
             value = option.split(" = ")[1]
         elif option.startswith(OPTION_REMOVE_DISC_TOTAL):
@@ -143,9 +143,9 @@ class CheckDiscNumbering(Check):
                 self.ctx.console.print(f"setting disctotal on {escape(track.filename)}", highlight=False)
                 self.tagger.get(album.path).set_basic_tags(path, [(BasicTag.DISCTOTAL, value)])
                 changed = True
-        return changed
+        return FixResult.of(changed)
 
-    def _fix_remove_disc_number_disc_total_1(self, album: Album) -> bool:
+    def _fix_remove_disc_number_disc_total_1(self, album: Album):
         changed = False
         tagger = self.tagger.get(album.path)
         for track in (track for track in album.tracks if (track.has(BasicTag.DISCNUMBER) or track.has(BasicTag.DISCTOTAL))):
@@ -163,4 +163,4 @@ class CheckDiscNumbering(Check):
                 for remove_tag in remove_tags:
                     tags.set_tag(remove_tag, None)
             changed = True
-        return changed
+        return FixResult.of(changed)

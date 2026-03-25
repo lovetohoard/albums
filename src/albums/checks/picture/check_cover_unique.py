@@ -8,7 +8,7 @@ from rich.markup import escape
 from ...interactive.image_table import render_image_table
 from ...picture.format import SUPPORTED_IMAGE_SUFFIXES
 from ...tagger.types import Picture, PictureType
-from ...types import Album, CheckResult, Fixer
+from ...types import Album, CheckResult, Fixer, FixResult
 from ..base_check import Check
 from ..helpers import delete_files_except
 
@@ -117,7 +117,9 @@ class CheckCoverUnique(Check):
                     # Maybe the tracks have unique cover art on purpose?
                     return CheckResult(
                         "all tracks have cover pictures, but not all cover pictures are the same",
-                        Fixer(lambda _: False, [], False, None, table),  # Don't know how to fix, but let's show the pics and the option to ignore
+                        Fixer(
+                            lambda _: FixResult.NO_CHANGE, [], False, None, table
+                        ),  # Don't know how to fix, but let's show the pics and the option to ignore
                     )
                 # else
                 return CheckResult("tracks do not all have cover pictures and not all cover pictures are the same")
@@ -142,7 +144,7 @@ class CheckCoverUnique(Check):
             return largest_image_file
         return None
 
-    def _fix_select_cover_source_or_delete(self, album: Album, option: str, options: Sequence[str], all_filenames: Sequence[str]) -> bool:
+    def _fix_select_cover_source_or_delete(self, album: Album, option: str, options: Sequence[str], all_filenames: Sequence[str]):
         if option.startswith(OPTION_DELETE_ALL_COVER_IMAGES):
             return delete_files_except(self.ctx, None, album, all_filenames)
         elif option.startswith(OPTION_SELECT_COVER_IMAGE):
@@ -150,5 +152,5 @@ class CheckCoverUnique(Check):
             self.ctx.console.print(f"setting cover source file to {escape(filename)}")
             file = next(file for file in album.picture_files if file.filename == filename)
             file.cover_source = True
-            return True
+            return FixResult.CHANGED_ALBUM
         raise ValueError(f"invalid option {option}")

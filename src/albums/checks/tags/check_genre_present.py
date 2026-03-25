@@ -4,7 +4,7 @@ from typing import Any
 from rich.markup import escape
 
 from ...tagger.folder import AlbumTagger, Cap
-from ...types import Album, BasicTag, CheckResult, Fixer
+from ...types import Album, BasicTag, CheckResult, Fixer, FixResult
 from ..base_check import Check
 from ..tag_policy import Policy, check_policy
 
@@ -72,7 +72,7 @@ class CheckGenrePresent(Check):
                         ),
                     )
 
-    def _fix_set_genre(self, album: Album, option: str) -> bool:
+    def _fix_set_genre(self, album: Album, option: str):
         # TODO: check if option is a "valid" genre (may be free text)
         tagger = self.tagger.get(album.path)
         changed = False
@@ -82,4 +82,4 @@ class CheckGenrePresent(Check):
                 with tagger.open(track.filename) as tags:
                     tags.set_tag(BasicTag.GENRE, option)
                 changed = True
-        return changed
+        return FixResult.of(changed)

@@ -11,7 +11,7 @@ from ...interactive.image_table import render_image_table
 from ...picture.format import SUPPORTED_IMAGE_SUFFIXES
 from ...tagger.folder import AlbumTagger, Cap
 from ...tagger.types import Picture, PictureType
-from ...types import Album, CheckResult, Fixer
+from ...types import Album, CheckResult, Fixer, FixResult
 from ..base_check import Check
 from ..helpers import FRONT_COVER_FILENAME
 
@@ -98,4 +98,4 @@ class CheckCoverAvailable(Check):
             with open(new_path, "wb") as f:
                 f.write(image_data)
 
-        return True
+        return FixResult.CHANGED_ALBUM

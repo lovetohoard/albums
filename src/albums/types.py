@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from enum import Enum, auto
 from typing import Any, Callable, Dict, List, Mapping, Optional, Sequence, Tuple, Union, overload
 
 from rich.console import RenderableType
-from sqlalchemy import REAL, Boolean, Enum, ForeignKey, Index, Integer, LargeBinary, Text
+from sqlalchemy import REAL, Boolean, ForeignKey, Index, Integer, LargeBinary, Text
+from sqlalchemy import Enum as SqlEnum
 from sqlalchemy.ext.associationproxy import AssociationProxy, association_proxy
 from sqlalchemy.orm import Mapped, composite, mapped_column, relationship
 
@@ -15,9 +17,20 @@ from .tagger.types import BasicTag, Picture, PictureType, StreamInfo
 type CheckConfiguration = Dict[str, Union[str, int, float, bool, Sequence[str]]]
 
 
+class FixResult(Enum):
+    NO_CHANGE = auto()
+    CHANGED_ALBUM = auto()
+    DELETED_ALBUM = auto()
+    CHANGED_OTHER = auto()
+
+    @staticmethod
+    def of(changed: bool):
+        return FixResult.CHANGED_ALBUM if changed else FixResult.NO_CHANGE
+
+
 @dataclass
 class Fixer:
-    fix: Callable[[str], bool]
+    fix: Callable[[str], FixResult]
     options: Sequence[str]  # at least one option should be provided if "free text" is not an option
     option_free_text: bool = False
     option_automatic_index: int | None = None
@@ -100,7 +113,7 @@ class TagV(Base):
     track_id: Mapped[Optional[int]] = mapped_column(ForeignKey("track.track_id"), nullable=False)
     track: Mapped[Optional[Track]] = relationship("Track", back_populates="tags")
 
-    tag: Mapped[BasicTag] = mapped_column("name", Enum(BasicTag, native_enum=False, values_callable=lambda e: [x.value for x in e]))  # pyright: ignore[reportUnknownVariableType, reportUnknownLambdaType, reportUnknownMemberType]
+    tag: Mapped[BasicTag] = mapped_column("name", SqlEnum(BasicTag, native_enum=False, values_callable=lambda e: [x.value for x in e]))  # pyright: ignore[reportUnknownVariableType, reportUnknownLambdaType, reportUnknownMemberType]
     value: Mapped[str] = mapped_column(Text, nullable=False)
 
 
@@ -177,16 +190,16 @@ class PictureFile(Base):
     album: Mapped[Optional[Album]] = relationship("Album", back_populates="picture_files")
 
     filename: Mapped[str] = mapped_column(Text, nullable=False)
+    file_size: Mapped[int] = mapped_column("file_size", Integer, nullable=False, default=0)
     modify_timestamp: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     cover_source: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     _format: Mapped[str] = mapped_column("format", Text, nullable=False, default="")
     _width: Mapped[int] = mapped_column("width", Integer, nullable=False, default=0)
     _height: Mapped[int] = mapped_column("height", Integer, nullable=False, default=0)
     _depth_bpp: Mapped[int] = mapped_column("depth_bpp", Integer, nullable=False, default=0)
-    _file_size: Mapped[int] = mapped_column("file_size", Integer, nullable=False, default=0)
     _file_hash: Mapped[bytes] = mapped_column("file_hash", LargeBinary, nullable=False, default=b"")
     _load_issue: Mapped[LoadIssuesType] = mapped_column("load_issue", LoadIssuesAsJson)
-    picture_info = composite(PictureInfo, _format, _width, _height, _depth_bpp, _file_size, _file_hash, _load_issue)
+    picture_info = composite(PictureInfo, _format, _width, _height, _depth_bpp, file_size, _file_hash, _load_issue)
 
     def to_dict(self):
         return {

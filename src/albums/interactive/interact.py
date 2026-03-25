@@ -6,14 +6,14 @@ import subprocess
 from pathlib import Path
 from typing import Sequence, Tuple
 
-from prompt_toolkit import shortcuts
+from prompt_toolkit.shortcuts import choice, confirm
 from rich.markup import escape
 from rich.table import Table
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from ..app import Context
-from ..types import Album, CheckResult
+from ..types import Album, CheckResult, FixResult
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +23,9 @@ OPTION_DO_NOTHING = ">> Do nothing"
 OPTION_IGNORE_CHECK = ">> Ignore this check for this album"
 
 
-def interact(ctx: Context, session: Session, check_name: str, check_result: CheckResult, album: Album, show_ignore_option: bool) -> Tuple[bool, bool]:
+def interact(
+    ctx: Context, session: Session, check_name: str, check_result: CheckResult, album: Album, show_ignore_option: bool
+) -> Tuple[bool, bool, bool]:
     # if there is a fixer, offer the options it specifies
     #
     # always offer these options:
@@ -37,6 +39,7 @@ def interact(ctx: Context, session: Session, check_name: str, check_result: Chec
     fixer = check_result.fixer
     done = False  # allow user to start over if canceled by accident or not confirmed
     maybe_changed = False
+    deleted = False
     user_quit = False  # user explicitly quit this checkRenderableType
 
     OPTION_RUN_TAGGER = f">> Edit tags with {ctx.config.tagger or 'external tagger'}"
@@ -77,7 +80,7 @@ def interact(ctx: Context, session: Session, check_name: str, check_result: Chec
             choice = options[option_index] if option_index is not None else None
             if choice == OPTION_RUN_TAGGER:
                 _run_tagger(ctx, album_path)
-                while not shortcuts.confirm("Done making changes in external program?"):
+                while not confirm("Done making changes in external program?"):
                     pass
                 maybe_changed |= True
                 done = True
@@ -91,12 +94,12 @@ def interact(ctx: Context, session: Session, check_name: str, check_result: Chec
             elif choice == OPTION_OPEN_FOLDER:
                 _open_folder(ctx, album_path)
                 ctx.console.print()
-                while not shortcuts.confirm("Done making changes in external program?"):
+                while not confirm("Done making changes in external program?"):
                     pass
                 maybe_changed |= True
                 done = True
             elif choice is None:  # if user pressed esc, confirm
-                done = shortcuts.confirm("Do you want to move on to the next check?")
+                done = confirm("Do you want to move on to the next check?")
                 user_quit = done
 
         elif fixer:
@@ -105,14 +108,16 @@ def interact(ctx: Context, session: Session, check_name: str, check_result: Chec
             else:
                 option = options[option_index]
 
-            maybe_changed |= fixer.fix(option)
+            fix_result = fixer.fix(option)
+            maybe_changed |= fix_result != FixResult.NO_CHANGE
+            deleted |= fix_result == FixResult.DELETED_ALBUM
             done = maybe_changed  # if that fixer option didn't change anything, loop
 
         if maybe_changed:
             session.flush()
         # otherwise loop and ask again
 
-    return (maybe_changed, user_quit)
+    return (maybe_changed, deleted, user_quit)
 
 
 def prompt_ignore_checks(session: Session, album_id: int, check_name: str):
@@ -121,7 +126,7 @@ def prompt_ignore_checks(session: Session, album_id: int, check_name: str):
         logger.error(f'did not expect "{check_name}" to already be ignored for {album.path}')
         return True
 
-    if shortcuts.confirm(f'Do you want to ignore the check "{check_name}" for this album?'):
+    if confirm(f'Do you want to ignore the check "{check_name}" for this album?'):
         album.ignore_checks.append(check_name)
         session.commit()
         return True
@@ -175,5 +180,5 @@ def _try_to_run(ctx: Context, commands: Sequence[str], params: Sequence[str], se
 
 def _choose_from_menu(prompt: str, options: list[str], default_option_index: int | None) -> int | None:
     default_option = options[default_option_index] if default_option_index is not None else None
-    selection = shortcuts.choice(message=prompt, options=[(o, o) for o in options], default=default_option)
+    selection = choice(message=prompt, options=[(o, o) for o in options], default=default_option)
     return options.index(selection)

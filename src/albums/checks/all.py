@@ -23,6 +23,7 @@ from .picture.check_picture_metadata import CheckPictureMetadata
 from .tags.check_album_artist import CheckAlbumArtist
 from .tags.check_album_tag import CheckAlbumTag
 from .tags.check_artist_tag import CheckArtistTag
+from .tags.check_duplicate_album import CheckDuplicateAlbum
 from .tags.check_extra_whitespace import CheckExtraWhitespace
 from .tags.check_genre_present import CheckGenrePresent
 from .tags.check_single_value_tags import CheckSingleValueTags
@@ -48,6 +49,7 @@ ALL_CHECKS: tuple[type[Check], ...] = (
     CheckAlbumTag,
     CheckAlbumArtist,
     CheckArtistTag,
+    CheckDuplicateAlbum,
     CheckSingleValueTags,
     CheckTrackTitle,
     CheckGenrePresent,

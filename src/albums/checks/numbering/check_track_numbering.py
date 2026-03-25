@@ -8,7 +8,7 @@ from rich.markup import escape
 from ...app import Context
 from ...tagger.folder import AlbumTagger, Cap
 from ...tagger.types import BasicTag
-from ...types import Album, CheckResult, Fixer, Track
+from ...types import Album, CheckResult, Fixer, FixResult, Track
 from ..base_check import Check
 from ..helpers import describe_track_number, get_tracks_by_disc, ordered_tracks, parse_filename
 from ..tag_policy import Policy, check_policy
@@ -67,7 +67,7 @@ class TrackTotalFixer(Fixer):
             new_tracktotal = self.max_tracktotal
         else:
             logger.error(f"invalid option for fix_interactive: {option}")
-            return False
+            return FixResult.NO_CHANGE
 
         changed = False
         for track in self.tracks:
@@ -81,7 +81,7 @@ class TrackTotalFixer(Fixer):
             if track_changed:
                 changed = True
                 tagger.set_basic_tags(path, [(BasicTag.TRACKTOTAL, new_tracktotal if new_tracktotal is None else str(new_tracktotal))])
-        return changed
+        return FixResult.of(changed)
 
 
 class CheckTrackNumbering(Check):
@@ -197,11 +197,11 @@ class CheckTrackNumbering(Check):
 
         return Fixer(lambda _: self._renumber(album, new_tracknumbers), options, False, option_automatic_index, table)
 
-    def _renumber(self, album: Album, new_tracknumbers: dict[str, str]) -> bool:
+    def _renumber(self, album: Album, new_tracknumbers: dict[str, str]):
         for track in album.tracks:
             if track.filename in new_tracknumbers:
                 new_tracknumber = new_tracknumbers[track.filename]
                 path = self.ctx.config.library / album.path / track.filename
                 self.ctx.console.print(f"setting track number {new_tracknumber} on {escape(track.filename)}", highlight=False)
                 self.tagger.get(album.path).set_basic_tags(path, [(BasicTag.TRACKNUMBER, new_tracknumber)])
-        return True
+        return FixResult.CHANGED_ALBUM

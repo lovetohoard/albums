@@ -4,7 +4,7 @@ from os import rename
 from pathvalidate import ValidationError, sanitize_filename, validate_filename
 from rich.markup import escape
 
-from ...types import Album, CheckResult, Fixer
+from ...types import Album, CheckResult, Fixer, FixResult
 from ..base_check import Check
 
 logger = logging.getLogger(__name__)
@@ -53,4 +53,4 @@ class CheckIllegalPathname(Check):
                 self.ctx.console.print(f"Renaming {escape(track.filename)} to {escape(new_filename)}")
                 rename(self.ctx.config.library / album.path / track.filename, self.ctx.config.library / album.path / new_filename)
                 changed = True
-        return changed
+        return FixResult.of(changed)

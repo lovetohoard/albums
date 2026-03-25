@@ -7,7 +7,7 @@ from rich.markup import escape
 
 from ...tagger.folder import AlbumTagger, Cap
 from ...tagger.types import Picture
-from ...types import Album, CheckResult, Fixer
+from ...types import Album, CheckResult, Fixer, FixResult
 from ..base_check import Check
 
 logger = logging.getLogger(__name__)
@@ -97,4 +97,4 @@ class CheckPictureMetadata(Check):
         for old_name, new_name in image_files_to_rename:
             self.ctx.console.print(f"Renaming {escape(old_name)} to {escape(new_name)}", highlight=False)
             rename(album_path / old_name, album_path / new_name)
-        return True
+        return FixResult.CHANGED_ALBUM

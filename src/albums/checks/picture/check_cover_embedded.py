@@ -13,7 +13,7 @@ from ...picture.format import mime_type_to_format
 from ...picture.info import PictureInfo
 from ...tagger.folder import Cap
 from ...tagger.types import Picture, PictureType
-from ...types import Album, CheckResult, Fixer, PictureFile
+from ...types import Album, CheckResult, Fixer, FixResult, PictureFile
 from ..base_check import Check
 from ..helpers import FRONT_COVER_FILENAME
 
@@ -211,13 +211,13 @@ class CheckCoverEmbedded(Check):
                     tags.add_picture(new_cover, image_data)
             else:
                 self.ctx.console.print(f"Skipping unsupported file {escape(track.filename)}")
-        return True
+        return FixResult.CHANGED_ALBUM
 
     def _fix_mark_cover_source(self, album: Album, filename: str):
         self.ctx.console.print(f"Mark as front cover source: {escape(filename)}")
         file = next(file for file in album.picture_files if file.filename == filename)
         file.cover_source = True
-        return True
+        return FixResult.CHANGED_ALBUM
 
     def _fix_extract_cover_source(self, album: Album, filename: str, cover: Picture):
         with self.tagger.get(album.path).open(filename) as tags:

@@ -3,7 +3,7 @@ from os import rename
 
 from rich.markup import escape
 
-from ...types import Album, CheckResult, Fixer
+from ...types import Album, CheckResult, Fixer, FixResult
 from ..base_check import Check
 
 logger = logging.getLogger(__name__)
@@ -27,7 +27,7 @@ class CheckUnreadableTrack(Check):
         fixer = Fixer(lambda option: self._fix_rename_unreadable(album), options, False, option_automatic_index, table)
         return CheckResult(f"{unreadable_count} unreadable tracks, example {example_filename}", fixer)
 
-    def _fix_rename_unreadable(self, album: Album) -> bool:
+    def _fix_rename_unreadable(self, album: Album):
         changed = False
         for track in sorted(album.tracks):
             if track.stream.error:
@@ -35,4 +35,4 @@ class CheckUnreadableTrack(Check):
                 self.ctx.console.print(f"Renaming {escape(track.filename)} to {escape(new_filename)}", highlight=False)
                 rename(self.ctx.config.library / album.path / track.filename, self.ctx.config.library / album.path / new_filename)
                 changed = True
-        return changed
+        return FixResult.of(changed)

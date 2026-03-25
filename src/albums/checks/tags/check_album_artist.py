@@ -6,7 +6,7 @@ from rich.markup import escape
 
 from ...tagger.folder import AlbumTagger, Cap
 from ...tagger.types import BasicTag
-from ...types import Album, CheckResult, Fixer
+from ...types import Album, CheckResult, Fixer, FixResult
 from ..base_check import Check
 from ..helpers import show_tag
 
@@ -118,7 +118,7 @@ class CheckAlbumArtist(Check):
             "select album artist to use for all tracks",
         )
 
-    def _fix(self, album: Album, album_artist_value: str) -> bool:
+    def _fix(self, album: Album, album_artist_value: str):
         changed = False
         for track in sorted(album.tracks, key=lambda track: track.filename):
             file = self.ctx.config.library / album.path / track.filename
@@ -141,4 +141,4 @@ class CheckAlbumArtist(Check):
             # else nothing to set
 
         self.ctx.console.print("done.")
-        return changed
+        return FixResult.of(changed)
