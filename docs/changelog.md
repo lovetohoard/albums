@@ -4,6 +4,8 @@ icon: lucide/scroll-text
 
 # Changelog
 
+v0.9.12 - more config options, grammatical numbers, rerun checks, bug fixes
+
 v0.9.11 - check folder-name, duplicate-album, improve import dup detection
 
 v0.9.10 - new check/fix for file-extension, import auto-skip, bug fixes

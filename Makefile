@@ -17,7 +17,6 @@ lint: lint-markdown ## Lint and static analysis
 	$(POETRY) run ruff format . --check
 	$(POETRY) run pyright
 	$(POETRY) run pyright -p tests
-	$(POETRY) run pymarkdown --strict-config scan *.md **/*.md
 
 spelling: ## Run spell check
 	$(DOCKER) run -it -v .:/workdir ghcr.io/streetsidesoftware/cspell:latest lint --gitignore * .github
