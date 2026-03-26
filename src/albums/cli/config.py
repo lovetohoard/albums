@@ -3,6 +3,7 @@ import logging
 import os
 import re
 from pathlib import Path
+from string import Template
 from typing import Mapping
 
 import rich_click as click
@@ -11,7 +12,7 @@ from rich.markup import escape
 from rich.table import Table
 
 from ..app import Context
-from ..config import Configuration, RescanOption, SettingValueType
+from ..config import Configuration, ID3v1Policy, PathCompatibilityOption, RescanOption, SettingValueType
 from ..database import db_config
 from ..interactive.configurator import interactive_config, set_library
 from .cli_context import pass_context, require_configured, require_persistent_context
@@ -52,14 +53,14 @@ def config(ctx: Context, show: bool, import_file: str, export_file: str, reset: 
     if kv:
         if str.count(kv, "=") < 1:
             if kv in config_values:
-                ctx.console.print(f"{kv} = {_render_setting(config_values[kv])}")
+                ctx.console.print(f"{kv} = {_render_setting(config_values[kv])}", soft_wrap=True)
             else:
                 ctx.console.print(f"invalid setting {kv}")
                 raise SystemExit(1)
         else:
             [name, value] = kv.split("=", 1)
             _set(ctx, name, value)
-            ctx.console.print(f"{name} = {value}")
+            ctx.console.print(f"{name} = {value}", soft_wrap=True)
     elif import_file:
         _import(ctx, import_file)
     elif export_file:
@@ -141,16 +142,40 @@ def _set(ctx: Context, setting_name: str, value: str):
 
     [section, name] = keys
     if section == "settings":
-        if name == "library":
+        if name == "default_import_path":
+            ctx.config.default_import_path = Template(value)
+            db_config.save(ctx.db, ctx.config)
+        elif name == "default_import_path_various":
+            ctx.config.default_import_path_various = Template(value)
+            db_config.save(ctx.db, ctx.config)
+        elif name == "id3v1":
+            ctx.config.id3v1 = ID3v1Policy(int(value))
+            db_config.save(ctx.db, ctx.config)
+        elif name == "import_scan_max_paths":
+            ctx.config.import_scan_max_paths = int(value)
+            db_config.save(ctx.db, ctx.config)
+        elif name == "library":
             set_library(ctx, value)
+        elif name == "more_import_paths":
+            ctx.config.more_import_paths = [Template(v) for v in value.split(",")]
+            db_config.save(ctx.db, ctx.config)
+        elif name == "open_folder_command":
+            ctx.config.open_folder_command = value
+            db_config.save(ctx.db, ctx.config)
+        elif name == "path_compatibility":
+            ctx.config.path_compatibility = PathCompatibilityOption(value)
+            db_config.save(ctx.db, ctx.config)
+        elif name == "path_replace_invalid":
+            ctx.config.path_replace_invalid = value
+            db_config.save(ctx.db, ctx.config)
+        elif name == "path_replace_slash":
+            ctx.config.path_replace_slash = value
+            db_config.save(ctx.db, ctx.config)
         elif name == "rescan":
             ctx.config.rescan = RescanOption(value)
             db_config.save(ctx.db, ctx.config)
         elif name == "tagger":
             ctx.config.tagger = value
-            db_config.save(ctx.db, ctx.config)
-        elif name == "open_folder_command":
-            ctx.config.open_folder_command = value
             db_config.save(ctx.db, ctx.config)
         else:
             ctx.console.print(f"{setting_name} is not a valid setting")

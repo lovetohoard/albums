@@ -69,6 +69,14 @@ class TestCliConfig:
         assert result.exit_code == 0
         assert f"settings.more_import_paths = {','.join(p.template for p in DEFAULT_MORE_IMPORT_PATHS)}" in result.output
 
+    def test_config_long_setting_value(self):
+        more_paths = ",".join(["a"] * 100)
+        result = self.run(["config", f"settings.more_import_paths={more_paths}"], init=True)
+        assert f"settings.more_import_paths = {more_paths}" in result.output
+
+        result = self.run(["config", "settings.more_import_paths"])
+        assert f"settings.more_import_paths = {more_paths}" in result.output
+
     def test_config_invalid(self):
         result = self.run(["config", "settings.foo=bar"], init=True)
         assert result.exit_code == 1
