@@ -1,7 +1,7 @@
 from collections import defaultdict
 from typing import Sequence
 
-from sqlalchemy import and_, or_, select
+from sqlalchemy import and_, func, or_, select
 from sqlalchemy.orm import Session, aliased
 
 from albums.tagger.types import BasicTag
@@ -20,12 +20,12 @@ def album_in_library(ctx: Context, album: Album) -> str | None:
             TagV2 = aliased(TagV)
             stmt = (
                 select(TagV)
-                .filter(and_(TagV.tag == BasicTag.ALBUM, TagV.value == album_name))
+                .filter(and_(TagV.tag == BasicTag.ALBUM, func.lower(TagV.value) == str.lower(album_name)))
                 .join(
                     TagV2,
                     and_(
                         TagV.track_id == TagV2.track_id,
-                        TagV2.value == artist,
+                        func.lower(TagV2.value) == str.lower(artist),
                         or_(TagV2.tag == BasicTag.ARTIST, TagV2.tag == BasicTag.ALBUMARTIST),
                     ),
                 )
