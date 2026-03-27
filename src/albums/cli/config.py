@@ -46,21 +46,21 @@ def config(ctx: Context, show: bool, import_file: str, export_file: str, reset: 
         defaults = Configuration().to_values()
         for k, v in sorted(config_values.items(), key=lambda i: i[0]):
             table.add_row(
-                k, "[bold]*[/bold]" if defaults[k] != v else "", _render_setting(v), _render_setting(defaults[k]) if defaults[k] != v else ""
+                k, "[bold]*[/bold]" if defaults[k] != v else "", _render_setting(k, v), _render_setting(k, defaults[k]) if defaults[k] != v else ""
             )
         ctx.console.print(table)
 
     if kv:
         if str.count(kv, "=") < 1:
             if kv in config_values:
-                ctx.console.print(f"{kv} = {_render_setting(config_values[kv])}", soft_wrap=True)
+                ctx.console.print(f"{kv} = {_render_setting(kv, config_values[kv])}", soft_wrap=True)
             else:
                 ctx.console.print(f"invalid setting {kv}")
                 raise SystemExit(1)
         else:
             [name, value] = kv.split("=", 1)
             _set(ctx, name, value)
-            ctx.console.print(f"{name} = {value}", soft_wrap=True)
+            ctx.console.print(f"{name} = {_render_setting(name, value)}", soft_wrap=True)
     elif import_file:
         _import(ctx, import_file)
     elif export_file:
@@ -130,7 +130,9 @@ def _reset(ctx: Context):
     ctx.console.print(f'Configuration reset to default except for library directory "{escape(str(ctx.config.library))}"')
 
 
-def _render_setting(v: SettingValueType):
+def _render_setting(k: str, v: SettingValueType):
+    if k == "settings.id3v1" and isinstance(v, int):
+        return ID3v1Policy(int(v)).name
     return escape(",".join(v) if isinstance(v, list) else str(v))
 
 
