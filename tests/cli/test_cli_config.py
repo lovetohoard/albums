@@ -69,6 +69,18 @@ class TestCliConfig:
         assert result.exit_code == 0
         assert f"settings.more_import_paths = {','.join(p.template for p in DEFAULT_MORE_IMPORT_PATHS)}" in result.output
 
+    def test_config_id3v1(self):
+        result = self.run(["config", "settings.id3v1"], init=True)
+        assert "settings.id3v1 = UPDATE" in result.output
+        result = self.run(["config", "settings.id3v1=CREATE"])
+        assert "settings.id3v1 = CREATE" in result.output
+        result = self.run(["config", "settings.id3v1=Remove"])
+        assert "settings.id3v1 = REMOVE" in result.output
+        result = self.run(["config", "settings.id3v1"])
+        assert "settings.id3v1 = REMOVE" in result.output
+        result = self.run(["config", "settings.id3v1=update"])
+        assert "settings.id3v1 = UPDATE" in result.output
+
     def test_config_long_setting_value(self):
         more_paths = ",".join(["a"] * 100)
         result = self.run(["config", f"settings.more_import_paths={more_paths}"], init=True)

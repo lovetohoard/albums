@@ -60,7 +60,7 @@ def config(ctx: Context, show: bool, import_file: str, export_file: str, reset: 
         else:
             [name, value] = kv.split("=", 1)
             _set(ctx, name, value)
-            ctx.console.print(f"{name} = {_render_setting(name, value)}", soft_wrap=True)
+            ctx.console.print(f"{name} = {_render_setting(name, ctx.config.to_values()[name])}", soft_wrap=True)
     elif import_file:
         _import(ctx, import_file)
     elif export_file:
@@ -151,7 +151,7 @@ def _set(ctx: Context, setting_name: str, value: str):
             ctx.config.default_import_path_various = Template(value)
             db_config.save(ctx.db, ctx.config)
         elif name == "id3v1":
-            ctx.config.id3v1 = ID3v1Policy(int(value))
+            ctx.config.id3v1 = ID3v1Policy[str.upper(value)]
             db_config.save(ctx.db, ctx.config)
         elif name == "import_scan_max_paths":
             ctx.config.import_scan_max_paths = int(value)
