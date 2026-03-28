@@ -1,3 +1,4 @@
+import os
 from os import rename, sep
 from pathlib import Path
 from string import Template
@@ -26,6 +27,9 @@ class CheckFolderName(Check):
     def check(self, album: Album):
         if not self._can_generate_folder_name(album):
             return None  # TODO: configure behavior when album doesn't have tags to generate folder name
+
+        if album.path in {".", "", os.sep}:
+            return None  # if --dir or import points to a single album, the album has no path within the temporary library and cannot be renamed
 
         correct_name = self._generate_folder_name(album)
         if Path(album.path).name == correct_name:

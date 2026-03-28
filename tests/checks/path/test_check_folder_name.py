@@ -40,6 +40,10 @@ class TestCheckFolderName:
         album = Album(path="Foo" + os.sep, tracks=[Track(filename="1.flac")])
         assert not CheckFolderName(Context()).check(album)
 
+    def test_folder_name_library_root(self):
+        album = Album(path=".", tracks=[Track(filename="1.flac", tag={BasicTag.ALBUM: "Foo"})])
+        assert not CheckFolderName(Context()).check(album)
+
     def test_folder_name_fix(self, mocker):
         album = Album(path="Foo (2026)" + os.sep, tracks=[Track(filename="1.flac", tag={BasicTag.ALBUM: "Foo"})])
         result = CheckFolderName(Context()).check(album)
