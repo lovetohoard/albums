@@ -44,11 +44,16 @@ def config(ctx: Context, show: bool, import_file: str, export_file: str, reset: 
 
     config_values = ctx.config.to_values()
     if show:
-        table = Table("setting", "set", "value", "default (if different)", row_styles=["bold", ""])
+        table = Table("setting", "set", "value", "default (if different)")
         defaults = Configuration().to_values()
         for k, v in sorted(config_values.items(), key=lambda i: i[0]):
+            non_default = defaults[k] != v
             table.add_row(
-                k, "[bold]*[/bold]" if defaults[k] != v else "", _render_setting(k, v), _render_setting(k, defaults[k]) if defaults[k] != v else ""
+                k,
+                "[bold]*[/bold]" if non_default else "",
+                _render_setting(k, v),
+                _render_setting(k, defaults[k]) if non_default else "",
+                style="bold" if non_default else None,
             )
         ctx.console.print(table)
 
