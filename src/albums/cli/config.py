@@ -2,6 +2,7 @@ import json
 import logging
 import os
 import re
+from itertools import chain
 from pathlib import Path
 from string import Template
 from typing import Mapping
@@ -14,7 +15,8 @@ from rich.table import Table
 from ..app import Context
 from ..config import Configuration, ID3v1Policy, PathCompatibilityOption, RescanOption, SettingValueType
 from ..database import db_config
-from ..interactive.configurator import interactive_config, set_library
+from ..interactive.configurator import interactive_config
+from ..interactive.setup_settings import set_library
 from .cli_context import pass_context, require_configured, require_persistent_context
 
 logger = logging.getLogger(__name__)
@@ -59,8 +61,10 @@ def config(ctx: Context, show: bool, import_file: str, export_file: str, reset: 
                 raise SystemExit(1)
         else:
             [name, value] = kv.split("=", 1)
-            _set(ctx, name, value)
-            ctx.console.print(f"{name} = {_render_setting(name, ctx.config.to_values()[name])}", soft_wrap=True)
+            if _set(ctx, name, value):
+                ctx.console.print(f"{name} = {_render_setting(name, ctx.config.to_values()[name])}", soft_wrap=True)
+            else:
+                raise SystemExit(1)
     elif import_file:
         _import(ctx, import_file)
     elif export_file:
@@ -83,7 +87,8 @@ def _import(ctx: Context, import_file: str):
     except Exception as ex:
         logger.error(f'error parsing file "{import_file}": {repr(ex)}')
         raise SystemExit(1)
-    (new_config, ignored) = Configuration.from_values((k, v) for k, v in config_items)
+
+    (new_config, ignored) = Configuration.from_values(chain(ctx.config.to_values().items(), ((k, v) for k, v in config_items)))
     if (
         ignored
         and ctx.console.is_interactive
@@ -130,17 +135,21 @@ def _reset(ctx: Context):
     ctx.console.print(f'Configuration reset to default except for library directory "{escape(str(ctx.config.library))}"')
 
 
-def _render_setting(k: str, v: SettingValueType):
-    if k == "settings.id3v1" and isinstance(v, int):
-        return ID3v1Policy(int(v)).name
-    return escape(",".join(v) if isinstance(v, list) else str(v))
+def _render_setting(key: str, value: SettingValueType):
+    if key == "settings.id3v1" and isinstance(value, int):
+        return ID3v1Policy(int(value)).name
+    if key == "settings.sync_destinations" and isinstance(value, list):
+        return escape(",".join(str(v["collection"]) for v in value if isinstance(v, dict)))
+    if isinstance(value, list):
+        return escape(",".join(str(v) for v in value))
+    return escape(str(value))
 
 
-def _set(ctx: Context, setting_name: str, value: str):
+def _set(ctx: Context, setting_name: str, value: str) -> bool:
     keys = setting_name.split(".")
     if len(keys) != 2:
         ctx.console.print(f"invalid setting {setting_name}")
-        raise SystemExit(1)
+        return False
 
     [section, name] = keys
     if section == "settings":
@@ -179,13 +188,17 @@ def _set(ctx: Context, setting_name: str, value: str):
         elif name == "tagger":
             ctx.config.tagger = value
             db_config.save(ctx.db, ctx.config)
+        elif name == "sync_destinations":
+            ctx.console.print("Use interactive config or import to create or update sync destinations")
+            return False
         else:
             ctx.console.print(f"{setting_name} is not a valid setting")
-            raise SystemExit(1)
+            return False
 
     else:
         _set_check(ctx, section, name, value)
         db_config.save(ctx.db, ctx.config)
+    return True
 
 
 def _set_check(ctx: Context, check_name: str, name: str, value: str):
