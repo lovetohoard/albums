@@ -4,6 +4,8 @@ icon: lucide/scroll-text
 
 # Changelog
 
+v0.9.13 - configured sync destinations, transcoding, bug fixes
+
 v0.9.12 - more config options, grammatical numbers, rerun checks, bug fixes
 
 v0.9.11 - check folder-name, duplicate-album, improve import dup detection
