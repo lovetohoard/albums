@@ -4,6 +4,8 @@ icon: lucide/scroll-text
 
 # Changelog
 
+v0.9.14 - folder-name check adds ignore_folders option + docs
+
 v0.9.13 - configured sync destinations, transcoding, bug fixes
 
 v0.9.12 - more config options, grammatical numbers, rerun checks, bug fixes

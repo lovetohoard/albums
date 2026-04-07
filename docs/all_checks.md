@@ -62,6 +62,26 @@ only examines scanned files with recognized extensions. Files not scanned by
 | --------------- | --------- | ------------------------------------------- |
 | `lowercase_all` | **false** | If true, check known image/video extensions |
 
+### folder-name
+
+The folder name for each album should indicate the contents. For example, it may
+be the name of the album. Folder names should be valid, as described by
+`path_compatibility` and related settings in [Usage](./usage.md).
+
+The folder name format is a template string. The template substitutions are:
+
+| Substitution  | Example      | Description  |
+| ------------- | ------------ | ------------ |
+| **`$album`**  | `Album Name` | Album name   |
+| **`$artist`** | `The Artist` | Album artist |
+
+**Automatic fix**: Rename the album folder according to the configured format.
+
+| Option           | Default    | Description                       |
+| ---------------- | ---------- | --------------------------------- |
+| `format`         | `"$album"` | Template to generate folder names |
+| `ignore_folders` | `["misc"]` | Ignore folders with these names   |
+
 ### track-filename
 
 Track filenames should match tags. Typically they include the track number and
