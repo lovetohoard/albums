@@ -22,7 +22,7 @@ jobs:
       - name: Install dependencies
         run: make install
       - name: Build executable
-        run: make package && ls -l dist && ls -l dist/pyinstaller
+        run: poetry dynamic-versioning && make package && ls -l dist && ls -l dist/pyinstaller
       - name: Upload package artifact
         uses: actions/upload-artifact@v7
         with:
