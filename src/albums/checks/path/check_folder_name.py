@@ -1,3 +1,4 @@
+import logging
 import os
 from os import rename, sep
 from pathlib import Path
@@ -12,10 +13,12 @@ from ...tagger.types import BasicTag
 from ...types import Album, CheckResult, Fixer, FixResult
 from ..base_check import Check
 
+logger = logging.getLogger(__name__)
+
 
 class CheckFolderName(Check):
     name = "folder-name"
-    default_config = {"enabled": True, "format": "$album"}
+    default_config = {"enabled": True, "format": "$album", "ignore_folders": ["misc"]}
     must_pass_checks = {"album-tag", "artist-tag"}
 
     def init(self, check_config: dict[str, Any]):
@@ -23,8 +26,18 @@ class CheckFolderName(Check):
         for id in self.format.get_identifiers():
             if id not in {"artist", "album"}:
                 raise ValueError(f"invalid substitution '{id}' in folder-name.format")
+        ignore_folders: list[Any] = check_config.get("ignore_folders", CheckFolderName.default_config["ignore_folders"])
+        if not isinstance(ignore_folders, list) or any(  # pyright: ignore[reportUnnecessaryIsInstance]
+            not isinstance(f, str) or f == "" for f in ignore_folders
+        ):
+            logger.warning(f'folder-name.ignore_folders must be a list of folders, ignoring value "{ignore_folders}"')
+            ignore_folders = []
+        self.ignore_folders = list(str(folder) for folder in ignore_folders)
 
     def check(self, album: Album):
+        if Path(album.path).name in self.ignore_folders:
+            return None
+
         if not self._can_generate_folder_name(album):
             return None  # TODO: configure behavior when album doesn't have tags to generate folder name
 
