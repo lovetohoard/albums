@@ -91,7 +91,7 @@ class Importer:
                         options = [(album_path, f">> Copy to: {album_path}") for album_path in library_paths] + [("", ">> Cancel")]
                         path_in_library = choice(message=f"Ready to copy from {source_path}", options=options)
                     if path_in_library:
-                        self.ctx.console.print(f"Import album from {source_path} to {str(self.ctx.config.library / path_in_library)}")
+                        self.ctx.console.print(f"Import album from {source_path} to {str(self._parent_context.config.library / path_in_library)}")
                         self.import_album(source_path, path_in_library, album)
 
     def _make_library_paths(self, album: Album):
