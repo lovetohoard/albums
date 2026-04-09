@@ -28,13 +28,14 @@ logger = logging.getLogger(__name__)
     add_help_option=False,
 )
 @click.option("--show", "-s", is_flag=True, help="show the current configuration")
+@click.option("--non-default", is_flag=True, help="with --show, only display entries different from defaults")
 @click.option("--import", "-i", "import_file", metavar="FILE", help="import configuration from JSON file")
 @click.option("--export", "-e", "export_file", metavar="FILE", help="export configuration to JSON file")
 @click.option("--reset", is_flag=True, help="reset the configuration to defaults")
 @click.argument("kv", metavar="[NAME=VALUE] [NAME]", required=False)
 @click.help_option("--help", "-h", help="show this message and exit")
 @pass_context
-def config(ctx: Context, show: bool, import_file: str, export_file: str, reset: bool, kv: str):
+def config(ctx: Context, show: bool, non_default: bool, import_file: str, export_file: str, reset: bool, kv: str):
     require_configured(ctx)
     require_persistent_context(ctx)
 
@@ -42,11 +43,17 @@ def config(ctx: Context, show: bool, import_file: str, export_file: str, reset: 
         ctx.console.print("The options --show, --import, --export, --reset and NAME are exclusive - you can only use one at a time")
         raise SystemExit(1)
 
+    if non_default and not show:
+        ctx.console.print("The option --non-default can only be used with --show")
+        raise SystemExit(1)
+
     config_values = ctx.config.to_values()
     if show:
         table = Table("setting", "set", "value", "default (if different)", row_styles=["bold", ""])
         defaults = Configuration().to_values()
         for k, v in sorted(config_values.items(), key=lambda i: i[0]):
+            if non_default and defaults[k] == v:
+                continue
             table.add_row(
                 k, "[bold]*[/bold]" if defaults[k] != v else "", _render_setting(k, v), _render_setting(k, defaults[k]) if defaults[k] != v else ""
             )

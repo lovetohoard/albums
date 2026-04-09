@@ -57,6 +57,16 @@ class TestCliConfig:
         assert_setting(result.output, "cover-dimensions.min_pixels", "42")
         assert_setting(result.output, "cover-dimensions.squareness", "0.42")
         assert_setting(result.output, "cover-filename.enabled", "False")
+
+        result = self.run(["config", "--show", "--non-default"])
+        assert "settings.library" in result.output
+        assert "settings.rescan" in result.output
+        assert "settings.tagger" in result.output
+        assert "settings.open_folder_command" in result.output
+        assert "cover-dimensions.min_pixels" in result.output
+        assert "cover-dimensions.squareness" in result.output
+        assert "cover-filename.enabled" in result.output
+        assert "settings.id3v1" not in result.output
         self.run(["config", "settings.library", str(TestCliConfig.library)])
 
     def test_config_get_setting(self):
@@ -89,6 +99,10 @@ class TestCliConfig:
         assert f"settings.more_import_paths = {more_paths}" in result.output
 
     def test_config_invalid(self):
+        result = self.run(["config", "--non-default"], init=True)
+        assert result.exit_code == 1
+        assert "can only be used with --show" in result.output
+
         result = self.run(["config", "settings.foo=bar"], init=True)
         assert result.exit_code == 1
         assert "not a valid setting" in result.output
